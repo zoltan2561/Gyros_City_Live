@@ -84,20 +84,7 @@ class CheckoutController extends Controller
 
         $taxArr['tax'] = $tax_name;
         $taxArr['rate'] = $tax_price;
-        //Szatyor
-        /*
-        $handlingFee = 30;
-        $totalTax = array_sum($tax_price) + $handlingFee;
-        $taxArr['sum'] = $totalTax; // opcionális, ha a view ezt használja összegzéshez
 
-// ha a nézet külön kezeli a total tax-ot, frissítsük ott is
-        if (!empty($tax_price)) {
-            // csak az utolsó adóhoz adjuk hozzá a 30-at, hogy ne legyen új sor
-            $lastIndex = count($tax_price) - 1;
-            $tax_price[$lastIndex] += $handlingFee;
-            $taxArr['rate'] = $tax_price;
-        }
-*/
 
 
         $shippingarea = Shippingarea::orderBy('reorder_id')->get();
@@ -311,8 +298,15 @@ class CheckoutController extends Controller
 
                 // 1) Szállítási díj → zóna → min rendelés
                 $dc = (int) round($toFloat($delivery_charge));
-                $minRequired = ($dc <= 560) ? 500 : (($dc <= 760) ? 3900 : (($dc <= 1900) ? 4900 : 5900));
-
+                 if ($dc <= 560) {
+                    $minRequired = 0; // vagy amit szeretnél
+                } elseif ($dc <= 760) {
+                    $minRequired = 5900;
+                } elseif ($dc <= 2200) {
+                    $minRequired = 7900;
+                } else {
+                    $minRequired = 11900;
+                }
 
                 // 2) VÉGÖSSZEG (grand_total) a limithez
                 //$gt = (int) round($toFloat($grand_total));             // pl. 5000
@@ -330,8 +324,6 @@ class CheckoutController extends Controller
                 }
             }
             /* ======================================================================== */
-
-
 
 
 
@@ -540,7 +532,8 @@ class CheckoutController extends Controller
                 if (Auth::check()) {
                     $user = Auth::user();
 
-                    // grand_total a rendelésen (HUF). TODO:marad?
+                    // grand_total a rendelésen (HUF).
+                    //TODO: élesre
                     $grandTotalFt = (int) round($order->grand_total);
                     $bonus = (int) (floor($grandTotalFt / 1000) * 0);
 
@@ -721,7 +714,7 @@ class CheckoutController extends Controller
     private function computeLoyaltyBonusFt(int $grandTotalFt): int
     {
         if ($grandTotalFt <= 0) return 0;
-        return (int) (floor($grandTotalFt / 1000) * 0);
+        return (int) (floor($grandTotalFt / 1000) * 50);
     }
 
 

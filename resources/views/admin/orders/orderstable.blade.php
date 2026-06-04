@@ -28,7 +28,7 @@
                         @endif
                     </div>
                 </td>
-                <td>{{ helper::date_format($orderdata->created_at) }}</td>
+                <td>{{ $orderdata->created_at }}</td>
                 <td>
                     {{ @$orderdata->name }}
                 </td>

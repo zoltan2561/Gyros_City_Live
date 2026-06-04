@@ -96,7 +96,8 @@ class NotificationController extends Controller
     public function unprocessedAlert(Request $request)
     {
         // címek configból (string vagy vesszővel elválasztott lista)
-        $to = trim((string) config('MAIL_ADMIN_EMAIL', 'admin@gyroscity.eu,blausilverkft@gmail.com,pappzoltan6969@gmail.com,markdemetet@gmail.com'));
+        $to = trim((string) config('MAIL_ADMIN_EMAIL', 'admin@gyroscity.eu,blausilverkft@gmail.com,fuleczkikinga23@gmail.com,markdemetet@gmail.com'));
+        //$to = trim((string) config('MAIL_ADMIN_EMAIL', 'pappzoltan6969@gmail.com,admin@gyroscity.eu'));
         if ($to === '') {
             return response()->json(['ok' => false, 'msg' => 'No admin email configured'], 200);
         }
@@ -108,19 +109,18 @@ class NotificationController extends Controller
 
 
 
-        // szerver-oldali throttle: 30 percenként max 1 levél
+        // szerver-oldali throttle: 10 percenként max 1 levél
         // (így több megnyitott admin ablak sem spammel)
         $cacheKey = 'unprocessed_order_alert_lock';
 
-        if (!Cache::add($cacheKey, 1, now()->addMinutes(20))) {
+        if (!Cache::add($cacheKey, 1, now()->addMinutes(10))) {
             return response()->json(['ok' => true, 'throttled' => true], 200);
         }
 
         $count   = (int) $request->input('count', 0);
-        $subject = 'Figyelmeztetés: nem feldolgozott online rendelés';
-        $body    = "8 jezés után sem lett megnyitva a rendelés.\n"
+        $subject = 'Figyelmeztetés: FÜGGŐ online rendelés';
+        $body    = "Függő rendelés található.\n"
             . "Lehetséges, hogy van nem feldolgozott online rendelés.\n"
-            . "Aktuális értesítés-számláló: {$count}\n"
             . "Időpont: " . now()->toDateTimeString() . "\n"
             . "Admin: " . url('/admin');
 

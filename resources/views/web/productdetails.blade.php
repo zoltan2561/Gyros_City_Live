@@ -459,8 +459,24 @@
                                 <h4 class="heading mb-3 fw-600 text-dark text-truncate">
                                     {{ trans('labels.description') }}
                                 </h4>
+                                @php
+                                    $descriptionWithGlossary = preg_replace_callback(
+                                        '/\[\[([^|\]]+)\|([^\]]+)\]\]/u',
+                                        static function ($matches) {
+                                            $term = trim($matches[1]);
+                                            $meaning = trim($matches[2]);
+
+                                            return sprintf(
+                                                '<span class="foreign-term" tabindex="0" role="button" data-bs-toggle="tooltip" data-bs-trigger="hover focus click" title="%s">%s</span>',
+                                                e($meaning),
+                                                e($term),
+                                            );
+                                        },
+                                        $getitemdata->item_description ?? '',
+                                    );
+                                @endphp
                                 <div class="item-description">
-                                    <p class="text-justify mb-0">{!! $getitemdata->item_description !!}</p>
+                                    <p class="text-justify mb-0">{!! $descriptionWithGlossary !!}</p>
                                 </div>
                             </div>
                         </div>
@@ -756,6 +772,15 @@
     @include('web.subscribeform')
 @endsection
 @section('scripts')
+    <style>
+        .item-description .foreign-term {
+            text-decoration: underline dotted;
+            text-underline-offset: 2px;
+            cursor: help;
+            font-weight: 600;
+        }
+    </style>
+
     <script src="{{ url(env('ASSETSPATHURL') . 'web-assets/js/item-image-carousel/main.js') }}"></script>
     <script src="{{ url(env('ASSETSPATHURL') . 'web-assets/js/item-image-carousel/zoom-image.js') }}"></script>
 
@@ -774,5 +799,11 @@
             $("#reviewModal img").attr('src', $(this).attr('data-item-image'));
             $('#reviewModal').modal('show');
         });
+
+        if (typeof bootstrap !== "undefined" && typeof bootstrap.Tooltip !== "undefined") {
+            document.querySelectorAll('.foreign-term[data-bs-toggle="tooltip"]').forEach(function(element) {
+                bootstrap.Tooltip.getOrCreateInstance(element);
+            });
+        }
     </script>
 @endsection

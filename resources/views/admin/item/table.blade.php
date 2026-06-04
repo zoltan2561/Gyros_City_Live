@@ -1,4 +1,6 @@
-<table class="table table-striped table-bordered zero-configuration">
+
+<table id="itemsTable" class="table table-striped table-bordered zero-configuration">
+
     <thead>
         <tr>
             <th></th>

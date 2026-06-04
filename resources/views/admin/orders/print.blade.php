@@ -9,94 +9,91 @@
     <link rel="stylesheet" href="{{ url('storage/app/public/admin-assets/assets/css/bootstrap/bootstrap.min.css') }}">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ helper::image_path(@helper::appdata()->favicon) }}">
     <style type="text/css">
-        /* 80 mm blokk – nagy, félkövér, fekete */
-        html, body{
-            width:80mm; margin:0; padding:0; background:#fff;
-            font-family: system-ui,-apple-system,"Segoe UI",Arial,Helvetica,sans-serif;
-            font-size:19px;              /* nagy alapméret */
-            line-height:1.22;
-            font-weight:700;             /* minden vastag */
-            color:#000;                  /* minden fekete */
-            -webkit-font-smoothing:none; /* hőnyomtatón élesebb */
-            text-align:center;
-        }
+/* ===== 80 mm hőnyomtató – papírtakarékos ===== */
+html, body{
+  width:80mm; margin:0; padding:0; background:#fff;
+  font-family:system-ui,-apple-system,"Segoe UI",Arial,Helvetica,sans-serif;
+  font-size:18px; line-height:1.22; font-weight:700; color:#000;
+  -webkit-font-smoothing:none; text-align:center;
+}
+#printDiv{ margin:0 auto; }
 
-        #printDiv{ margin:0 auto; }
-        .resept{ width:100%; margin:0 auto; padding:1.2mm 0.8mm; background:#fff; } /* picit kisebb belső margó */
+.resept{
+  width:100%; margin:0 auto; padding:1.2mm 0.8mm; background:#fff;
+  page-break-inside:avoid;     /* ne törje szét a blokkot */
+}
+/* ha több rendelés blokkot nyomtatsz egymás után, köztük finom elválasztó */
+.resept:not(:last-of-type)::after{
+  content:""; display:block; border-top:1px dashed #000; margin:2mm 0 0 0;
+}
 
-        /* Fejléc */
-        h5{ font-size:30px; margin:0; letter-spacing:1px; }
-        .fs-8{ font-size:24px !important; }
-        .fs-10, .txt-resept-font-size{ font-size:20px !important; }
+/* fejlécek */
+h5{ font-size:28px; margin:0; letter-spacing:1px; }
+.fs-8{ font-size:22px !important; }
+.fs-10, .txt-resept-font-size{ font-size:18px !important; }
 
-        /* Terméknév */
-        .product-text-size{
-            font-size:23px !important;
-            line-height:1.22;
-            color:#000 !important;
-            font-weight:700;
-        }
+/* terméknév tipó */
+.product-text-size{
+  font-size:20px !important; line-height:1.22; color:#000 !important; font-weight:700;
+}
 
-        /* ===== Extrák/Testreszabás – legyen fekete, félkövér, 1 sorban ===== */
-        .product-text-size .text-muted,
-        .product-text-size .text-muted span{
-            font-size:18px !important;
-            font-weight:700 !important;          /* tényleg félkövér */
-            color:#000 !important;               /* nem szürke */
-            opacity:1 !important;
-            white-space:nowrap;                   /* ne törjön három sorba */
-            display:inline-block;
-        }
+/* extrák feketével, tömörebben */
+.product-text-size .text-muted,
+.product-text-size .text-muted span{
+  font-size:17px !important; font-weight:700 !important; color:#000 !important;
+  opacity:1 !important; white-space:nowrap; display:inline-block;
+}
 
-        /* Táblázat – az „első verzió” szerinti középre igazítás */
-        .table{ width:100%; border-collapse:collapse; margin:6px 0; }
-        .table th, .table td{
-            border:0; padding:4px 1px;           /* kicsit kisebb padding → kevesebb törés */
-            text-align:center; vertical-align:middle;
-            white-space:nowrap;
-        }
-        .table td:nth-child(2){ white-space:normal; } /* a terméknév törhet */
+/* táblázat + elválasztó minden tétel után */
+.table{ width:100%; border-collapse:collapse; margin:4px 0; }
+.table th, .table td{ border:0; padding:3px 1px; text-align:center; vertical-align:middle; }
+.table td:nth-child(2){              /* terméknév oszlop */
+  white-space:normal; text-align:left; padding-left:10mm;   /* ~1 cm balra */
+}
+/* VÍZSZINTES VONAL a tételek között (csak a body-ban) */
+.table tbody tr{ border-bottom:1px dashed #000; }
+.table tbody tr:last-child{ border-bottom:1px dashed #000; } /* az utolsó tétel után is legyen */
 
-        /* Szaggatott elválasztók */
-        .underline-3{
-            border-top:2px dashed #000;
-            border-bottom:2px dashed #000;
-            padding:4px 0; margin:6px 0;
-        }
+/* szaggatott blokk-elválasztók (összesítők köré) */
+.underline-3{
+  border-top:1px dashed #000; border-bottom:1px dashed #000;
+  padding:3px 0; margin:5px 0;
+}
 
-        /* Összesítők */
-        .total-line{
-            border-top:2px dashed #000; border-bottom:2px dashed #000;
-            padding:6px 0; margin-top:10px; font-size:23px; text-transform:uppercase;
-        }
-        .grand-total{ font-size:29px; margin-top:3mm; text-transform:uppercase; }
+/* nyomtatási optimalizáció – ne húzzon plusz papírt */
+@media print{
+  @page{ margin:2mm; size:auto; }
+  html, body{ height:auto !important; -webkit-print-color-adjust:exact !important; }
+  #btnPrint{ display:none !important; }
+  #printDiv{ page-break-after:avoid !important; }
+  #printDiv *:last-child{ margin-bottom:0 !important; padding-bottom:0 !important; }
+}
+/* rendelés-blokk: keskenyebb szélső padding */
+.resept{
+  width:100%;
+  margin:0 auto;
+  padding:1mm 0.4mm;       /* 1.2mm 0.8mm → 1mm 0.4mm */
+  background:#fff;
+  page-break-inside:avoid;
+}
 
-        /* Nyomtatási margó – kicsit „kijjebb” */
-        @media print{
-            @page{ margin: 2mm; }   /* eddigi 0 helyett 2 mm */
-            body{ margin:0; }
-            #btnPrint{ display:none !important; }
-        }
+/* cellák: kicsit keskenyebb vízszintes padding */
+.table th, .table td{
+  border:0;
+  padding:3px 0.5mm;       /* 3px 1px → 3px 0.5mm */
+  text-align:center;
+  vertical-align:middle;
+}
 
-        .btn-primary{
-            background:#0a53ff; color:#fff; border:0;
-            font-size:21px; padding:9px 26px; border-radius:6px;
-        }
+/* terméknév oszlop: még balrább */
+.table td:nth-child(2){
+  white-space:normal;
+  text-align:left;
+  padding-left:6mm;        /* 10mm → 6mm (ha kell még: 5mm / 4mm) */
+}
 
-        /* Megjegyzés blokk tipó */
-        .note-box{ text-align:left; }
-        .note-title{ font-size:22px; text-transform:uppercase; }
-        .note-text{ font-size:20px; font-weight:700; white-space:normal; word-break:break-word; }
+
     </style>
-
-
-
-
-
-
-
-
-
 
 
 </head>
@@ -104,6 +101,34 @@
 <body>
     <div id="printDiv">
         <div class="resept p-2">
+@php
+    // Nyomtatás ideje
+    $printedAt = \Carbon\Carbon::now()->timezone(config('app.timezone', 'Europe/Budapest'));
+
+    // Alapadatok
+    $transactionType = (int)($orderdata->transaction_type ?? 0);
+    $orderType = (int)($orderdata->order_type ?? 0);
+    $note = mb_strtoupper($orderdata->instruction ?? $orderdata->notes ?? $orderdata->order_notes ?? '');
+
+    // Alapértelmezett címke
+    $paymentLabel = 'FIZETÉS'.$transactionType;
+
+    // 1️⃣ Készpénz
+    if ($transactionType === 1 && !str_contains($note, 'KÁRTYÁVAL') ) {
+        $paymentLabel = 'KÉSZPÉNZ';
+    }
+    // 2️⃣ Helyszíni kártyás (POS terminál)
+    elseif ($transactionType === 1 && str_contains($note, 'KÁRTYÁVAL')) {
+        $paymentLabel = 'KÁRTYÁS';
+    }
+    // 3️⃣ Online kártyás (Barion, Stripe stb.)
+    elseif ($transactionType === 16 || $orderType === 16) {
+        $paymentLabel = 'ONLINE KÁRTYÁS';
+    }
+@endphp
+
+
+
             <div class="address">
                 <h5 class="m-0 text-uppercase fs-8 text-center line-2 fw-600">{{ @helper::appdata()->short_title }}</h5>
                 <div class="col-12 mt-1 d-flex gap-1 align-items-center justify-content-center ">
@@ -115,6 +140,12 @@
                         @elseif ($orderdata->order_type == 3)
                             {{ trans('labels.pos') }}
                         @endif
+                        <div class="col-12 mt-1 d-flex gap-1 align-items-center justify-content-center">
+    <small class="text-uppercase fs-10 text-center text-dark fw-500 line-1">
+        {{ __('Fizetés') }}: {{ $paymentLabel }}
+    </small>
+</div>
+
                     </small>
                 </div>
                 <div class="col-12 mt-1 d-flex gap-1 align-items-center justify-content-center">
@@ -150,9 +181,10 @@
                 <p
                     class="fw-500 d-flex gap-1 align-items-center justify-content-center m-0 text-uppercase fs-10 text-center text-dark line-1">
                     {{ trans('labels.order_date') }} :
-                    <small
-                        class="fw-500 text-uppercase fs-10 text-center text-dark line-1">{{ @helper::date_format($orderdata->created_at) }}
-                    </small>
+                    <small class="fw-500 text-uppercase fs-10 text-center text-dark line-1">
+    {{ ($orderdata->created_at) }}
+</small>
+
                 </p>
             </div>
             <div class="total-billes-amount">
@@ -161,9 +193,11 @@
                         class="fw-500 d-flex gap-1 align-items-center justify-content-center m-0 text-uppercase fs-10 text-center text-dark">
                         {{ $orderdata->order_type == '1' ? trans('labels.delivery_date') : trans('labels.pickup_date') }}
                         :
-                        <small class="fw-500 text-uppercase fs-10 text-center text-dark line-1">
-                            {{ @helper::date_format($orderdata->delivery_date) }}
-                        </small>
+                       <small class="fw-500 text-uppercase fs-10 text-center text-dark line-1">
+    {{($orderdata->created_at) }}
+</small>
+
+
                     </div>
                 @endif
                 @if ($orderdata->delivery_time != '')
@@ -178,20 +212,16 @@
                 @endif
             </div>
             <table class="table table-borderless my-2 bg-transparent">
-                <thead class="underline-3">
-                    <tr class="text-dark">
-                        <th scope="col" class="product-text-size fw-bold">#</th>
-                        <th scope="col" class="product-text-size fw-bold">{{ trans('labels.item') }}
-                        </th>
-                        <th scope="col" class="product-text-size fw-bold text-center">{{ trans('labels.price') }}
-                        </th>
-                        <th scope="col" class="product-text-size fw-bold text-center">{{ trans('labels.qty') }}
-                        </th>
-                        <th scope="col" class="product-text-size fw-bold text-center pe-0">
-                            {{ trans('labels.total') }}
-                        </th>
-                    </tr>
-                </thead>
+               <thead class="underline-3">
+  <tr class="text-dark">
+    <th scope="col" class="product-text-size fw-bold">#</th>
+    <th scope="col" class="product-text-size fw-bold">{{ trans('labels.item') }}</th>
+    <th scope="col" class="product-text-size fw-bold text-center">db</th>
+    <th scope="col" class="product-text-size fw-bold text-center">{{ trans('labels.price') }}</th>
+  </tr>
+</thead>
+
+
                 <tbody>
                     @php
                         $order_total = 0;
@@ -206,78 +236,65 @@
                                 $orders['qty'];
                             $qty += $orders['qty'];
                         @endphp
-                        <tr class="align-middle">
-                            <td class="py-2">
-                                <p class="fw-500 text-dark line-1 m-0 product-text-size">{{ ++$key }}</p>
-                            </td>
-                            <td class="py-2">
-                                <h6 class="m-0 fw-500 product-text-size">
-                                    {{ $orders->item_name }}
-                                    [{{ $orders->item_type == 1 ? trans('labels.veg') : trans('labels.nonveg') }}]
-                                    <br>
-                                    @php
-                                        $addons_name = explode('| ', $orders->addons_name);
-                                        $addons_price = explode('| ', $orders->addons_price);
-                                        $extras_name = explode('| ', $orders->extras_name);
-                                        $extras_price = explode('| ', $orders->extras_price);
-                                    @endphp
-                                    @if ($orders->addons_id != '')
-                                        @foreach ($addons_name as $key => $val)
-                                            <span class="text-muted">{{ $addons_name[$key] }} :
-                                                <span>{{ helper::currency_format($addons_price[$key]) }}</span>
-                                            </span><br>
-                                        @endforeach
-                                    @endif
-                                    @if ($orders->extras_id != '')
-                                        @foreach ($extras_name as $key => $val)
-                                            <span class="text-muted">{{ $extras_name[$key] }} :
-                                                <span>{{ helper::currency_format($extras_price[$key]) }}</span>
-                                            </span><br>
-                                        @endforeach
-                                    @endif
-                                </h6>
-                            </td>
-                            <td class="py-2 text-end">
-                                <div class="fw-500 product-text-size d-flex align-items-center justify-content-center">
-                                    <p class="m-0 text-dark">
-                                        {{ helper::currency_format($orders->item_price) }}
-                                        @if ($orders->addons_total_price != 0 || $orders->extras_total_price != 0)
-                                            <br><small class="text-muted">+
-                                                {{ helper::currency_format($orders->addons_total_price + $orders->extras_total_price) }}</small>
-                                        @endif
-                                    </p>
-                                </div>
-                            </td>
-                            <td class="py-2 text-end">
-                                <div class="fw-500 product-text-size d-flex align-items-center justify-content-center">
-                                    <p class="m-0 text-dark">{{ $orders->qty }}</p>
-                                </div>
-                            </td>
-                            <td class="py-2 pe-0 text-end">
-                                <p class="text-dark fw-500 line-1 m-0  product-text-size">
-                                    {{ helper::currency_format($orders->item_price * $orders->qty + $orders->addons_total_price + $orders->extras_total_price) }}
-                                </p>
-                            </td>
-                        </tr>
+                       <tr class="align-middle">
+  <td class="py-2">
+    <p class="fw-500 text-dark line-1 m-0 product-text-size">{{ ++$key }}</p>
+  </td>
+
+  <td class="py-2">
+    <h6 class="m-0 fw-500 product-text-size">
+      {{ $orders->item_name }}<br>
+      @php
+          $addons_name = explode('| ', $orders->addons_name);
+          $extras_name = explode('| ', $orders->extras_name);
+      @endphp
+      @if ($orders->addons_id != '')
+        @foreach ($addons_name as $key => $val)
+          <span class="text-muted">{{ trim($addons_name[$key]) }}</span><br>
+        @endforeach
+      @endif
+      @if ($orders->extras_id != '')
+        @foreach ($extras_name as $key => $val)
+          <span class="text-muted">{{ trim($extras_name[$key]) }}</span><br>
+        @endforeach
+      @endif
+    </h6>
+  </td>
+
+  <!-- 3. oszlop: DB (mennyiség) -->
+  <td class="py-2 text-end">
+    <p class="m-0 text-dark product-text-size">{{ $orders->qty }}</p>
+  </td>
+
+  <!-- 4. oszlop: ÁR (egységár + extrák összege) -->
+  <td class="py-2 text-end">
+    <p class="m-0 text-dark product-text-size">
+      {{ helper::currency_format($orders->item_price) }}
+      @if ($orders->addons_total_price != 0 || $orders->extras_total_price != 0)
+        <br><small class="text-muted">+
+          {{ helper::currency_format($orders->addons_total_price + $orders->extras_total_price) }}</small>
+      @endif
+    </p>
+  </td>
+</tr>
+
+
                     @endforeach
                 </tbody>
-                <tfoot>
-                    <tr class="underline-3">
-                        <td class="py-2" colspan="3">
-                            <h6 class="line-1 m-0 fw-600 product-text-size">{{ trans('labels.subtotal') }}</h6>
-                        </td>
-                        <td class="py-2 text-end">
-                            <div class=" product-text-size d-flex align-items-center justify-content-center">
-                                <p class="m-0 text-dark">{{ $qty }}</p>
-                            </div>
-                        </td>
-                        <td class="py-2 pe-0 text-end">
-                            <p class="text-dark line-1 fw-500 m-0  product-text-size">
-                                {{ helper::currency_format($order_total) }}
-                            </p>
-                        </td>
-                    </tr>
-                </tfoot>
+             <tfoot>
+  <tr class="underline-3">
+    <td class="py-2" colspan="2">
+      <h6 class="line-1 m-0 fw-600 product-text-size">{{ trans('labels.subtotal') }}</h6>
+    </td>
+    <td class="py-2 text-end">
+      <p class="m-0 text-dark product-text-size">{{ $qty }}</p>
+    </td>
+    <td class="py-2 text-end">
+      <p class="m-0 text-dark product-text-size">{{ helper::currency_format($order_total) }}</p>
+    </td>
+  </tr>
+</tfoot>
+
             </table>
             <div class="col-12 d-flex mb-2 justify-content-end">
                 <div class="col-7">

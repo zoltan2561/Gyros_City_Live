@@ -62,8 +62,9 @@ Route::post('password/reset', [ResetPasswordController::class, 'reset'])->name('
 //noti email alert cucc
 Route::middleware(['auth']) //
 ->post('admin/order-unprocessed-alert', [NotificationController::class, 'unprocessedAlert'])
-    ->name('admin.unprocessed.order.alert');
-
+    ->name('admin.unprocessed.order.alert')
+	->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class])
+	->withoutMiddleware(['auth']);
 //Delivery hivasa
 
 Route::post('/admin/toggle-delivery', [SettingController::class, 'toggleDelivery'])

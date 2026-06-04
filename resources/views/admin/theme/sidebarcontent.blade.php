@@ -6,14 +6,7 @@
             <i class="fa-solid fa-house-user"></i><span class="nav-text ">{{ trans('labels.dashboard') }}</span>
         </a>
     </li>
-    <li class="nav-item mb-2 fs-7 {{ Auth::user()->type != 1 ? (in_array('23', $modules) == true ? '' : 'd-none') : '' }}"
-        id="23">
-        <a class="nav-link rounded d-flex {{ request()->is('admin/systemaddons*') ? 'active' : '' }}"
-            href="{{ URL::to('/admin/systemaddons') }}" aria-expanded="false">
-            <i class="fa fa-puzzle-piece"></i><span class="nav-text d-flex justify-content-between w-100">{{ trans('labels.addons_manager') }}</span>
-            <span class="rainbowText float-right mr-1 mt-1">Premium</span>
-        </a>
-    </li>
+
     @if (@helper::checkaddons('pos'))
         @if (Auth::user()->type != 1)
             @if (in_array('25', $modules))

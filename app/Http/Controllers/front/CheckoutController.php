@@ -84,7 +84,8 @@ class CheckoutController extends Controller
 
         $taxArr['tax'] = $tax_name;
         $taxArr['rate'] = $tax_price;
-
+        
+       
 
 
         $shippingarea = Shippingarea::orderBy('reorder_id')->get();
@@ -532,7 +533,7 @@ class CheckoutController extends Controller
                 if (Auth::check()) {
                     $user = Auth::user();
 
-                    // grand_total a rendelésen (HUF).
+                    // grand_total a rendelésen (HUF). 
                     //TODO: élesre
                     $grandTotalFt = (int) round($order->grand_total);
                     $bonus = (int) (floor($grandTotalFt / 1000) * 0);

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\front;
 
 use App\Http\Controllers\Controller;
+use App\Services\DeliveryMinimum;
 use App\Helpers\helper;
 use App\Helpers\whatsapp_helper;
 use Illuminate\Http\Request;
@@ -281,50 +282,10 @@ class CheckoutController extends Controller
             $transaction_id = $transaction_id;
 
 
-            /* === MIN. RENDELÉSI ÖSSZEG CHECK (csak kiszállításnál, VÉGÖSSZEGBŐL) ===== */
-            if ((int)$order_type === 1) {
-                // kis helper a "340.00HUF", "5 000", "5,000.00" stb. parse-olására
-                $toFloat = function($val): float {
-                    if (is_null($val)) return 0.0;
-                    if (is_numeric($val)) return (float)$val;
-                    $s = preg_replace('/[^\d.,]/u', '', (string)$val);
-                    if ($s === '' || $s === null) return 0.0;
-                    if (strpos($s, ',') !== false && strpos($s, '.') === false) {
-                        $s = str_replace(',', '.', $s);   // "5 000,00" -> "5000.00"
-                    } else {
-                        $s = str_replace(',', '', $s);    // "5,000.00" -> "5000.00"
-                    }
-                    return is_numeric($s) ? (float)$s : 0.0;
-                };
-
-                // 1) Szállítási díj → zóna → min rendelés
-                $dc = (int) round($toFloat($delivery_charge));
-                 if ($dc <= 560) {
-                    $minRequired = 0; // vagy amit szeretnél
-                } elseif ($dc <= 760) {
-                    $minRequired = 5900;
-                } elseif ($dc <= 2200) {
-                    $minRequired = 7900;
-                } else {
-                    $minRequired = 11900;
-                }
-
-                // 2) VÉGÖSSZEG (grand_total) a limithez
-                //$gt = (int) round($toFloat($grand_total));             // pl. 5000
-                // Ha inkább a szállítás NÉLKÜLI összeggel hasonlítanál, ezt használd:
-                 $gt = max(0, (int) round($toFloat($grand_total)) - (int) round($toFloat($delivery_charge)));
-
-                if ($gt < $minRequired) {
-                    $missing = $minRequired - $gt;
-                    return response()->json([
-                        'status'  => 0,
-                        'code'    => 'min_order_not_met',
-                        'message' => 'Nincs meg a minimum rendelési összeg: '.$minRequired.' Ft. '
-                            . 'Jelenlegi (végösszeg): '.$gt.' Ft. Hiányzik: '.$missing.' Ft.',
-                    ], 200);
-                }
+            $minimumError = DeliveryMinimum::violation($order_type, $grand_total, $delivery_charge);
+            if ($minimumError !== null) {
+                return response()->json(array_merge(['status' => 0], $minimumError), 200);
             }
-            /* ======================================================================== */
 
 
 

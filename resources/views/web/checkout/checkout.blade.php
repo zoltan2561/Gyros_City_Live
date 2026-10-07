@@ -870,12 +870,13 @@
                 const dc = Math.round(toFloat(delivery_charge));
                 const gt = Math.max(0, Math.round(toFloat(grand_total)) - dc);
 
-                const minRequired = (dc <= 1100) ? 2500 : ((dc <= 1900) ? 4900 : 5900);
+                const bands = @json(\App\Services\DeliveryMinimum::BANDS);
+                const minRequired = bands.find(band => band.max_charge === null || dc <= band.max_charge).minimum;
 
                 if (gt < minRequired){
                     const missing = minRequired - gt;
                     ui.error('Nincs meg a minimum rendelési összeg: ' + minRequired + ' Ft. '
-                        + 'Jelenlegi (végösszeg): ' + gt + ' Ft. Hiányzik: ' + missing + ' Ft.');
+                        + 'Jelenlegi (szállítás nélkül): ' + gt + ' Ft. Hiányzik: ' + missing + ' Ft.');
                     return false;
                 }
                 return true;

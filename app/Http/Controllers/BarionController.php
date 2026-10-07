@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\BarionService;
+use App\Services\DeliveryMinimum;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -37,6 +38,20 @@ class BarionController extends Controller
             }
             if ($cartdata->count() <= 0) {
                 return response()->json(['ok' => false, 'msg' => trans('messages.cart_is_empty1')], 200);
+            }
+
+            // Reject before creating a payment or a draft, using the same rule as placeorder.
+            $minimumError = DeliveryMinimum::violation(
+                $request->input('order_type', 1),
+                $request->input('grand_total', '0'),
+                $request->input('delivery_charge', '0')
+            );
+            if ($minimumError !== null) {
+                return response()->json([
+                    'ok' => false,
+                    'code' => $minimumError['code'],
+                    'msg' => $minimumError['message'],
+                ], 200);
             }
 
             // draft (amit a callback-ben véglegesítünk)

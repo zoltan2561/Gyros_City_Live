@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\DB;
 use App\Models\Cart;
+use App\Models\Shippingarea;
 use App\Models\Order;
 use App\Models\OrderDetails;
 use App\Models\CustomStatus;
@@ -40,11 +41,31 @@ class BarionController extends Controller
                 return response()->json(['ok' => false, 'msg' => trans('messages.cart_is_empty1')], 200);
             }
 
+            $orderType = (int) $request->input('order_type', 1);
+            if (!in_array($orderType, [1, 2], true)) {
+                return response()->json(['ok' => false, 'code' => 'invalid_order_type', 'msg' => 'Válassz átvételi módot.'], 200);
+            }
+
+            // The posted hidden charge can be stale. Resolve the selected area on the server.
+            $deliveryCharge = 0;
+            if ($orderType === 1) {
+                $areaId = $request->input('delivery_area');
+                $area = ctype_digit((string) $areaId) ? Shippingarea::find($areaId) : null;
+                if (!$area) {
+                    return response()->json([
+                        'ok' => false,
+                        'code' => 'invalid_delivery_area',
+                        'msg' => 'Válaszd ki a szállítási területet. Ha már kiválasztottad, frissítsd az oldalt és próbáld újra.',
+                    ], 200);
+                }
+                $deliveryCharge = $area->delivery_charge;
+            }
+
             // Reject before creating a payment or a draft, using the same rule as placeorder.
             $minimumError = DeliveryMinimum::violation(
-                $request->input('order_type', 1),
+                $orderType,
                 $request->input('grand_total', '0'),
-                $request->input('delivery_charge', '0')
+                $deliveryCharge
             );
             if ($minimumError !== null) {
                 return response()->json([
@@ -56,12 +77,12 @@ class BarionController extends Controller
 
             // draft (amit a callback-ben véglegesítünk)
             $draft = [
-                'order_type'       => (int)$request->input('order_type', 1),
+                'order_type'       => $orderType,
                 'transaction_type' => 16, // Barion
                 'grand_total'      => (string)$request->input('grand_total','0'),
                 'tax'              => (string)$request->input('tax',''),
                 'tax_name'         => (string)$request->input('tax_name',''),
-                'delivery_charge'  => (string)$request->input('delivery_charge','0'),
+                'delivery_charge'  => (string)$deliveryCharge,
 
                 'name'   => trim(($request->input('first_name','').' '.$request->input('last_name',''))),
                 'email'  => (string)$request->input('email',''),

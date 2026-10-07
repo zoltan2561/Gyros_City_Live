@@ -440,7 +440,7 @@
                 <input type="hidden" name="tax" id="tax" value="{{ implode('|', $taxArr['rate']) }}">
                 <input type="hidden" name="tax_name" id="tax_name" value="{{ implode('|', $taxArr['tax']) }}">
                 <input type="hidden" name="shipping_charge" id="shipping_charge" value="">
-                <input type="hidden" name="delivery_charge" id="delivery_charge" value="{{ $delivery_charge }}">
+                <input type="hidden" name="delivery_charge" id="delivery_charge_value" value="{{ $delivery_charge }}">
                 <input type="hidden" name="user_name" id="user_name" value="{{ @Auth::user()->name }}">
                 <input type="hidden" name="user_email" id="user_email" value="{{ @Auth::user()->email }}">
                 <input type="hidden" name="user_mobile" id="user_mobile" value="{{ @Auth::user()->mobile }}">
@@ -771,6 +771,16 @@
             const el  = id => document.getElementById(id);
             const val = id => document.querySelector('input#'+id)?.value ?? el(id)?.value ?? '';
 
+            function selectedOrderType(){
+                return document.querySelector('input[name="order_type"]:checked')?.value || val('order_type') || '1';
+            }
+
+            function selectedDeliveryCharge(){
+                if (selectedOrderType() !== '1') return 0;
+                const area = el('delivery_area');
+                return toFloat(area?.options[area.selectedIndex]?.dataset.charge ?? val('shipping_charge'));
+            }
+
             function selectedPaymentType(){
                 const r = document.querySelector('input[name="transaction_type"]:checked')
                     ||  document.querySelector('input[name="payment_type"]:checked')
@@ -822,7 +832,7 @@
                 }
                 if (!mobile){ ui.error(el('mobile_message')?.value || 'Telefon kötelező'); el('mobile')?.focus(); return false; }
 
-                const orderType = (el('order_type')?.value || '1');
+                const orderType = selectedOrderType();
                 if (orderType === '1'){ // kiszállítás
                     const address = el('new_address')?.value?.trim() || '';
                     const city    = el('new_city')?.value?.trim()    || '';
@@ -862,12 +872,11 @@
 
             // Minimum összeg (Barionhoz – 16)
             function validateMinTotalFor16(){
-                const orderType = (el('order_type')?.value || '1');
+                const orderType = selectedOrderType();
                 if (orderType !== '1') return true; // csak kiszállításnál
 
                 const grand_total     = val('grand_total');
-                const delivery_charge = val('delivery_charge');
-                const dc = Math.round(toFloat(delivery_charge));
+                const dc = Math.round(selectedDeliveryCharge());
                 const gt = Math.max(0, Math.round(toFloat(grand_total)) - dc);
 
                 const bands = @json(\App\Services\DeliveryMinimum::BANDS);
@@ -906,8 +915,9 @@
                     grand_total:     val('grand_total'),
                     tax:             val('tax'),
                     tax_name:        val('tax_name'),
-                    order_type:      el('order_type')?.value ?? '',
-                    delivery_charge: val('delivery_charge'),
+                    order_type:      selectedOrderType(),
+                    delivery_area:   val('delivery_area'),
+                    delivery_charge: selectedDeliveryCharge(),
                     buynow:          val('buynow'),
 
                     email:      el('email')?.value ?? '',

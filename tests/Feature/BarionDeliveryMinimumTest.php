@@ -48,6 +48,13 @@ class BarionDeliveryMinimumTest extends TestCase
             $table->text('draft_json')->nullable();
             $table->timestamps();
         });
+        Schema::create('shipping_area', function (Blueprint $table) {
+            $table->id();
+            $table->decimal('delivery_charge', 10, 2);
+        });
+        foreach ([560, 760, 2200, 2400] as $charge) {
+            DB::table('shipping_area')->insert(['id' => $charge, 'delivery_charge' => $charge]);
+        }
     }
 
     /** @dataProvider underMinimumOrders */
@@ -60,7 +67,9 @@ class BarionDeliveryMinimumTest extends TestCase
 
         $this->postJson('/barion/indit', [
             'order_type' => 1,
-            'delivery_charge' => $charge,
+            'delivery_area' => $charge,
+            // Reproduce the real checkout: this hidden input used to remain at zero.
+            'delivery_charge' => 0,
             'grand_total' => $total,
             'buynow' => $buynow,
         ])->assertOk()->assertJson([
@@ -101,7 +110,8 @@ class BarionDeliveryMinimumTest extends TestCase
 
         $this->postJson('/barion/indit', [
             'order_type' => $type,
-            'delivery_charge' => $charge,
+            'delivery_area' => $type === 1 ? $charge : null,
+            'delivery_charge' => 0,
             'grand_total' => $total,
         ])->assertOk()->assertJson([
             'ok' => true, 'redirect' => 'https://example.test/pay',
@@ -109,7 +119,33 @@ class BarionDeliveryMinimumTest extends TestCase
 
         $this->assertSame(1, BarionTransaction::count());
         $this->assertSame((string) $total, BarionTransaction::first()->draft_json['grand_total']);
+        $this->assertSame((float) $charge, (float) BarionTransaction::first()->draft_json['delivery_charge']);
         $this->assertSame(1, Cart::count());
+    }
+
+    /** @dataProvider invalidAreas */
+    public function test_missing_or_invalid_area_cannot_start_payment($area): void
+    {
+        $this->seedCart(false, 0, 1000);
+        $gateway = Mockery::mock(BarionService::class);
+        $gateway->shouldNotReceive('startPayment');
+        $this->app->bind(BarionService::class, fn () => $gateway);
+
+        $this->postJson('/barion/indit', [
+            'order_type' => 1,
+            'delivery_area' => $area,
+            'delivery_charge' => 0,
+            'grand_total' => 1000,
+        ])->assertOk()->assertJson([
+            'ok' => false, 'code' => 'invalid_delivery_area',
+        ])->assertJsonMissingPath('redirect');
+
+        $this->assertSame(0, BarionTransaction::count());
+    }
+
+    public static function invalidAreas(): array
+    {
+        return [[null], [''], [99999], ['invalid'], ['760x']];
     }
 
     public static function acceptedOrders(): array

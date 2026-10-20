@@ -1,4 +1,4 @@
-<table class="table table-striped table-bordered zero-configuration">
+<table class="table table-striped table-bordered {{ ($ordersPaginated ?? false) ? 'orders-paginated' : 'zero-configuration' }}">
     <thead>
         <tr>
             <th>#</th>
@@ -15,7 +15,7 @@
     <tbody>
         @foreach ($getorders as $key => $orderdata)
             <tr id="dataid{{ $orderdata->id }}">
-                <td>{{ ++$key }}</td>
+                <td>{{ ($ordersPaginated ?? false) ? $getorders->firstItem() + $key : $key + 1 }}</td>
                 <td>
                     <div class="d-flex justify-content-between">
                         <a href="{{ URL::to('admin/invoice/' . $orderdata->id) }}"
@@ -49,7 +49,7 @@
                             {{ trans('labels.cash') }}
                         @endif
                     @else
-                        {{ helper::getpayment($orderdata->transaction_type) }}
+                        {{ isset($orderPaymentNames) ? ($orderPaymentNames[$orderdata->transaction_type] ?? '—') : helper::getpayment($orderdata->transaction_type) }}
                     @endif
                     <br>
                     @if ($orderdata->payment_status == 1)
@@ -62,18 +62,23 @@
                 </td>
                 <td>{{ helper::currency_format($orderdata->grand_total) }}</td>
                 <td>
+                    @php
+                        $orderStatusName = isset($orderStatusNames)
+                            ? ($orderStatusNames[$orderdata->status . ':' . $orderdata->status_type . ':' . $orderdata->order_type] ?? '—')
+                            : (helper::gettype($orderdata->status, $orderdata->status_type, $orderdata->order_type)->name ?? '—');
+                    @endphp
                     @if ($orderdata->status_type == 1)
                         <small
-                            class="text-order-placed">{{ helper::gettype($orderdata->status, $orderdata->status_type, $orderdata->order_type)->name }}</small>
+                            class="text-order-placed">{{ $orderStatusName }}</small>
                     @elseif ($orderdata->status_type == 2)
                         <small
-                            class="text-order-waitingpickup">{{ helper::gettype($orderdata->status, $orderdata->status_type, $orderdata->order_type)->name }}</small>
+                            class="text-order-waitingpickup">{{ $orderStatusName }}</small>
                     @elseif ($orderdata->status_type == 3)
                         <small
-                            class="text-order-completed">{{ helper::gettype($orderdata->status, $orderdata->status_type, $orderdata->order_type)->name }}</small>
+                            class="text-order-completed">{{ $orderStatusName }}</small>
                     @elseif ($orderdata->status_type == 4)
                         <small
-                            class="text-order-cancelled">{{ helper::gettype($orderdata->status, $orderdata->status_type, $orderdata->order_type)->name }}</small>
+                            class="text-order-cancelled">{{ $orderStatusName }}</small>
                     @endif
                 </td>
                 <td>

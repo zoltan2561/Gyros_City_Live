@@ -22,3 +22,8 @@
 @media(max-width:575px){.city-site header .navbar-brand .city-brand-logo{height:58px;width:82px}}
 @media(max-width:575px){.city-site .cookie-consent{bottom:82px!important}}
 @media(prefers-reduced-motion:reduce){.city-site *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+.city-catalog-mobile{background:#1d1b18;border-top:1px solid #ffffff14}
+.city-catalog-mobile>.container{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.city-catalog-mobile .city-catalog-link{display:flex;align-items:center;justify-content:center;min-height:48px;padding:10px 6px;font-size:13px;font-weight:700;color:#eee7db;border-bottom:3px solid transparent}
+.city-catalog-mobile .city-catalog-link:hover,.city-catalog-mobile .city-catalog-link.active{color:var(--city-yellow);border-bottom-color:var(--city-yellow)}
+@media(max-width:991px){.city-site .city-cart-feedback{top:calc(160px + env(safe-area-inset-top,0px))}}

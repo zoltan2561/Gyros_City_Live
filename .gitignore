@@ -49,6 +49,8 @@ yarn-error.log*
 Thumbs.db
 
 # Server backups and exported data
+/LIVE_source/
+/LIVE_SOURCE/
 *.bak
 *.backup
 *.orig

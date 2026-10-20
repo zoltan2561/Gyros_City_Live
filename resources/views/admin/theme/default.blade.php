@@ -128,8 +128,6 @@
             </div>
         </div>
         <!-- ASSIGN-DRIVER-MODAL-END -->
-        <footer class="py-3 text-center bg-white fixed-bottom border-top">{{ helper::appdata()->copyright }}
-        </footer>
     </div>
 </main>
 @include('admin.theme.script')

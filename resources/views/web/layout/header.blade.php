@@ -1,4 +1,10 @@
 <!-- header section start -->
+@php
+    $headerCategory = $categorydata->slug ?? $getitemdata->category_info->slug ?? request('category');
+    $catalogSection = request()->is('categories', 'menu', 'item-*')
+        ? ($headerCategory === 'italok' ? 'drinks' : ($headerCategory === 'menuk' ? 'combos' : 'food'))
+        : null;
+@endphp
 <header>
 
     <div class="header-bar" id="header1">
@@ -38,11 +44,7 @@
                     <div class="navbar-nav mx-auto">
                         <a class="nav-link px-3 {{ request()->is('/') ? 'active' : '' }}"
                            href="{{ route('home') }}">{{ trans('labels.home') }}</a>
-                        <a class="nav-link px-3 {{ request()->is('categories', 'menu', 'item-*') ? 'active' : '' }}"
-                           href="{{ route('categories') }}">{{ trans('labels.menu') }}</a>
-
-                        <a class="nav-link px-3 {{ request()->is('faq') ? 'active' : '' }}"
-                           href="{{ route('faq') }}">{{ trans('labels.faq') }}</a>
+                        @include('web.city.catalog-links', ['catalogLinkClass' => 'nav-link px-3'])
                         <a class="nav-link px-3 {{ request()->is('contactus') ? 'active' : '' }}"
                            href="{{ route('contact-us') }} ">{{ trans('labels.help_contact_us') }}</a>
 
@@ -107,6 +109,11 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </nav>
+        <nav class="city-catalog-mobile d-lg-none" aria-label="Étlap, itallap és menük">
+            <div class="container">
+                @include('web.city.catalog-links', ['catalogLinkClass' => ''])
             </div>
         </nav>
     </div>

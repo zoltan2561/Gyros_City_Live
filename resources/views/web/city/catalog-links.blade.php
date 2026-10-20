@@ -1,0 +1,3 @@
+<a href="{{ route('categories') }}" class="city-catalog-link {{ $catalogLinkClass }} {{ $catalogSection === 'food' ? 'active' : '' }}" @if ($catalogSection === 'food') aria-current="page" @endif>Étlap</a>
+<a href="{{ route('menu', ['category' => 'italok']) }}" class="city-catalog-link {{ $catalogLinkClass }} {{ $catalogSection === 'drinks' ? 'active' : '' }}" @if ($catalogSection === 'drinks') aria-current="page" @endif>Itallap</a>
+<a href="{{ route('menu', ['category' => 'menuk']) }}" class="city-catalog-link {{ $catalogLinkClass }} {{ $catalogSection === 'combos' ? 'active' : '' }}" @if ($catalogSection === 'combos') aria-current="page" @endif>Menü</a>

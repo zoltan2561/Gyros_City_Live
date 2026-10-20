@@ -274,7 +274,7 @@
                                             $meaning = trim($matches[2]);
 
                                             return sprintf(
-                                                '<span class="foreign-term" tabindex="0" role="button" data-bs-toggle="tooltip" data-bs-trigger="hover focus click" title="%s">%s</span>',
+                                                '<button type="button" class="foreign-term" data-term-description="%s" aria-haspopup="dialog" aria-controls="ingredientMeaningModal">%s</button>',
                                                 e($meaning),
                                                 e($term),
                                             );
@@ -577,15 +577,39 @@
     @endif
     <!-- RELATED PRODUCTS Section End Here -->
     @include('web.subscribeform')
+    <div class="modal fade" id="ingredientMeaningModal" tabindex="-1" aria-labelledby="ingredientMeaningTitle" aria-describedby="ingredientMeaningText" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title fs-5" id="ingredientMeaningTitle"></h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Magyarázat bezárása"></button>
+                </div>
+                <div class="modal-body"><p id="ingredientMeaningText" class="mb-0"></p></div>
+                <div class="modal-footer"><button type="button" class="btn btn-primary" data-bs-dismiss="modal">Bezárás</button></div>
+            </div>
+        </div>
+    </div>
 @endsection
 @section('scripts')
     <style>
         .item-description .foreign-term {
+            display: inline;
+            padding: 2px 0;
+            border: 0;
+            background: transparent;
+            color: inherit;
+            font: inherit;
             text-decoration: underline dotted;
             text-underline-offset: 2px;
-            cursor: help;
+            cursor: pointer;
             font-weight: 600;
         }
+        .item-description .foreign-term:focus-visible { outline: 2px solid #c00051; outline-offset: 3px; }
+        #ingredientMeaningModal .modal-header { gap: 12px; }
+        #ingredientMeaningModal .modal-title { overflow-wrap: anywhere; }
+        #ingredientMeaningModal .btn-close { min-width: 44px; min-height: 44px; flex-shrink: 0; }
+        #ingredientMeaningModal .modal-footer .btn { min-height: 44px; }
+        #ingredientMeaningText { white-space: pre-line; overflow-wrap: anywhere; line-height: 1.65; }
     </style>
 
     <script>
@@ -599,10 +623,20 @@
             $('#reviewModal').modal('show');
         });
 
-        if (typeof bootstrap !== "undefined" && typeof bootstrap.Tooltip !== "undefined") {
-            document.querySelectorAll('.foreign-term[data-bs-toggle="tooltip"]').forEach(function(element) {
-                bootstrap.Tooltip.getOrCreateInstance(element);
+        (() => {
+            const modal = document.getElementById('ingredientMeaningModal');
+            // Existing modal handling blurs .wrapper; dialogs must sit outside it.
+            document.body.append(modal);
+            let trigger;
+            document.querySelectorAll('.foreign-term[data-term-description]').forEach(element => {
+                element.addEventListener('click', () => {
+                    trigger = element;
+                    document.getElementById('ingredientMeaningTitle').textContent = element.textContent;
+                    document.getElementById('ingredientMeaningText').textContent = element.dataset.termDescription;
+                    bootstrap.Modal.getOrCreateInstance(modal).show();
+                });
             });
-        }
+            modal.addEventListener('hidden.bs.modal', () => trigger?.focus({preventScroll: true}));
+        })();
     </script>
 @endsection

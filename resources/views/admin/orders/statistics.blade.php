@@ -10,7 +10,7 @@
                         </span>
                         <span class="text-end">
                             <p class="fw-500 mb-1">{{ trans('labels.total_orders') }}</p>
-                            <h4>{{ count($getorders) }}</h4>
+                            <h4>{{ $totalorders ?? count($getorders) }}</h4>
                         </span>
                     </div>
                 </div>

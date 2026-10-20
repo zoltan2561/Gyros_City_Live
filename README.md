@@ -9,6 +9,12 @@
 
 ## Gyros City frissítés – 2026. október 20.
 
+A pizzaleírások idegen összetevőneveinek magyarázata külön, görgethető ablakban nyílik meg. A korábbi, hover/fókusz/kattintás miatt beragadó tooltip helyett natív gomb indítja; bezárható a két bezárógombbal, az ablakon kívülre kattintva és Escape-pel, majd visszaadja a fókuszt az összetevőnek. A régi oldalelhomályosítás miatt az ablak közvetlenül a body alá kerül.
+
+Az admin rendeléslistája szerveroldalon lapoz, oldalanként 10 rendelést hoz, legújabbal kezdve. A rendelési számra, névre és telefonszámra keresés a teljes, státusz szerint szűrt listában működik; lapozáskor a keresés és a státusz megmarad. Az összesítő számok a teljes online rendelésállományt mutatják. Az oldal nem használ második, csak az aktuális tíz sorban kereső DataTable-lapozást; a kimutatás/export a meglévő kimutatásoldalról érhető el. A státusz- és fizetésimód-neveket egyszerre olvassa be, a listában nem tölt felesleges vevő-/futárkapcsolatokat. Nem igényel migrációt.
+
+Ugyanazzal a helyi, 1098 online rendelést tartalmazó adatbázissal a teljes adminnézet CLI-s előállítása a módosítás előtt 5328 ms / 8838 lekérdezés / 2 357 851 bájt volt. Az első javított mérés 349 ms; a végleges, a közös futárválasztóhoz szükséges névlistát is megtartó változat meleg nézetcache mellett 103 ms / 113 lekérdezés / 79 759 bájt. Ezek helyi szerveroldali mérések, nem éles válaszidőgaranciák. Öt új izolált teszt ellenőrzi a tízes korlátot, rendezést, lapozást, teljes keresést, státuszszűrést és összesítőket. A teljes PHP-csomag 107 tesztje, 474 ellenőrzése sikeres; az összeállító 6 JavaScript-tesztje is sikeres. Böngészőben az adminlapozás, régi rendelés keresése, üres találat és a magyarázat bezárása/újranyitása is ellenőrizve; az admin 360, 390 és 1440 px-en nem okoz oldalszintű vízszintes túllógást. A böngészős rendelési tesztadatok kizárólag az elkülönített QA-adatbázisba kerültek.
+
 Az étlap kategóriaoldala és kategóriaválasztója külön elrendezést kapott (`public/city/menu.css`, `menu.js`): asztali kategóriasáv, mobilon vízszintesen lapozható kategóriák, kategórián belüli névkeresés és tömörebb ételkártyák. A kiválasztott mobil kategória automatikusan látható helyre kerül.
 
 A termékoldal és a felugró összeállító közös nézetet használ (`web/city/builder.blade.php`, `public/city/builder.css`, `builder.js`). Mobilon teljes képernyős ablak, teljes sorban érinthető választók, előre rendezett kötelező csoportok, választási korlátok és élő, extrákat/darabszámot is tartalmazó ár segíti a rendelést. Az összeg és a rendelőgomb mobilon látható marad. Kosárba helyezéskor nincs oldal-újratöltés; a visszajelzésből megnyitható a kosár. Hibánál az összeállítás megmarad, az ismételt koppintás nem indít párhuzamos kosárkérést. A termékképek natívan lapozhatók, a mobil mezők 16 px-esek, az alsó navigáció és a rendelősáv figyelembe veszi a kijelző biztonsági sávját. Ezek az eszközök sem igényelnek Mix-buildet.
@@ -55,6 +61,26 @@ Visszaállításkor a két új tábla megtartható; a `down()` törölné a hír
 
 Az átvett 13 funkcióteszt izolált SQLite-adatbázissal és helyettesített levelezővel fut. A teljes adminfelület, mentés, nem mentett módosítás miatti küldéstiltás, próbalevél, kötegelt küldés, frissítés utáni állapot és leiratkozás MariaDB QA-adatbázison, mesterséges címekkel és igazoltan `log` levelezővel is ellenőrizve. Az adminoldalak 360, 390 és 1440 px-en nem lógnak túl. A normál helyi adatbázisban nem jött létre hírlevél vagy kézbesítés; valódi SMTP-kézbesítés nem lett tesztelve.
 
+### Szombati élesítés előkészítése – LIVE_source mentés
+
+A 2026. október 20-án átadott mentésben 63 adatbázistábla van. A helyi adatbázisban ezek oszlopnevei egyeznek a mentéssel; ez nem teljes típus-, index-, adattartalom- vagy éles szerverellenőrzés. A mentésből hiányzó új táblák: `gift_promotions`, `newsletters`, `newsletter_deliveries`. A két új migráció csak ezeket hozza létre; visszavonásuk viszont törölné az új funkciók adatait.
+
+A helyi adatbázis 166 külön termékképfájlt hivatkozik. Ebből 84 hiányzott helyben; ezeket az eredeti nevükön, meglévő fájl felülírása nélkül átmásoltuk a mentésből. Utána mind a 166 megtalálható, és tartalmuk SHA-256 alapján egyezik a mentéssel. Adatbázisrekordot nem módosítottunk.
+
+A képfájlok tényleges helye `storage/app/public/admin-assets/images/item/`; a régi helper és a feltöltés közvetlenül az `ASSETSPATHURL` útvonalat használja. Ezért önmagában a szokásos `public/storage` symlink létrehozása nem elég. A teljes szükséges `storage` tartalomnak, a munkameneteknek, a `storage/installed` jelzőnek és az eredeti képek URL-jeinek is elérhetőnek kell maradniuk az új kiadásból. Az éles `.env`, az `APP_KEY`, az adatbázis-kapcsolat és a session-beállítások megőrzendők.
+
+Javasolt kiadási sorrend (előkészítés, még nem végrehajtott élesítés):
+
+1. A Hostinger tényleges telepítési módját és célkönyvtárát ellenőrizni kell. Külön kiadási mappában készüljön el a rögzített Git-commit, a `composer.lock` szerinti függőségekkel. Az automatikus deploy legyen kikapcsolva a jóváhagyott időpontig. A `LIVE_source`, az SQL, a helyi QA-segédek és a tesztadatok nem kiadási fájlok.
+2. A feltöltések és a futás közben változó állományok tartós, deploy által nem cserélt tárhelyet kapjanak. A megosztott storage használatát, jogosultságait, valamint a régi és új képek HTTP-elérését előre próbakiadással kell igazolni. Egy `.gitignore` szabály önmagában nem garantálja, hogy a tárhely deployja megőrzi a fájlokat. A [Hostinger hivatalos útmutatója](https://www.hostinger.com/support/1583302-how-to-deploy-a-git-repository-in-hostinger/) célkönyvtári felülírásra is figyelmeztet repóváltáskor; ebből nem következik általános feltöltésmegőrzési garancia.
+3. Élesítés előtt külön próba friss adatbázismásolattal, valódi levélküldés és élő fizetés nélkül: étlap és képek, belépés utáni kosár, területi díj, rendelési dátum, ajándékválasztás és admin rendelésnézet. A jelenlegi teljes `route:list` hibája miatt ne kerüljön ellenőrizetlen `route:cache` a deployba. A kód sok helyen közvetlen `env()`-hívást használ, ezért `config:cache` sem kapcsolható be külön kompatibilitási próba nélkül.
+4. Az éjszakai váltás előtt ne legyen aktív rendelés vagy függő kártyás fizetés. Rövid rendelési szünet alatt friss, visszaállítható adatbázis- és fájlmentés kell a webgyökéren kívül. A mostani SQL kizárólag összehasonlítási/próba alap: élesbe visszatölteni tilos, mert az azóta érkezett adatok elvesznének. Az admin-, háttérfolyamat- és fizetési írásokat is figyelembe kell venni a mentés konzisztenciájához.
+5. Csak a két megnevezett új migráció fusson az aktuális éles adatbázison, előzetes tábla- és migrációállapot-ellenőrzés után; általános `migrate`, `migrate:fresh`, `db:wipe`, seeder vagy dumpimport ne legyen automatikus deploylépés. Ezután az előre elkészített kódra váltás és a nézetcache frissítése következhet. A pontos váltási parancs a Hostinger könyvtár- és symlink-lehetőségeinek ellenőrzése után rögzíthető.
+6. Újranyitás előtt HTTP-ellenőrzés mobilon és asztali méretben, admin belépés, képek és rendelési folyamat, valamint a mentés előtti/utáni rendelésazonosítók és állapotok ellenőrzése kell. A karbantartási middleware jelenleg minden útvonalat tilt, így a Barion `/barion/callback` értesítést is; a függő tranzakciók lezárását és a callback működését a váltás előtt rendezni kell. Teljes karbantartási mód aktív fizetés alatt nem kapcsolható be ellenőrizetlenül.
+7. Hibánál az előző kódra kell visszaváltani, a működő adatbázist és feltöltéseket megtartva. Az új táblák maradjanak meg. Újranyitás után beérkezett rendeléseket egy korábbi adatbázismentés visszatöltése elveszítene; ilyen visszaállítás külön egyeztetést igényel.
+
+Cél a rövid váltási szünet; pontos időt és adatvesztés nélküli eredményt csak a tárhelyen végzett próba, mentés-visszaállítási ellenőrzés és a fizetési folyamat igazolása után lehet vállalni. Hostinger-fiókhoz ebben az ellenőrzésben nem kapcsolódtunk, éles módosítás nem történt.
+
 ### Az étlap- és ajándékfrissítés telepítése
 
 Az új migráció csak a `gift_promotions` táblát hozza létre; meglévő táblákhoz és rendelésekhez nem nyúl. Előbb készüljön adatbázis-mentés, majd a jóváhagyott kiadás részeként futtatható:
@@ -74,7 +100,7 @@ node --check public/city/menu.js
 node --check public/city/builder.js
 ```
 
-Az új akciótábla hiányában az étlap tovább működik, az admin jelzi a telepítési igényt. Visszaállításnál az új tábla megtartható; a migráció `down()` művelete törölné a beállított akciókat, ezért azt csak külön jóváhagyással és mentés után szabad futtatni. Éles környezetben nincs automatikus akció-létrehozás, adatfeltöltés vagy publikálás. A helyi katalógusban még nincsenek pizzák és külön palacsintaízek: ezeket a valós kínálat alapján kell felvenni vagy szinkronizálni az éles kiadás előtt.
+Az új akciótábla hiányában az étlap tovább működik, az admin jelzi a telepítési igényt. Visszaállításnál az új tábla megtartható; a migráció `down()` művelete törölné a beállított akciókat, ezért azt csak külön jóváhagyással és mentés után szabad futtatni. Éles környezetben nincs automatikus akció-létrehozás, adatfeltöltés vagy publikálás. Az importált éles katalógus már tartalmaz pizzákat és desszerteket. Az akció indítása előtt a tényleges ajándéktételeket és választható ízeket az adminban kell ellenőrizni és a szabályhoz rendelni.
 
 Az akció- és fizetési funkciótesztek elkülönített, memóriabeli SQLite-kapcsolaton futnak; a migráció és a felületi próbák MariaDB-n is ellenőrizve lettek. A böngészős mintarendeléshez külön QA-adatbázis készült, valódi rendelés és fizetés nélkül. A `storage/framework/testing` alatti helyi segédek és QA-bejelentkezési router nem kiadási fájlok, nem telepíthetők éles tárhelyre.
 

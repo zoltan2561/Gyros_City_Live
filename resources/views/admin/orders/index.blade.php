@@ -1,14 +1,42 @@
 @extends('admin.theme.default')
+@section('styles')
+    <style>
+        .orders-admin .card, .orders-admin .card-body { min-width: 0; }
+        .orders-admin #orders-search { font-size: 16px; }
+        .orders-admin form[role="search"] .btn { min-height: 44px; }
+        @media (max-width: 575px) {
+            .page-topbar .navbar-header .header-item { width: 44px; padding-left: 6px; padding-right: 6px; }
+            .orders-admin .card-body { padding: 20px 16px; }
+        }
+    </style>
+@endsection
 @section('content')
     @include('admin.breadcrumb')
-    <div class="container-fluid">
+    <div class="container-fluid orders-admin">
         @include('admin.orders.statistics')
         <div class="row">
             <div class="col-12">
                 <div class="card border-0">
                     <div class="card-body">
+                        <form action="{{ url('admin/orders') }}" method="get" class="d-flex flex-wrap gap-2 mb-3" role="search">
+                            @if (request('status'))<input type="hidden" name="status" value="{{ request('status') }}">@endif
+                            <div class="flex-grow-1">
+                                <label for="orders-search" class="form-label">Keresés a teljes rendeléslistában</label>
+                                <input type="search" id="orders-search" name="q" value="{{ request('q') }}" maxlength="100" class="form-control" placeholder="Rendelésszám, név vagy telefonszám">
+                            </div>
+                            <div class="d-flex flex-wrap align-items-end gap-2">
+                                <button type="submit" class="btn btn-primary">Keresés</button>
+                                @if (request('q'))<a href="{{ url('admin/orders') . (request('status') ? '?status=' . urlencode(request('status')) : '') }}" class="btn btn-outline-secondary">Törlés</a>@endif
+                                <a href="{{ url('admin/report') }}" class="btn btn-outline-secondary">Kimutatás / export</a>
+                            </div>
+                        </form>
                         <div class="table-responsive" id="table-display">
                             @include('admin.orders.orderstable')
+                        </div>
+                        @if ($getorders->isEmpty())<p role="status" class="text-muted my-3">Nincs a keresésnek megfelelő rendelés.</p>@endif
+                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-3">
+                            <p class="text-muted mb-0">{{ $getorders->firstItem() ?? 0 }}–{{ $getorders->lastItem() ?? 0 }} / {{ $getorders->total() }} rendelés</p>
+                            {{ $getorders->onEachSide(1)->links() }}
                         </div>
                     </div>
                 </div>

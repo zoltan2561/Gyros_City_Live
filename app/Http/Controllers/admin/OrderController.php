@@ -12,13 +12,15 @@ use App\Models\Order;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\OrderDetails;
+use App\Models\Payment;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class OrderController extends Controller
 {
     public function index(Request $request)
     {
-        $getorders = Order::with('user_info', 'driver_info')->select('order.*')->where('order_from', '!=', 'pos');
+        $request->validate(['q' => ['nullable', 'string', 'max:100']]);
+        $getorders = Order::query()->where('order_from', '!=', 'pos');
 
         if ($request->has('status') && $request->status != "") {
             if ($request->status == "processing") {
@@ -31,12 +33,29 @@ class OrderController extends Controller
                 $getorders = $getorders->where('status_type', 4);
             }
         }
-        $getorders = $getorders->orderByDesc('id')->get();
-        $getdriver = User::where('type', '3')->where('is_available', 1)->orderByDesc('id')->get();
-        $totalprocessing = Order::whereIn('status_type', array(1, 2))->where('order_from', '!=', 'pos')->count();
-        $totalcompleted = Order::where('status_type', 3)->where('order_from', '!=', 'pos')->count();
-        $totalcancelled = Order::where('status_type', 4)->where('order_from', '!=', 'pos')->count();
-        return view('admin.orders.index', compact('getorders', 'getdriver', 'totalprocessing', 'totalcompleted', 'totalcancelled'));
+        $search = trim((string) $request->input('q', ''));
+        if ($search !== '') {
+            $getorders->where(function ($query) use ($search) {
+                $query->where('order_number', 'like', '%'.$search.'%')
+                    ->orWhere('name', 'like', '%'.$search.'%')
+                    ->orWhere('mobile', 'like', '%'.$search.'%');
+            });
+        }
+        $getorders = $getorders->orderByDesc('id')->paginate(10)->withQueryString();
+        $totals = Order::where('order_from', '!=', 'pos')->selectRaw('COUNT(*) AS total,
+            SUM(CASE WHEN status_type IN (1, 2) THEN 1 ELSE 0 END) AS processing,
+            SUM(CASE WHEN status_type = 3 THEN 1 ELSE 0 END) AS completed,
+            SUM(CASE WHEN status_type = 4 THEN 1 ELSE 0 END) AS cancelled')->first();
+        $totalorders = (int) $totals->total;
+        $totalprocessing = (int) $totals->processing;
+        $totalcompleted = (int) $totals->completed;
+        $totalcancelled = (int) $totals->cancelled;
+        $orderStatusNames = CustomStatus::all(['id', 'type', 'order_type', 'name'])
+            ->mapWithKeys(fn ($status) => [$status->id.':'.$status->type.':'.$status->order_type => $status->name])->all();
+        $orderPaymentNames = Payment::pluck('payment_name', 'payment_type')->all();
+        $getdriver = User::where('type', '3')->where('is_available', 1)->orderByDesc('id')->get(['id', 'name']);
+        $ordersPaginated = true;
+        return view('admin.orders.index', compact('getorders', 'getdriver', 'totalorders', 'totalprocessing', 'totalcompleted', 'totalcancelled', 'orderStatusNames', 'orderPaymentNames', 'ordersPaginated'));
     }
 
     public function update(Request $request)

@@ -46,7 +46,7 @@
         }
     </style>
     @yield('styles')
-    <link rel="stylesheet" href="{{ url('public/city/city.css') }}?v=20261020">
+    <link rel="stylesheet" href="{{ url('public/city/city.css') }}?v=20261020-2">
     <link rel="stylesheet" href="{{ url('public/city/builder.css') }}?v=20261020-2">
 
 

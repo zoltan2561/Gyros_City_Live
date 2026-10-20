@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="en" dir="{{ session('direction') == 2 ? 'rtl' : 'ltr' }}">
+<html lang="{{ session('locale', 'hu') }}" dir="{{ session('direction') == 2 ? 'rtl' : 'ltr' }}">
 
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
     <meta property="og:title" content="{{ @helper::appdata()->og_title }}" />
     <meta property="og:description" content="{{ @helper::appdata()->og_description }}" />
     <meta property="og:image" content='{{ helper::image_path(@helper::appdata()->og_image) }}' />
@@ -46,6 +46,8 @@
         }
     </style>
     @yield('styles')
+    <link rel="stylesheet" href="{{ url('public/city/city.css') }}?v=20261020">
+    <link rel="stylesheet" href="{{ url('public/city/builder.css') }}?v=20261020-2">
 
 
     <!-- Barion Base Pixel -->
@@ -76,7 +78,8 @@
     </noscript>
 </head>
 
-<body>
+<body class="city-site" data-gift-url="{{ route('cart.promotions') }}" data-city-cart="{{ request()->is('cart') ? 'true' : 'false' }}" data-city-checkout="{{ request()->is('checkout') ? 'true' : 'false' }}" data-buynow="{{ (int) request('buynow', 0) === 1 ? 1 : 0 }}">
+    <a class="city-skip-link" href="#main-content">Ugrás a tartalomhoz</a>
     <main id="main-content" class="">
         <div class="wrapper">
             <input type="hidden" name="hdnsession" id="hdnsession" value="{{ session()->get('direction') }}">
@@ -112,7 +115,7 @@
     </main>
 
     <!-- Modal Item Details -->
-    <div class="modal modalitemdetails" id="modalitemdetails" tabindex="-1" aria-labelledby="exampleModalLabel"
+    <div class="modal modalitemdetails" id="modalitemdetails" tabindex="-1" aria-labelledby="city-builder-title"
         aria-hidden="true">
         <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content" id="modalitem_body">
@@ -425,6 +428,9 @@
     </script>
     <script src="{{ url(env('ASSETSPATHURL') . 'web-assets/js/custom/top_deals.js') }}"></script>
     <script src="{{ url(env('ASSETSPATHURL') . 'web-assets/js/common.js') }}"></script><!-- web-common-js -->
+    @include('web.city.gift-modal')
+    <script src="{{ url('public/city/city.js') }}?v=20261020" defer></script>
+    <script src="{{ url('public/city/builder.js') }}?v=20261020-2" defer></script>
 
     @if (@helper::checkaddons('sales_notification'))
         @if (helper::appdata()->fake_sales_notification == 1)

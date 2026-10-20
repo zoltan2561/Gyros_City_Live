@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\BarionService;
 use App\Services\DeliveryMinimum;
+use App\Services\GiftPromotions;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -75,6 +76,12 @@ class BarionController extends Controller
                 ], 200);
             }
 
+            $giftService = app(GiftPromotions::class);
+            if ($issue = $giftService->error($cartdata, $buynow)) {
+                return response()->json(['ok' => false, 'code' => 'cart_changed', 'msg' => $issue]);
+            }
+            $cartdata = $cartdata->concat($giftService->giftLines($cartdata, $buynow));
+
             // draft (amit a callback-ben véglegesítünk)
             $draft = [
                 'order_type'       => $orderType,
@@ -138,6 +145,10 @@ class BarionController extends Controller
             // kosár átkonvertálása a service-nek
             $svcCart = [];
             foreach ($draft['items'] as $it) {
+                // Zero-price gifts remain in the immutable order draft; no charge is sent for them.
+                if ((float) $it['item_price'] === 0.0) {
+                    continue;
+                }
                 $svcCart[] = [
                     'name'  => $it['item_name'],
                     'qty'   => (int)$it['qty'],

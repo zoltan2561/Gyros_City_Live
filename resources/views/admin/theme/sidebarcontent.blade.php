@@ -82,6 +82,14 @@
             <i class="fa-solid fa-cart-shopping"></i><span class="nav-text ">{{ trans('labels.orders') }}</span>
         </a>
     </li>
+    @if ((int) Auth::user()->type === 1)
+        <li class="nav-item mb-2 fs-7">
+            <a class="nav-link rounded d-flex {{ request()->is('admin/gift-promotions*') ? 'active' : '' }}"
+                href="{{ route('admin.gift-promotions') }}">
+                <i class="fa-solid fa-gift"></i><span class="nav-text">Ajándékakciók</span>
+            </a>
+        </li>
+    @endif
     <li class="nav-item mb-2 fs-7 {{ Auth::user()->type != 1 ? (in_array('2', $modules) == true ? '' : 'd-none') : '' }}"
         id="2">
         <a class="nav-link rounded d-flex {{ request()->is('admin/report*') ? 'active' : '' }}"
@@ -316,6 +324,13 @@
             <i class="fa-solid fa-messages"></i><span class="nav-text ">{{ trans('labels.inquiries') }}</span>
         </a>
     </li>
+    @if ((int) Auth::user()->type === 1)
+    <li class="nav-item mb-2 fs-7">
+        <a class="nav-link rounded d-flex {{ request()->is('admin/newsletter*') ? 'active' : '' }}" href="{{ route('admin.newsletter.index') }}">
+            <i class="fa-solid fa-envelope"></i><span class="nav-text">{{ trans('newsletter.title') }}</span>
+        </a>
+    </li>
+    @endif
     <li class="nav-item mb-2 fs-7">
         <a class="nav-link rounded d-flex {{ request()->is('admin/subscribe*') ? 'active' : '' }}"
             href="{{ URL::to('/admin/subscribe') }}" aria-expanded="false">

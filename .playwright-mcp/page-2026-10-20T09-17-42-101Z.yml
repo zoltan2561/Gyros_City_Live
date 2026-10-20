@@ -1,0 +1,120 @@
+- generic [active] [ref=f31e1]:
+  - link "Ugrás a tartalomhoz" [ref=f31e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - main [ref=f31e3]:
+    - generic [ref=f31e4]:
+      - navigation [ref=f31e7]:
+        - generic [ref=f31e8]:
+          - link "Gyros City Gyros City" [ref=f31e9] [cursor=pointer]:
+            - /url: http://127.0.0.1:8016
+            - img "Gyros City" [ref=f31e10]
+            - generic [ref=f31e11]: Gyros City
+          - generic [ref=f31e12]: 
+          - text:   
+      - list [ref=f31e18]:
+        - listitem [ref=f31e19]:
+          - link " Kezdőlap" [ref=f31e20] [cursor=pointer]:
+            - /url: http://127.0.0.1:8016
+            - generic [ref=f31e21]: 
+            - paragraph [ref=f31e22]: Kezdőlap
+        - listitem [ref=f31e23]:
+          - link " Étlap" [ref=f31e24] [cursor=pointer]:
+            - /url: http://127.0.0.1:8016/categories
+            - generic [ref=f31e25]: 
+            - paragraph [ref=f31e26]: Étlap
+        - listitem [ref=f31e27]:
+          - link " 0 . Kosár" [ref=f31e28] [cursor=pointer]:
+            - /url: http://127.0.0.1:8016/cart
+            - generic [ref=f31e29]:
+              - generic [ref=f31e30]: 
+              - generic [ref=f31e31]: "0"
+            - paragraph [ref=f31e32]: . Kosár
+        - listitem [ref=f31e33]:
+          - link " Kívánságlista" [ref=f31e34] [cursor=pointer]:
+            - /url: http://127.0.0.1:8016/login
+            - generic [ref=f31e35]: 
+            - paragraph [ref=f31e36]: Kívánságlista
+        - listitem [ref=f31e37]:
+          - link " Fiók" [ref=f31e38] [cursor=pointer]:
+            - /url: http://127.0.0.1:8016/login
+            - generic [ref=f31e39]: 
+            - paragraph [ref=f31e40]: Fiók
+      - generic [ref=f31e41]:
+        - navigation "breadcrumb" [ref=f31e45]:
+          - list [ref=f31e46]:
+            - listitem [ref=f31e47]:
+              - link "Kezdőlap" [ref=f31e48] [cursor=pointer]:
+                - /url: http://127.0.0.1:8016
+            - listitem [ref=f31e49]: "> Kosár"
+        - generic [ref=f31e59]:
+          - heading "Hírlevél" [level=1] [ref=f31e60]
+          - paragraph [ref=f31e61]: Iratkozz fel hírlevelünkre
+          - paragraph [ref=f31e62]: Értesülj elsőként az újdonságokról és akciókról.
+          - generic [ref=f31e63]:
+            - textbox "E-mail" [ref=f31e64]
+            - button "Feliratkozás" [ref=f31e65] [cursor=pointer]
+        - generic [ref=f31e68]:
+          - generic [ref=f31e70]:
+            - generic [ref=f31e71]:
+              - link [ref=f31e72] [cursor=pointer]:
+                - /url: http://127.0.0.1:8016
+                - img "footer_logo" [ref=f31e73]
+              - heading "Gyros City Vásárosnamény" [level=1] [ref=f31e74]
+              - paragraph [ref=f31e75]: "Minden nap: 8:00 - 22:00 Kiszállítás 11:00-21:30"
+            - generic [ref=f31e76]:
+              - generic [ref=f31e77]:
+                - generic [ref=f31e78]:
+                  - heading "Oldalak" [level=4] [ref=f31e79]
+                  - list [ref=f31e80]:
+                    - listitem [ref=f31e81]:
+                      - link "Bemutatkozás" [ref=f31e82] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8016/abous-us
+                    - listitem [ref=f31e83]:
+                      - link "Általános Szerződési Feltételek (ÁSZF)" [ref=f31e84] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8016/privacy-policy
+                    - listitem [ref=f31e85]:
+                      - link "Kiszállítással kapcsolatos információk" [ref=f31e86] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8016/refund-policy
+                    - listitem [ref=f31e87]:
+                      - link "Adatvédelmi Tájékoztató[GDPR]" [ref=f31e88] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8016/terms-conditions
+                    - listitem [ref=f31e89]:
+                      - link "Allergén táblázat" [ref=f31e90] [cursor=pointer]:
+                        - /url: alergens.html
+                - generic [ref=f31e91]:
+                  - heading "Egyéb" [level=4] [ref=f31e92]
+                  - list [ref=f31e93]:
+                    - listitem [ref=f31e94]:
+                      - link "Menü" [ref=f31e95] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8016/categories
+                    - listitem [ref=f31e96]:
+                      - link "GYIK" [ref=f31e97] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8016/faq
+                    - listitem [ref=f31e98]:
+                      - link "Kapcsolat" [ref=f31e99] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8016/contactus
+                    - listitem [ref=f31e100]:
+                      - link "Galéria" [ref=f31e101] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8016/gallery
+                - generic [ref=f31e102]:
+                  - heading "Kapcsolat" [level=4] [ref=f31e103]
+                  - list [ref=f31e104]:
+                    - link " 06205976297" [ref=f31e105] [cursor=pointer]:
+                      - /url: callto:06205976297
+                      - listitem [ref=f31e106]:
+                        - generic [ref=f31e107]: 
+                        - paragraph [ref=f31e108]: "06205976297"
+                    - link " info@gyroscity.eu" [ref=f31e109] [cursor=pointer]:
+                      - /url: mailto:info@gyroscity.eu
+                      - listitem [ref=f31e110]:
+                        - generic [ref=f31e111]: 
+                        - paragraph [ref=f31e112]: info@gyroscity.eu
+                  - link "f" [ref=f31e115] [cursor=pointer]:
+                    - /url: https://www.facebook.com/gyroscity
+              - img "Barion" [ref=f31e116]
+          - 'link "© 2026 BY: pZoli.com" [ref=f31e119] [cursor=pointer]':
+            - /url: https://pzoli.com
+      - generic [ref=f31e123]:
+        - paragraph [ref=f31e125]: A megfelelő élmény biztosításához sütikre van szükség.
+        - button "Sütik engedélyezése" [ref=f31e127] [cursor=pointer]
+  - text:       

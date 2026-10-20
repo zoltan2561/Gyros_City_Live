@@ -4,6 +4,7 @@ namespace App\Http\Controllers\front;
 
 use App\Http\Controllers\Controller;
 use App\Services\DeliveryMinimum;
+use App\Services\GiftPromotions;
 use App\Helpers\helper;
 use App\Helpers\whatsapp_helper;
 use Illuminate\Http\Request;
@@ -49,6 +50,8 @@ class CheckoutController extends Controller
             $getcartlist = Cart::where('session_id', Session::getId())->where('buynow', $request->buynow)->orderByDesc('id')->get();
             $getpaymentmethods = Payment::select('id', 'unique_identifier', 'environment', 'payment_name', 'payment_type', 'currency', 'public_key', 'secret_key', 'encryption_key', 'image')->where('is_available', 1)->orderBy('reorder_id')->where('payment_name', '!=', 'Wallet')->where('is_activate', '1')->get();
         }
+        $giftService = app(GiftPromotions::class);
+        $cartIssue = $giftService->error($getcartlist, (int) $request->input('buynow', 0));
         $producttax = 0;
         $tax_name = [];
         $tax_price = [];
@@ -91,7 +94,7 @@ class CheckoutController extends Controller
 
         $shippingarea = Shippingarea::orderBy('reorder_id')->get();
         if (count($getcartlist) > 0) {
-            return view('web.checkout.checkout', compact('getaddresses', 'getpaymentmethods', 'getcartlist', 'taxArr', 'getsettings', 'shippingarea'));
+            return view('web.checkout.checkout', compact('getaddresses', 'getpaymentmethods', 'getcartlist', 'taxArr', 'getsettings', 'shippingarea', 'cartIssue'));
         } else {
             return redirect()->back();
         }
@@ -134,6 +137,9 @@ class CheckoutController extends Controller
             $cartdata = \App\Models\Cart::where('session_id', \Session::getId())->where('buynow', $buynow)->get();
         }
 
+        if ($issue = app(GiftPromotions::class)->error($cartdata, (int) $buynow)) {
+            return response()->json(['status' => 2, 'message' => $issue]);
+        }
         if ($request->qty > helper::appdata()->max_order_qty) {
             $msg = trans('messages.order_qty_less_then') . ' : ' . helper::appdata()->max_order_qty;
             return response()->json(['status' => 2, 'message' => $msg], 200);
@@ -286,6 +292,11 @@ class CheckoutController extends Controller
             if ($minimumError !== null) {
                 return response()->json(array_merge(['status' => 0], $minimumError), 200);
             }
+            $giftService = app(GiftPromotions::class);
+            if ($issue = $giftService->error($cartdata, (int) $buynow)) {
+                return response()->json(['status' => 0, 'code' => 'cart_changed', 'message' => $issue]);
+            }
+            $giftLines = $giftService->giftLines($cartdata, (int) $buynow);
 
 
 
@@ -424,7 +435,7 @@ class CheckoutController extends Controller
                     $cartdata = Cart::where('session_id', Session::getId())->where('buynow', $buynow)->get();
                 }
 
-                foreach ($cartdata as $cart) {
+                foreach ($cartdata->concat($giftLines) as $cart) {
                     $od = new OrderDetails();
                     $od->order_id = $order->id;
                     $od->user_id = @$checkuser->id;

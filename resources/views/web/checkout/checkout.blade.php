@@ -3,6 +3,10 @@
     | {{ trans('labels.checkout') }}
 @endsection
 @section('content')
+    <div class="container mt-4">
+        @if (!empty($cartIssue))<div class="alert alert-warning" role="alert" data-city-gift-issue="{{ str_starts_with($cartIssue, 'Válaszd ki') ? 'true' : 'false' }}">{{ $cartIssue }} <a href="{{ route('cart') }}">Kosár megnyitása</a></div>@endif
+        <div id="city-cart-gifts" aria-live="polite"></div>
+    </div>
     <div class="breadcrumb-sec">
         <div class="container">
             <div class="breadcrumb-sec-content">
@@ -227,9 +231,14 @@
                                                        id="new_city"
                                                        placeholder="Pl. Vásárosnamény"
                                                        value="{{ old('city') }}"
-                                                       required
-                                                       readonly>
-                                                <small class="text-muted">A város a kiválasztott szállítási területből töltődik.</small>
+                                                       autocomplete="address-level2" list="delivery-city-suggestions"
+                                                       aria-describedby="city-delivery-status" required>
+                                                <datalist id="delivery-city-suggestions">
+                                                    @foreach ($shippingarea->flatMap(fn ($area) => $area->city_names)->unique() as $cityName)
+                                                        <option value="{{ $cityName }}"></option>
+                                                    @endforeach
+                                                </datalist>
+                                                <small id="city-delivery-status" class="city-delivery-status" role="status" aria-live="polite">Írd be a települést, és automatikusan kiválasztjuk a kiszállítási területet.</small>
                                             </div>
 
 
@@ -246,11 +255,13 @@
                                     </div>
                                     <div class="row">
                                         <div class="col-md-12 mb-3">
+                                            <label for="delivery_area" class="form-label">Kiszállítási terület és díj</label>
                                             <select name="delivery_area" id="delivery_area" class="form-select">
                                                 <option value="" data-charge="0">{{ trans('labels.select') }}
                                                 </option>
                                                 @foreach ($shippingarea as $area)
                                                     <option value="{{ $area->id }}"
+                                                        data-cities="{{ json_encode($area->city_names, JSON_UNESCAPED_UNICODE) }}" @selected((string) old('delivery_area') === (string) $area->id)
                                                         data-charge="{{ $area->delivery_charge }}">{{ $area->name }}
                                                     </option>
                                                 @endforeach
@@ -604,6 +615,7 @@
     <script src="https://checkout.flutterwave.com/v3.js"></script>
     <script src="https://js.paystack.co/v1/inline.js"></script>
     <script src="{{ url(env('ASSETSPATHURL') . 'web-assets/js/custom/checkout.js') }}"></script>
+    <script src="{{ url('public/city/delivery.js') }}?v=20261020-2" defer></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
@@ -671,36 +683,7 @@
             });
         })();
     </script>
-    <script>
-        (function(){
-            var areaSel = document.getElementById('delivery_area');
-            var cityInp = document.getElementById('new_city');
 
-            function firstWordFromOption(optText){
-                // első "szó" levétele, utólagos vessző/kötőjel letisztítással
-                var t = (optText || '').trim();
-                if (!t) return '';
-                var first = t.split(/\s+/)[0];         // első szó
-                first = first.replace(/[.,;:-]+$/, ''); // záró írásjelek le
-                return first;
-            }
-
-            function syncCity(){
-                var opt = areaSel.options[areaSel.selectedIndex];
-                if (!opt || !opt.value) {
-                    cityInp.value = '';
-                    return;
-                }
-                cityInp.value = firstWordFromOption(opt.text);
-            }
-
-            if (areaSel && cityInp) {
-                areaSel.addEventListener('change', syncCity);
-                // betöltéskor is frissítünk (ha már ki van választva valami)
-                syncCity();
-            }
-        })();
-    </script>
 
 
 

@@ -320,7 +320,23 @@ class helper
 
     public static function date_format($date)
     {
-        return date(helper::appdata()->date_format, strtotime($date));
+        if ($date instanceof \DateTimeInterface) {
+            $timestamp = $date->getTimestamp();
+        } else {
+            $date = trim((string) $date);
+            if ($date === '' || str_starts_with($date, '0000-00-00')) {
+                return '—';
+            }
+            if (preg_match('/^(\d{4})-(\d{2})-(\d{2})/', $date, $parts)
+                && !checkdate((int) $parts[2], (int) $parts[3], (int) $parts[1])) {
+                return '—';
+            }
+            $timestamp = strtotime($date);
+            if ($timestamp === false) {
+                return '—';
+            }
+        }
+        return date(helper::appdata()->date_format, $timestamp);
     }
 
     public static function time_format($time)

@@ -22,6 +22,8 @@ use App\Http\Controllers\admin\TimeController;
 use App\Http\Controllers\admin\OtherPagesController;
 use App\Http\Controllers\admin\BookingsController;
 use App\Http\Controllers\admin\GlobalExtrasController;
+use App\Http\Controllers\admin\NewsletterController;
+use App\Http\Controllers\front\NewsletterUnsubscribeController;
 use App\Http\Controllers\front\UserController as WebUserController;
 use App\Http\Controllers\front\ItemController as WebItemController;
 use App\Http\Controllers\front\OrderController as WebOrderController;
@@ -98,6 +100,8 @@ Route::prefix('barion')->group(function () {
 
 
 Route::get('/language-{lang}', [LangController::class, 'change'])->name('language');
+Route::get('/newsletter/unsubscribe/{token}', [NewsletterUnsubscribeController::class, 'show'])->name('newsletter.unsubscribe');
+Route::post('/newsletter/unsubscribe/{token}', [NewsletterUnsubscribeController::class, 'unsubscribe'])->name('newsletter.unsubscribe.confirm');
 Route::post('add-on/session/save', [AdminController::class, 'sessionsave']);
 Route::group(['namespace' => 'front', 'middleware' => 'MaintenanceMiddleware'], function () {
 	// home
@@ -140,18 +144,20 @@ Route::group(['namespace' => 'front', 'middleware' => 'MaintenanceMiddleware'], 
             ->name('adduser');
 
         Route::get('/verification', [WebUserController::class, 'verification'])->name('verification');
-        Route::post('/verify-otp', [WebUserController::class, 'verifyotp'])->name('verifyotp');
+        Route::post('/verify-otp', [WebUserController::class, 'verifyotp'])->middleware(\App\Http\Middleware\PreserveGuestCart::class)->name('verifyotp');
         Route::get('/resend-otp', [WebUserController::class, 'resendotp']);
         //Route::get('/forgot-password', [WebUserController::class, 'forgotpassword'])->name('forgot-password');
         //Route::post('/send-pass', [WebUserController::class, 'sendpass'])->name('sendpass');
         Route::get('/login', [WebUserController::class, 'login'])->name('login');
-        Route::post('/checklogin', [WebUserController::class, 'checklogin']);
+        Route::post('/checklogin', [WebUserController::class, 'checklogin'])->middleware(\App\Http\Middleware\PreserveGuestCart::class);
     });
 
 
 
     // cart
 	Route::get('/cart', [CartController::class, 'index'])->name('cart');
+    Route::get('/cart/promotions', [\App\Http\Controllers\front\GiftPromotionController::class, 'index'])->name('cart.promotions');
+    Route::post('/cart/promotions', [\App\Http\Controllers\front\GiftPromotionController::class, 'choose']);
 	Route::post('/cart/deleteitem', [CartController::class, 'deletecartitem']);
 	Route::post('/cart/qtyupdate', [CartController::class, 'qtyupdate']);
 	Route::post('addtocart', [CartController::class, 'addtocart']);
@@ -251,6 +257,18 @@ Route::group(['prefix' => 'admin', 'namespace' => 'admin'], function () {
 	Route::post('auth', [AdminController::class, 'auth']);
 
 	Route::group(['middleware' => 'AdminAuth'], function () {
+        Route::get('/newsletter', [NewsletterController::class, 'index'])->name('admin.newsletter.index');
+        Route::get('/newsletter/create', [NewsletterController::class, 'create'])->name('admin.newsletter.create');
+        Route::post('/newsletter', [NewsletterController::class, 'store'])->name('admin.newsletter.store');
+        Route::post('/newsletter/test', [NewsletterController::class, 'test'])->middleware('throttle:10,1')->name('admin.newsletter.test');
+        Route::get('/newsletter/{newsletter}/edit', [NewsletterController::class, 'edit'])->name('admin.newsletter.edit');
+        Route::post('/newsletter/{newsletter}/update', [NewsletterController::class, 'update'])->name('admin.newsletter.update');
+        Route::post('/newsletter/{newsletter}/send', [NewsletterController::class, 'send'])->name('admin.newsletter.send');
+        Route::get('/newsletter/{newsletter}', [NewsletterController::class, 'show'])->name('admin.newsletter.show');
+        Route::post('/newsletter/{newsletter}/process', [NewsletterController::class, 'process'])->name('admin.newsletter.process');
+
+        Route::get('gift-promotions', [\App\Http\Controllers\admin\GiftPromotionController::class, 'index'])->name('admin.gift-promotions');
+        Route::post('gift-promotions', [\App\Http\Controllers\admin\GiftPromotionController::class, 'save'])->name('admin.gift-promotions.save');
 
 		Route::group(['prefix' => 'language-settings'], function () {
 			Route::get('/', [LangController::class, 'index']);

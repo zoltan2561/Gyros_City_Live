@@ -7,6 +7,81 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Gyros City frissítés – 2026. október 20.
+
+Az étlap kategóriaoldala és kategóriaválasztója külön elrendezést kapott (`public/city/menu.css`, `menu.js`): asztali kategóriasáv, mobilon vízszintesen lapozható kategóriák, kategórián belüli névkeresés és tömörebb ételkártyák. A kiválasztott mobil kategória automatikusan látható helyre kerül.
+
+A termékoldal és a felugró összeállító közös nézetet használ (`web/city/builder.blade.php`, `public/city/builder.css`, `builder.js`). Mobilon teljes képernyős ablak, teljes sorban érinthető választók, előre rendezett kötelező csoportok, választási korlátok és élő, extrákat/darabszámot is tartalmazó ár segíti a rendelést. Az összeg és a rendelőgomb mobilon látható marad. Kosárba helyezéskor nincs oldal-újratöltés; a visszajelzésből megnyitható a kosár. Hibánál az összeállítás megmarad, az ismételt koppintás nem indít párhuzamos kosárkérést. A termékképek natívan lapozhatók, a mobil mezők 16 px-esek, az alsó navigáció és a rendelősáv figyelembe veszi a kijelző biztonsági sávját. Ezek az eszközök sem igényelnek Mix-buildet.
+
+Jelszavas és OTP-s belépéskor a `PreserveGuestCart` a hitelesítés előtti valódi munkamenet-azonosítót adja át a `GuestCartTransfer` szolgáltatásnak. Csak az adott vendég saját, még fiókhoz nem rendelt sorait veszi át, az eredeti tételekkel, árakkal, extrákkal és mennyiségekkel együtt; a fiók korábbi kosara is megmarad. Az eltérő összeállítású sorokat nem vonja össze, az ajándékválasztást pedig átviszi a felhasználói kulcsra, majd a meglévő akciószolgáltatás újraellenőrzi. A normál és gyorsrendelési kosár külön marad; új vendég-gyorsrendelés átvételekor a fiók korábbi gyorsrendelési tételei a normál kosárba kerülnek. Elutasított belépés után a vendégkosár követi az esetleges munkamenetváltást. Kilépés új munkamenetet indít, így a fiók tételei nem jelennek meg a kijelentkezett vendégnek. A javítás nem igényel migrációt vagy korábbi kosarak visszamenőleges módosítását.
+
+A pénztár városmezője szerkeszthető, és a meglévő `shipping_area` lista nevei alapján választ területet. Az ékezetek, kis/nagybetűk, irányítószám és a kötőjel/szóköz eltérése nem akadály. A `DeliveryAreaNames` a névből leválasztja a díjat és a megjegyzést; közös terület vesszővel, pontosvesszővel vagy perjellel felsorolt települései is felismerhetők. A `public/city/delivery.js` a kiválasztáskor frissíti a díjat és a végösszeget. Részleges/ismert területhez nem illő névnél törli a régi díjat; több egyezésnél kézi választást kér. A területlista és a díjak változatlanok, nincs geokódolás vagy külső szolgáltatás. A végleges kártyás fizetés továbbra is a szerveren beolvasott területi díjat használja.
+
+Az üres vagy hibás dátum formázása „—” jelet ad az 1970-es dátum helyett. A rendelés részleteiben időzítetlen átvételnél „Elkészülés után”, kiszállításnál „Mielőbbi kiszállítás” látszik; megadott dátumnál a dátum és idősáv megmarad. A nyomtatott átvételi dátum is a beállított átvételi napot használja. Korábbi rendelési adatokat nem módosítottunk.
+
+A főoldal új, mobilon is külön elrendezett hamburgeres nyitóképet kapott. A megjelenés a `public/city/city.css`, a kapcsolódó működés a `public/city/city.js` fájlban van; ezek közvetlenül töltődnek be, nem igényelnek Mix-buildet. A WebP nyitókép a tulajdonos által megadott Gyros City kép alapján készült, generált átdolgozás. A `public/city/facebook-*.jpg` képek a [Gyros City Facebook-oldaláról](https://www.facebook.com/gyroscity) letöltött képi referenciák.
+
+Az adminban kikapcsolt ételek az aktív kategóriák étlapján és keresésében láthatók maradnak, szürkített képpel és „Nem elérhető” jelöléssel. Kosárba tenni, mennyiséget növelni és rendelést leadni ilyen étellel szerveroldalon sem lehet. A tényleges törlés továbbra is eltávolítja az ételt.
+
+### Ajándékakció beállítása
+
+Az **Admin → Ajándékakciók** menüpont az étterem tulajdonosának (`type=1`) érhető el.
+
+1. Add meg az akció vásárlóknak is látható nevét.
+2. Válassz egy kategóriát vagy konkrét ételeket, és állítsd be a szükséges darabszámot. A vegyesen választott ételek mennyisége összeadódik.
+3. Jelöld be a választható ajándék ételeket, és az ajándék darabszámát. Minden választható íz külön katalógustétel legyen. Fizetős extrák nem adódnak az ajándékhoz.
+4. Válaszd ki, hogy rendelésenként egyszer vagy minden teljes darabszám után újra járjon az ajándék. Opcionálisan első és utolsó nap is megadható; mindkettő beleszámít, Europe/Budapest szerint.
+5. Kapcsold be és mentsd az akciót. Több aktív szabály együtt is érvényesülhet.
+
+A szükséges darabszám elérésekor ajándékválasztó jelenik meg. A választás a kosárban is módosítható, és munkameneten belül frissítés után is megmarad. A rendszer újraszámol mennyiség- és elérhetőség-változáskor, valamint fizetés/rendelés előtt. A jogosultság elvesztése törli a már nem járó választást. Ha minden beállított ajándék elfogyott, ezt jelzi a felület, a fizetős rendelést tovább engedi.
+
+Az ajándékok szerver által képzett, 0 Ft-os rendelési tételek. Nem kerülnek fizetős kosársorként az adatbázisba, nem generálnak további ajándékot. Készpénzes rendelésnél a meglévő rendeléstétel-mentés, Barionnál a fizetés indításakor elmentett rendelési pillanatkép viszi tovább őket; az admin, rendelésnézet és számla a meglévő tétellistát használja.
+
+### Hírlevélküldés – a FoodPRO meglévő modulja
+
+A modul a FoodPRO `41580d3d21dc2d7311ff7941cb807ef7642db4cb` állapotából került át. A `NewsletterSender`, `Newsletter`, `NewsletterDelivery`, `NewsletterMail`, leiratkozó vezérlő és `newsletter:send` parancs az eredeti megvalósítás. A Gyros Cityhez az adminjogosultságot (jelenleg csak tulajdonos, `type=1`), a menühivatkozásokat és a színeket igazítottuk; nem került át FoodPRO-címzett, levél vagy SMTP-beállítás. A nyilvános feliratkozás ellenőrzése és címnormalizálása is a FoodPRO meglévő megoldását használja.
+
+Az **Admin → Hírlevélküldés** felületen piszkozat, élő előnézet, külön címre küldött próbalevél és a mentett levél megerősített kiküldése érhető el. A meglévő `subscribe` lista érvényes, egyedi címeit használja. Küldés közben ötfős kötegek futnak, amíg az állapotoldal nyitva van; megszakítás után a mentett állapotból folytatható. Ugyanannak a hírlevélnek ugyanaz a cím csak egy kézbesítési sora lehet. A hibás és a bizonytalan, már folyamatban lévő kézbesítést nem próbálja újra automatikusan. A „küldve” a levelezőrendszernek történő átadást jelenti, nem bizonyítja a postaládába érkezést.
+
+Minden címzett külön levelet és saját leiratkozó linket kap. A link megnyitása még nem iratkoztat le; a megerősítő gomb intézi a leiratkozást, és a még függő levelek kihagyását. A tárgy és a szöveg ellenőrzött, az előnézet és a levélsablon nem hajt végre beírt HTML-t. A modul a Gyros City meglévő Laravel levelezési beállításait használja, `.env`-módosítás nélkül.
+
+Az átvett migráció csak a `newsletters` és `newsletter_deliveries` táblákat hozza létre. Meglévő feliratkozót vagy rendelést nem módosít. A helyi telepítéskor a feliratkozólista változatlanságát SHA-256 összehasonlítással ellenőriztük. Éles kiadás előtt adatbázismentés után, külön jóváhagyott telepítéskor futtatható:
+
+```sh
+php artisan migrate --path=database/migrations/2026_10_07_000001_create_newsletter_tables.php
+```
+
+Visszaállításkor a két új tábla megtartható; a `down()` törölné a hírlevélelőzményeket és kézbesítési állapotokat. Automatikus időzítés nem lett beállítva. Később külön üzemeltetési beállítással a `php artisan newsletter:send --limit=25` parancs dolgozhat fel legfeljebb 25 függő címzettet futásonként; ezt a parancsot éles listára a beépítés során nem futtattuk.
+
+Az átvett 13 funkcióteszt izolált SQLite-adatbázissal és helyettesített levelezővel fut. A teljes adminfelület, mentés, nem mentett módosítás miatti küldéstiltás, próbalevél, kötegelt küldés, frissítés utáni állapot és leiratkozás MariaDB QA-adatbázison, mesterséges címekkel és igazoltan `log` levelezővel is ellenőrizve. Az adminoldalak 360, 390 és 1440 px-en nem lógnak túl. A normál helyi adatbázisban nem jött létre hírlevél vagy kézbesítés; valódi SMTP-kézbesítés nem lett tesztelve.
+
+### Az étlap- és ajándékfrissítés telepítése
+
+Az új migráció csak a `gift_promotions` táblát hozza létre; meglévő táblákhoz és rendelésekhez nem nyúl. Előbb készüljön adatbázis-mentés, majd a jóváhagyott kiadás részeként futtatható:
+
+```sh
+php artisan migrate --path=database/migrations/2026_10_20_000001_create_gift_promotions_table.php
+php artisan view:cache
+vendor/bin/phpunit
+vendor/bin/phpunit --filter NewsletterPortTest
+vendor/bin/phpunit --filter GuestCartLoginTest
+node --test tests/frontend/barion-delivery-minimum.test.cjs
+node --test tests/frontend/delivery-city.test.cjs
+node --test tests/frontend/builder.test.cjs
+node --check public/city/city.js
+node --check public/city/delivery.js
+node --check public/city/menu.js
+node --check public/city/builder.js
+```
+
+Az új akciótábla hiányában az étlap tovább működik, az admin jelzi a telepítési igényt. Visszaállításnál az új tábla megtartható; a migráció `down()` művelete törölné a beállított akciókat, ezért azt csak külön jóváhagyással és mentés után szabad futtatni. Éles környezetben nincs automatikus akció-létrehozás, adatfeltöltés vagy publikálás. A helyi katalógusban még nincsenek pizzák és külön palacsintaízek: ezeket a valós kínálat alapján kell felvenni vagy szinkronizálni az éles kiadás előtt.
+
+Az akció- és fizetési funkciótesztek elkülönített, memóriabeli SQLite-kapcsolaton futnak; a migráció és a felületi próbák MariaDB-n is ellenőrizve lettek. A böngészős mintarendeléshez külön QA-adatbázis készült, valódi rendelés és fizetés nélkül. A `storage/framework/testing` alatti helyi segédek és QA-bejelentkezési router nem kiadási fájlok, nem telepíthetők éles tárhelyre.
+
+Ellenőrzött helyi állapot: 102 PHPUnit-teszt (454 ellenőrzés), 24 JavaScript-teszt, Blade-fordítás, PHP/JS szintaxis és `git diff --check` sikeres. A dátumhibát célzott teszt reprodukálta (`null` → `1970-01-01`), és a javítás után az üres/hibás, illetve a valódi dátumok tesztjei is sikeresek. Böngészőben 360, 390, 820 és 1440 px-es összeállító és termékoldal, valamint 360/390 px-es főoldal, kategóriák, étlap, kosár és pénztár ellenőrizve: nincs vízszintes túllógás. Az összeállítónál hiányzó kötelező választás, maximum elérése/feloldása/törlés, extra és darabszám ára, hálózati hiba utáni megmaradó választás és újbóli próbálkozás, dupla koppintásra egyetlen kérés, kosárban tárolt összeg, vendég pénztárra lépés és ajándékjogosultság is ellenőrizve. A korábbi automatikus településfelismerés/díjváltás/kézi többértelmű választás/elviteli díjnullázás, valamint főoldal-, kosár- és ajándékfunkciók próbái is sikeresek. A kezdeti sütisáv/visszajelzés-ütközést javítottuk és a kosárlinket újra ellenőriztük. Valódi rendelés és élő fizetés nem futott.
+
+Meglévő ellenőrzési korlát: a teljes `php artisan route:list` egy korábbi, hiányzó `App\Http\Controllers\MyFatoorahController` miatt hibázik. Az új akcióútvonalak regisztrációja külön ellenőrizve lett, a hozzájuk tartozó HTTP-funkciótesztek sikeresek.
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:

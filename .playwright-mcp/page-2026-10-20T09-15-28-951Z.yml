@@ -1,0 +1,464 @@
+- main [ref=f27e2]:
+  - generic [ref=f27e3]:
+    - generic [ref=f27e5]:
+      - button "" [ref=f27e7] [cursor=pointer]
+      - generic [ref=f27e9]:
+        - generic [ref=f27e10] [cursor=pointer]: Be
+        - button "🚚 Kiszállítás kikapcsolása" [ref=f27e15] [cursor=pointer]
+        - generic [ref=f27e16]: 
+        - generic [ref=f27e20]:
+          - button [ref=f27e21] [cursor=pointer]: 
+          - text:   
+    - generic [ref=f27e23]:
+      - text:                                                                           
+      - generic [ref=f27e25]:
+        - link " Kattints az általános beállítások megadásához." [ref=f27e27] [cursor=pointer]:
+          - /url: http://127.0.0.1:8016/admin/settings
+          - generic [ref=f27e28]: 
+          - text: Kattints az általános beállítások megadásához.
+        - generic [ref=f27e29]:
+          - generic [ref=f27e30]:
+            - generic [ref=f27e31]:
+              - heading "Ajándékakciók" [level=1] [ref=f27e32]
+              - paragraph [ref=f27e33]: Ha ebből ennyit rendelnek, ezt adjuk ajándékba.
+            - link "Új akció" [ref=f27e34] [cursor=pointer]:
+              - /url: http://127.0.0.1:8016/admin/gift-promotions
+          - generic [ref=f27e35]:
+            - generic [ref=f27e37]:
+              - heading "Új ajándékakció" [level=2] [ref=f27e38]
+              - generic [ref=f27e39]: Akció neve (a vásárló is látja)
+              - textbox "Akció neve (a vásárló is látja)" [ref=f27e40]:
+                - /placeholder: "Például: Két pizza mellé ajándék palacsinta"
+              - generic [ref=f27e41]: Miből kell rendelni?
+              - combobox "Miből kell rendelni?" [ref=f27e42]:
+                - option "Egy kategória bármely ételéből" [selected]
+                - option "Kiválasztott ételekből"
+              - generic [ref=f27e43]:
+                - generic [ref=f27e44]: Kategória
+                - combobox "Kategória" [ref=f27e45]:
+                  - option "Válassz kategóriát" [selected]
+                  - option "Desszertek"
+                  - option "Gyros"
+                  - option "Gyros Tálak"
+                  - option "Hamburgerek"
+                  - option "Hot-Dog"
+                  - option "Italok"
+                  - option "Kebab"
+                  - option "Kész ételek"
+                  - option "Kézműves Hamburger"
+                  - option "Menük"
+                  - option "Óriás Hamurger"
+                  - option "Pizzák · teszt"
+                  - option "Saláták"
+                  - option "Sültek"
+                  - option "Szendvicsek"
+              - generic [ref=f27e46]:
+                - generic [ref=f27e47]:
+                  - generic [ref=f27e48]: Szükséges darabszám
+                  - spinbutton "Szükséges darabszám" [ref=f27e49]: "2"
+                - generic [ref=f27e50]:
+                  - generic [ref=f27e51]: Ajándék darabszáma
+                  - spinbutton "Ajándék darabszáma" [ref=f27e52]: "1"
+              - group "Miből választhat ajándékot?" [ref=f27e53]:
+                - paragraph [ref=f27e55]: Minden választható íz külön étel legyen az étlapon. Az ajándék ára 0 Ft, fizetős extrák nélkül. A nem elérhető ajándékot nem ajánljuk fel.
+                - searchbox "Ajándék ételek keresése" [ref=f27e56]
+                - generic [ref=f27e57]:
+                  - generic [ref=f27e58]:
+                    - checkbox "Ásványviz 0,5" [ref=f27e59]
+                    - text: Ásványviz 0,5
+                  - generic [ref=f27e60]:
+                    - checkbox "Babgulyás 500ml" [ref=f27e61]
+                    - text: Babgulyás 500ml
+                  - generic [ref=f27e62]:
+                    - checkbox "Baklava szelet" [ref=f27e63]
+                    - text: Baklava szelet
+                  - generic [ref=f27e64]:
+                    - checkbox "Bomba" [ref=f27e65]
+                    - text: Bomba
+                  - generic [ref=f27e66]:
+                    - checkbox "Borsodi" [ref=f27e67]
+                    - text: Borsodi
+                  - generic [ref=f27e68]:
+                    - checkbox "Cézár saláta" [ref=f27e69]
+                    - text: Cézár saláta
+                  - generic [ref=f27e70]:
+                    - checkbox "Chicken burger" [ref=f27e71]
+                    - text: Chicken burger
+                  - generic [ref=f27e72]:
+                    - checkbox "Chickenburger menü" [ref=f27e73]
+                    - text: Chickenburger menü
+                  - generic [ref=f27e74]:
+                    - checkbox "Chickenburger menü" [ref=f27e75]
+                    - text: Chickenburger menü
+                  - generic [ref=f27e76]:
+                    - checkbox "City Burger" [ref=f27e77]
+                    - text: City Burger
+                  - generic [ref=f27e78]:
+                    - checkbox "City Burger Maxi" [ref=f27e79]
+                    - text: City Burger Maxi
+                  - generic [ref=f27e80]:
+                    - checkbox "City Burger Plusz" [ref=f27e81]
+                    - text: City Burger Plusz
+                  - generic [ref=f27e82]:
+                    - checkbox "City-burger maxi menü" [ref=f27e83]
+                    - text: City-burger maxi menü
+                  - generic [ref=f27e84]:
+                    - checkbox "City-burger maxi menü" [ref=f27e85]
+                    - text: City-burger maxi menü
+                  - generic [ref=f27e86]:
+                    - checkbox "City-burger menü" [ref=f27e87]
+                    - text: City-burger menü
+                  - generic [ref=f27e88]:
+                    - checkbox "City-burger menü" [ref=f27e89]
+                    - text: City-burger menü
+                  - generic [ref=f27e90]:
+                    - checkbox "City-burger párosajánlat" [ref=f27e91]
+                    - text: City-burger párosajánlat
+                  - generic [ref=f27e92]:
+                    - checkbox "City-burger párosajánlat" [ref=f27e93]
+                    - text: City-burger párosajánlat
+                  - generic [ref=f27e94]:
+                    - checkbox "City-burger plusz menü" [ref=f27e95]
+                    - text: City-burger plusz menü
+                  - generic [ref=f27e96]:
+                    - checkbox "City-burger plusz menü" [ref=f27e97]
+                    - text: City-burger plusz menü
+                  - generic [ref=f27e98]:
+                    - checkbox "Csirke Döner (pitában)" [ref=f27e99]
+                    - text: Csirke Döner (pitában)
+                  - generic [ref=f27e100]:
+                    - checkbox "Csirke Döner (pitában) menü" [ref=f27e101]
+                    - text: Csirke Döner (pitában) menü
+                  - generic [ref=f27e102]:
+                    - checkbox "Csirke Döner (pitában) menü" [ref=f27e103]
+                    - text: Csirke Döner (pitában) menü
+                  - generic [ref=f27e104]:
+                    - checkbox "Csirke Dürüm (tortillában)" [ref=f27e105]
+                    - text: Csirke Dürüm (tortillában)
+                  - generic [ref=f27e106]:
+                    - checkbox "Csirke Dürüm (tortillában) menü" [ref=f27e107]
+                    - text: Csirke Dürüm (tortillában) menü
+                  - generic [ref=f27e108]:
+                    - checkbox "Csirke Dürüm (tortillában) menü" [ref=f27e109]
+                    - text: Csirke Dürüm (tortillában) menü
+                  - generic [ref=f27e110]:
+                    - checkbox "Csirke Nuggets falatkák 4, 6 vagy 8 db" [ref=f27e111]
+                    - text: Csirke Nuggets falatkák 4, 6 vagy 8 db
+                  - generic [ref=f27e112]:
+                    - checkbox "Csirkemell saláta" [ref=f27e113]
+                    - text: Csirkemell saláta
+                  - generic [ref=f27e114]:
+                    - checkbox "Édes chillis csirke falatkák-menü" [ref=f27e115]
+                    - text: Édes chillis csirke falatkák-menü
+                  - generic [ref=f27e116]:
+                    - checkbox "Édes chillis csirke falatkák-menü" [ref=f27e117]
+                    - text: Édes chillis csirke falatkák-menü
+                  - generic [ref=f27e118]:
+                    - checkbox "Édes-chillis csirkemell falatkák választható körettel" [ref=f27e119]
+                    - text: Édes-chillis csirkemell falatkák választható körettel
+                  - generic [ref=f27e120]:
+                    - checkbox "Elfogyott pizza · teszt (jelenleg nem elérhető)" [ref=f27e121]
+                    - text: Elfogyott pizza · teszt (jelenleg nem elérhető)
+                  - generic [ref=f27e122]:
+                    - checkbox "Fishburger" [ref=f27e123]
+                    - text: Fishburger
+                  - generic [ref=f27e124]:
+                    - checkbox "Fishburger menü" [ref=f27e125]
+                    - text: Fishburger menü
+                  - generic [ref=f27e126]:
+                    - checkbox "Fishburger menü" [ref=f27e127]
+                    - text: Fishburger menü
+                  - generic [ref=f27e128]:
+                    - checkbox "Gesztenyepüré" [ref=f27e129]
+                    - text: Gesztenyepüré
+                  - generic [ref=f27e130]:
+                    - checkbox "Görög saláta" [ref=f27e131]
+                    - text: Görög saláta
+                  - generic [ref=f27e132]:
+                    - checkbox "Gösser 0,0%" [ref=f27e133]
+                    - text: Gösser 0,0%
+                  - generic [ref=f27e134]:
+                    - checkbox "Gösser Citrom" [ref=f27e135]
+                    - text: Gösser Citrom
+                  - generic [ref=f27e136]:
+                    - checkbox "Gyros kifliben" [ref=f27e137]
+                    - text: Gyros kifliben
+                  - generic [ref=f27e138]:
+                    - checkbox "Gyros kifliben menü" [ref=f27e139]
+                    - text: Gyros kifliben menü
+                  - generic [ref=f27e140]:
+                    - checkbox "Gyros kifliben menü" [ref=f27e141]
+                    - text: Gyros kifliben menü
+                  - generic [ref=f27e142]:
+                    - checkbox "Gyros pitában" [ref=f27e143]
+                    - text: Gyros pitában
+                  - generic [ref=f27e144]:
+                    - checkbox "Gyros pitában menü" [ref=f27e145]
+                    - text: Gyros pitában menü
+                  - generic [ref=f27e146]:
+                    - checkbox "Gyros pitában menü" [ref=f27e147]
+                    - text: Gyros pitában menü
+                  - generic [ref=f27e148]:
+                    - checkbox "Gyros tortillában" [ref=f27e149]
+                    - text: Gyros tortillában
+                  - generic [ref=f27e150]:
+                    - checkbox "Gyros tortillában menü" [ref=f27e151]
+                    - text: Gyros tortillában menü
+                  - generic [ref=f27e152]:
+                    - checkbox "Gyros tortillában menü" [ref=f27e153]
+                    - text: Gyros tortillában menü
+                  - generic [ref=f27e154]:
+                    - checkbox "Gyros-tál" [ref=f27e155]
+                    - text: Gyros-tál
+                  - generic [ref=f27e156]:
+                    - checkbox "Gyros-tál EXTRA, sajt nélkül" [ref=f27e157]
+                    - text: Gyros-tál EXTRA, sajt nélkül
+                  - generic [ref=f27e158]:
+                    - checkbox "Gyros-tál EXTRA, sajttal" [ref=f27e159]
+                    - text: Gyros-tál EXTRA, sajttal
+                  - generic [ref=f27e160]:
+                    - checkbox "Gyros-tál, sajttal" [ref=f27e161]
+                    - text: Gyros-tál, sajttal
+                  - generic [ref=f27e162]:
+                    - checkbox "Hamburger (classic)-menü (sertés húsból)" [ref=f27e163]
+                    - text: Hamburger (classic)-menü (sertés húsból)
+                  - generic [ref=f27e164]:
+                    - checkbox "Hamburger (classic)-menü (sertés húsból)" [ref=f27e165]
+                    - text: Hamburger (classic)-menü (sertés húsból)
+                  - generic [ref=f27e166]:
+                    - checkbox "Hamburger chillis ízesítéssel" [ref=f27e167]
+                    - text: Hamburger chillis ízesítéssel
+                  - generic [ref=f27e168]:
+                    - checkbox "Hamburger classic" [ref=f27e169]
+                    - text: Hamburger classic
+                  - generic [ref=f27e170]:
+                    - checkbox "Hamburger dupla húspogácsával" [ref=f27e171]
+                    - text: Hamburger dupla húspogácsával
+                  - generic [ref=f27e172]:
+                    - checkbox "Hamburger dupla húspogácsával, chillis ízesítéssel" [ref=f27e173]
+                    - text: Hamburger dupla húspogácsával, chillis ízesítéssel
+                  - generic [ref=f27e174]:
+                    - checkbox "Hamburger dupla húspogácsával,sajttal" [ref=f27e175]
+                    - text: Hamburger dupla húspogácsával,sajttal
+                  - generic [ref=f27e176]:
+                    - checkbox "Hamburger sajtos" [ref=f27e177]
+                    - text: Hamburger sajtos
+                  - generic [ref=f27e178]:
+                    - checkbox "Hamburger sajtos-chillis ízesítéssel" [ref=f27e179]
+                    - text: Hamburger sajtos-chillis ízesítéssel
+                  - generic [ref=f27e180]:
+                    - checkbox "Heineken 0,33" [ref=f27e181]
+                    - text: Heineken 0,33
+                  - generic [ref=f27e182]:
+                    - checkbox "Heineken zero 0,33" [ref=f27e183]
+                    - text: Heineken zero 0,33
+                  - generic [ref=f27e184]:
+                    - checkbox "HELL" [ref=f27e185]
+                    - text: HELL
+                  - generic [ref=f27e186]:
+                    - checkbox "HELL energy cofee" [ref=f27e187]
+                    - text: HELL energy cofee
+                  - generic [ref=f27e188]:
+                    - checkbox "Hot-dog Chilis" [ref=f27e189]
+                    - text: Hot-dog Chilis
+                  - generic [ref=f27e190]:
+                    - checkbox "Hot-dog Sajtos" [ref=f27e191]
+                    - text: Hot-dog Sajtos
+                  - generic [ref=f27e192]:
+                    - checkbox "Hot-dog Sajtos-Chilis" [ref=f27e193]
+                    - text: Hot-dog Sajtos-Chilis
+                  - generic [ref=f27e194]:
+                    - checkbox "Hot-dog sima" [ref=f27e195]
+                    - text: Hot-dog sima
+                  - generic [ref=f27e196]:
+                    - checkbox "Hot-dog zöldséges" [ref=f27e197]
+                    - text: Hot-dog zöldséges
+                  - generic [ref=f27e198]:
+                    - checkbox "Hot-dog zöldséges sajtos" [ref=f27e199]
+                    - text: Hot-dog zöldséges sajtos
+                  - generic [ref=f27e200]:
+                    - checkbox "Ice Tea 0,5" [ref=f27e201]
+                    - text: Ice Tea 0,5
+                  - generic [ref=f27e202]:
+                    - checkbox "Jasper burger" [ref=f27e203]
+                    - text: Jasper burger
+                  - generic [ref=f27e204]:
+                    - checkbox "Jasper-burger menü" [ref=f27e205]
+                    - text: Jasper-burger menü
+                  - generic [ref=f27e206]:
+                    - checkbox "Jasper-burger menü" [ref=f27e207]
+                    - text: Jasper-burger menü
+                  - generic [ref=f27e208]:
+                    - checkbox "Kakaós palacsinta · teszt" [ref=f27e209]
+                    - text: Kakaós palacsinta · teszt
+                  - generic [ref=f27e210]:
+                    - checkbox "Kebab-tál" [ref=f27e211]
+                    - text: Kebab-tál
+                  - generic [ref=f27e212]:
+                    - checkbox "Kebab-tál EXTRA" [ref=f27e213]
+                    - text: Kebab-tál EXTRA
+                  - generic [ref=f27e214]:
+                    - checkbox "Kőbányai" [ref=f27e215]
+                    - text: Kőbányai
+                  - generic [ref=f27e216]:
+                    - checkbox "Lekváros palacsinta · teszt" [ref=f27e217]
+                    - text: Lekváros palacsinta · teszt
+                  - generic [ref=f27e218]:
+                    - checkbox "Marlenka szelet" [ref=f27e219]
+                    - text: Marlenka szelet
+                  - generic [ref=f27e220]:
+                    - checkbox "Melegszendvics provenci krém-sajtos" [ref=f27e221]
+                    - text: Melegszendvics provenci krém-sajtos
+                  - generic [ref=f27e222]:
+                    - checkbox "Melegszendvics sonkás-sajtos" [ref=f27e223]
+                    - text: Melegszendvics sonkás-sajtos
+                  - generic [ref=f27e224]:
+                    - checkbox "Melegszendvics szalámis-sajtos" [ref=f27e225]
+                    - text: Melegszendvics szalámis-sajtos
+                  - generic [ref=f27e226]:
+                    - checkbox "Miller 0,33" [ref=f27e227]
+                    - text: Miller 0,33
+                  - generic [ref=f27e228]:
+                    - checkbox "Mirinda 1L" [ref=f27e229]
+                    - text: Mirinda 1L
+                  - generic [ref=f27e230]:
+                    - checkbox "Natúr csirkemell szeletek sajttal, választható körettel" [ref=f27e231]
+                    - text: Natúr csirkemell szeletek sajttal, választható körettel
+                  - generic [ref=f27e232]:
+                    - checkbox "Nuggets-menü" [ref=f27e233]
+                    - text: Nuggets-menü
+                  - generic [ref=f27e234]:
+                    - checkbox "Nuggets-menü" [ref=f27e235]
+                    - text: Nuggets-menü
+                  - generic [ref=f27e236]:
+                    - checkbox "Óriás hamburger chillis" [ref=f27e237]
+                    - text: Óriás hamburger chillis
+                  - generic [ref=f27e238]:
+                    - checkbox "Óriás hamburger normal" [ref=f27e239]
+                    - text: Óriás hamburger normal
+                  - generic [ref=f27e240]:
+                    - checkbox "Óriás hamburger sajtos" [ref=f27e241]
+                    - text: Óriás hamburger sajtos
+                  - generic [ref=f27e242]:
+                    - checkbox "Óriás hamburger sajtos-chillis" [ref=f27e243]
+                    - text: Óriás hamburger sajtos-chillis
+                  - generic [ref=f27e244]:
+                    - checkbox "Palacsinta" [ref=f27e245]
+                    - text: Palacsinta
+                  - generic [ref=f27e246]:
+                    - checkbox "Párolt jázmin rizs" [ref=f27e247]
+                    - text: Párolt jázmin rizs
+                  - generic [ref=f27e248]:
+                    - checkbox "Pepsi 0,22" [ref=f27e249]
+                    - text: Pepsi 0,22
+                  - generic [ref=f27e250]:
+                    - checkbox "Pepsi 0,33" [ref=f27e251]
+                    - text: Pepsi 0,33
+                  - generic [ref=f27e252]:
+                    - checkbox "Pepsi 0,5" [ref=f27e253]
+                    - text: Pepsi 0,5
+                  - generic [ref=f27e254]:
+                    - checkbox "Pepsi 1L" [ref=f27e255]
+                    - text: Pepsi 1L
+                  - generic [ref=f27e256]:
+                    - checkbox "Rántott csirkemell szeletek választható körettel" [ref=f27e257]
+                    - text: Rántott csirkemell szeletek választható körettel
+                  - generic [ref=f27e258]:
+                    - checkbox "Rántott halrudacskák választható körettel" [ref=f27e259]
+                    - text: Rántott halrudacskák választható körettel
+                  - generic [ref=f27e260]:
+                    - checkbox "Rántott sajt választható körettel" [ref=f27e261]
+                    - text: Rántott sajt választható körettel
+                  - generic [ref=f27e262]:
+                    - checkbox "Rántott sajt-menü" [ref=f27e263]
+                    - text: Rántott sajt-menü
+                  - generic [ref=f27e264]:
+                    - checkbox "Rántott sajt-menü" [ref=f27e265]
+                    - text: Rántott sajt-menü
+                  - generic [ref=f27e266]:
+                    - checkbox "Rántott szelet-menü" [ref=f27e267]
+                    - text: Rántott szelet-menü
+                  - generic [ref=f27e268]:
+                    - checkbox "Rántott szelet-menü" [ref=f27e269]
+                    - text: Rántott szelet-menü
+                  - generic [ref=f27e270]:
+                    - checkbox "Red Bull" [ref=f27e271]
+                    - text: Red Bull
+                  - generic [ref=f27e272]:
+                    - checkbox "Sajtos pizza · teszt" [ref=f27e273]
+                    - text: Sajtos pizza · teszt
+                  - generic [ref=f27e274]:
+                    - checkbox "Schweppes 0,5" [ref=f27e275]
+                    - text: Schweppes 0,5
+                  - generic [ref=f27e276]:
+                    - checkbox "Sonkás pizza · teszt" [ref=f27e277]
+                    - text: Sonkás pizza · teszt
+                  - generic [ref=f27e278]:
+                    - checkbox "Soproni" [ref=f27e279]
+                    - text: Soproni
+                  - generic [ref=f27e280]:
+                    - checkbox "Soproni Radler 2% meggy" [ref=f27e281]
+                    - text: Soproni Radler 2% meggy
+                  - generic [ref=f27e282]:
+                    - checkbox "Soproni Zéro 0,0%" [ref=f27e283]
+                    - text: Soproni Zéro 0,0%
+                  - generic [ref=f27e284]:
+                    - checkbox "Soproni zéró citrom 0,0%" [ref=f27e285]
+                    - text: Soproni zéró citrom 0,0%
+                  - generic [ref=f27e286]:
+                    - checkbox "Sült burgonya" [ref=f27e287]
+                    - text: Sült burgonya
+                  - generic [ref=f27e288]:
+                    - checkbox "Texasi-csirke szárny falatkák választható körettel" [ref=f27e289]
+                    - text: Texasi-csirke szárny falatkák választható körettel
+                  - generic [ref=f27e290]:
+                    - checkbox "Toma Gyümölcs 0,25" [ref=f27e291]
+                    - text: Toma Gyümölcs 0,25
+                  - generic [ref=f27e292]:
+                    - checkbox "Toma Gyümölcs 0,33" [ref=f27e293]
+                    - text: Toma Gyümölcs 0,33
+                  - generic [ref=f27e294]:
+                    - checkbox "Toma Gyümölcs 0,5" [ref=f27e295]
+                    - text: Toma Gyümölcs 0,5
+                  - generic [ref=f27e296]:
+                    - checkbox "Tuborg green 0,33" [ref=f27e297]
+                    - text: Tuborg green 0,33
+                  - generic [ref=f27e298]:
+                    - checkbox "Tutty juice" [ref=f27e299]
+                    - text: Tutty juice
+                  - generic [ref=f27e300]:
+                    - checkbox "Vega-burger" [ref=f27e301]
+                    - text: Vega-burger
+                  - generic [ref=f27e302]:
+                    - checkbox "Vega-tál" [ref=f27e303]
+                    - text: Vega-tál
+                  - generic [ref=f27e304]:
+                    - checkbox "Vegyes köret" [ref=f27e305]
+                    - text: Vegyes köret
+              - generic [ref=f27e306]:
+                - checkbox "Minden teljes darabszám után újra járjon (pl. 4 pizzához 2 ajándék)." [ref=f27e307]
+                - text: Minden teljes darabszám után újra járjon (pl. 4 pizzához 2 ajándék).
+              - generic [ref=f27e308]:
+                - generic [ref=f27e309]:
+                  - generic [ref=f27e310]: Első nap (nem kötelező)
+                  - textbox "Első nap (nem kötelező)" [ref=f27e311]
+                - generic [ref=f27e312]:
+                  - generic [ref=f27e313]: Utolsó nap (nem kötelező)
+                  - textbox "Utolsó nap (nem kötelező)" [ref=f27e314]
+              - paragraph [ref=f27e315]: A megadott napok is beleszámítanak, magyarországi idő szerint. Több aktív akció együtt is érvényesülhet.
+              - generic [ref=f27e316]:
+                - checkbox "Akció bekapcsolva" [ref=f27e317]
+                - text: Akció bekapcsolva
+              - button "Akció mentése" [ref=f27e318] [cursor=pointer]
+            - generic [ref=f27e319]:
+              - heading "Mentett akciók" [level=2] [ref=f27e320]
+              - article [ref=f27e321]:
+                - generic [ref=f27e322]:
+                  - heading "Két pizza mellé ajándék palacsinta" [level=3] [ref=f27e323]
+                  - generic [ref=f27e324]: Bekapcsolva
+                - paragraph [ref=f27e325]: 2 db → 1 db ajándék. Ismétlődő.
+                - paragraph [ref=f27e326]: "Feltétel: Sajtos pizza · teszt, Sonkás pizza · tesztAjándék: Kakaós palacsinta · teszt, Lekváros palacsinta · teszt"
+                - link "Szerkesztés" [ref=f27e327] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8016/admin/gift-promotions?edit=1
+    - text: 
+    - generic [ref=f27e328]: "©BY: pZoli.com"

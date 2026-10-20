@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Helpers\helper;
 use App\Helpers\sms_helper;
 use App\Models\User;
-use App\Models\Cart;
 use App\Models\OTPConfiguration;
 use App\Models\SystemAddons;
 use App\Models\Transaction;
@@ -307,12 +306,6 @@ class UserController extends Controller
                     if (Auth::user()->is_available == 1) {
                         if (Auth::user()->is_verified == 1) {
 
-                            $oldsessionid = session()->get('oldsessionid');
-                            $cart = Cart::where('session_id', $oldsessionid)->update([
-                                'user_id' => Auth::user()->id,
-                                'session_id' => '',
-                            ]);
-
                             return redirect(route('home'));
                         } else {
                             $otp = rand(100000, 999999);
@@ -451,7 +444,8 @@ class UserController extends Controller
     public function logout()
     {
         Auth::logout();
-        session()->flush();
+        session()->invalidate();
+        session()->regenerateToken();
         return redirect(route('home'));
     }
 }

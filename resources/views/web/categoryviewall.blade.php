@@ -1,49 +1,19 @@
 @extends('web.layout.default')
-@section('page_title')
-    | {{ trans('labels.categories') }}
+@section('page_title', '| Étlap')
+@section('styles')
+<link rel="stylesheet" href="{{ url('public/city/menu.css') }}?v=20261020-2">
 @endsection
 @section('content')
-    <div class="breadcrumb-sec">
-        <div class="container">
-            <div class="breadcrumb-sec-content">
-                <nav class="text-dark breadcrumb-divider" aria-label="breadcrumb">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item">
-                            <a class="text-dark fw-600" href="{{ URL::to('/') }}">{{ trans('labels.home') }}</a>
-                        </li>
-
-                        {{-- ÚJ: Kategóriák link a lista oldalra --}}
-                        <li class="breadcrumb-item">
-                            <a class="text-dark fw-600" href="{{ url('categories') }}">{{ trans('labels.categories') }}</a>
-                        </li>
-
-                        {{-- Aktuális kategória neve --}}
-                        <li class="breadcrumb-item active" aria-current="page">
-                            {{ $currentCategory->category_name ?? \Illuminate\Support\Str::headline(str_replace('-', ' ', request('category'))) }}
-                        </li>
-                    </ol>
-
-                </nav>
-            </div>
-        </div>
-    </div>
-    <div class="container">
-        <div class="row g-3 mb-3 mt-5">
-            @foreach (helper::get_categories() as $categorydata)
-                <div class="col-lg-2 col-md-3 col-sm-4 col-6">
-                    <div class="category-wrapper mx-2">
-                        <a href="{{ URL::to('/menu/?category=' . $categorydata->slug) }}">
-                            <div class="cat rounded-circle mx-auto">
-                                <img src="{{ helper::image_path($categorydata->image) }}" class="rounded-circle"
-                                    alt="category">
-                            </div>
-                        </a>
-                        <p class="my-2 text-center">{{ $categorydata->category_name }}</p>
-                    </div>
-                </div>
-            @endforeach
-        </div>
-    </div>
-
-    @include('web.subscribeform')
+<div class="city-menu-page">
+    <section class="city-menu-intro city-menu-overview-intro"><div class="container"><div><p class="city-eyebrow">Gyros City · Étlap</p><h1>Mihez van kedved?</h1><p>Gyros, burger vagy valami más? Innen indul a rendelésed.</p></div><a class="city-menu-back" href="{{ route('cart') }}">Kosaram megnyitása →</a></div></section>
+    <section class="container city-menu-overview" aria-label="Étlap kategóriái">
+        @foreach (helper::get_categories() as $category)
+        <a class="city-menu-category-card" href="{{ url('/menu?category='.$category->slug) }}">
+            <div class="city-menu-category-photo"><img src="{{ helper::image_path($category->image) }}" width="480" height="300" alt="" loading="lazy"></div>
+            <div class="city-menu-category-caption"><div><p>{{ $category->item_info->count() }} tétel</p><h2>{{ $category->category_name }}</h2></div><span aria-hidden="true">↗</span></div>
+        </a>
+        @endforeach
+    </section>
+    <div class="container city-menu-help"><p>Inkább telefonon rendelnél?</p><a href="tel:+36205976297">06 20 597 6297 ↗</a></div>
+</div>
 @endsection

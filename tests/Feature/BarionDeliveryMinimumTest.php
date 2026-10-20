@@ -30,6 +30,15 @@ class BarionDeliveryMinimumTest extends TestCase
             'session.driver' => 'array',
         ]);
 
+        Schema::create('categories', function (Blueprint $table) {
+            $table->id(); $table->integer('is_available'); $table->integer('is_deleted');
+        });
+        Schema::create('item', function (Blueprint $table) {
+            $table->id(); $table->integer('cat_id'); $table->integer('item_status'); $table->boolean('today_unavailable');
+        });
+        DB::table('categories')->insert(['id' => 1, 'is_available' => 1, 'is_deleted' => 2]);
+        DB::table('item')->insert(['id' => 1, 'cat_id' => 1, 'item_status' => 1, 'today_unavailable' => false]);
+
         Schema::create('cart', function (Blueprint $table) {
             $table->id();
             $table->string('session_id')->nullable();

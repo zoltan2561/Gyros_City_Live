@@ -101,7 +101,7 @@ class HomeController extends Controller
                 })
                 ->groupBy('order_details.item_id', 'item.id', 'cart.item_id')
                 ->orderByDesc('item_order_counter')
-                ->where('item.item_status', '1')
+                ->visibleOnMenu()
                 ->take(9)->get();
 
             $todayspecial = Item::with('category_info', 'subcategory_info', 'item_image')->select('item.*', DB::raw('(case when favorite.item_id is null then 0 else 1 end) as is_favorite'), DB::raw('(case when item.price is null then 0 else item.price end) as item_price'), DB::raw('(case when cart.item_id is null then 0 else 1 end) as is_cart'))
@@ -116,7 +116,7 @@ class HomeController extends Controller
                 })
                 ->groupBy('item.id', 'cart.item_id')
                 ->where('item.is_featured', '1')
-                ->where('item.item_status', '1')
+                ->visibleOnMenu()
                 ->orderBy('item.reorder_id')->take(8)->get();
 
             $topdealsproduct = Item::with('category_info', 'subcategory_info', 'item_image')->select('item.*', DB::raw('(case when favorite.item_id is null then 0 else 1 end) as is_favorite'), DB::raw('(case when item.price is null then 0 else item.price end) as item_price'), DB::raw('(case when cart.item_id is null then 0 else 1 end) as is_cart'))
@@ -131,7 +131,7 @@ class HomeController extends Controller
                 })
                 ->groupBy('item.id', 'cart.item_id')
                 ->where('item.is_top_deals', '1')
-                ->where('item.item_status', '1')
+                ->visibleOnMenu()
                 ->where('item.price', '>', $offer_price)
                 ->orderBy('item.reorder_id')->take(8)->get();
 
@@ -147,7 +147,7 @@ class HomeController extends Controller
                 })
                 ->groupBy('item.id', 'cart.item_id')
                 ->inRandomOrder()
-                ->where('item.item_status', '1')
+                ->visibleOnMenu()
                 ->take(9)->get();
         } else {
             $topitemlist = Item::with('category_info', 'subcategory_info', 'item_image')->select('item.*', 'order_details.qty as order_details_qty', DB::raw('count(order_details.item_id) as item_order_counter'), DB::raw('(case when item.price is null then 0 else item.price end) as item_price'), DB::raw('(case when cart.item_id is null then 0 else 1 end) as is_cart'))
@@ -159,7 +159,7 @@ class HomeController extends Controller
                 })
                 ->groupBy('order_details.item_id', 'item.id', 'cart.item_id')
                 ->orderByDesc('item_order_counter')
-                ->where('item.item_status', '1')
+                ->visibleOnMenu()
                 ->take(8)->get();
 
             $todayspecial = Item::with('category_info', 'subcategory_info', 'item_image')->select('item.*', DB::raw('(case when item.price is null then 0 else item.price end) as item_price'), DB::raw('(case when cart.item_id is null then 0 else 1 end) as is_cart'))
@@ -170,7 +170,7 @@ class HomeController extends Controller
                 })
                 ->groupBy('item.id', 'cart.item_id')
                 ->where('item.is_featured', '1')
-                ->where('item.item_status', '1')
+                ->visibleOnMenu()
                 ->orderBy('item.reorder_id')
                 ->take(8)->get();
 
@@ -182,7 +182,7 @@ class HomeController extends Controller
                 })
                 ->groupBy('item.id', 'cart.item_id')
                 ->where('item.is_top_deals', '1')
-                ->where('item.item_status', '1')
+                ->visibleOnMenu()
                 ->where('item.price', '>', $offer_price)
                 ->orderBy('item.reorder_id')->take(10)->get();
 
@@ -194,7 +194,7 @@ class HomeController extends Controller
                 })
                 ->groupBy('item.id', 'cart.item_id')
                 ->inRandomOrder()
-                ->where('item.item_status', '1')
+                ->visibleOnMenu()
                 ->take(8)->get();
         }
 
@@ -207,7 +207,7 @@ class HomeController extends Controller
         }
 
         $lang = Languages::get();
-        return view('web.home' . $theme . '.index', compact('sliders', 'banners', 'todayspecial', 'topitemlist', 'storereviews', 'getteams', 'getfaqs', 'getblogs', 'getwhychooseus', 'recommended', 'topdealsproduct', 'topdeals', 'getgalleries', 'lang'));
+        return view('web.city.home', compact('sliders', 'banners', 'todayspecial', 'topitemlist', 'storereviews', 'getteams', 'getfaqs', 'getblogs', 'getwhychooseus', 'recommended', 'topdealsproduct', 'topdeals', 'getgalleries', 'lang'));
     }
     public function categories(Request $request)
     {

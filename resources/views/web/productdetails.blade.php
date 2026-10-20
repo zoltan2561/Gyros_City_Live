@@ -3,6 +3,7 @@
     | {{ @$getitemdata->item_name }}
 @endsection
 @section('content')
+@if (!$getitemdata->is_orderable)<div class="container mt-4"><p class="alert alert-secondary" role="status">Ez az étel jelenleg nem elérhető. Az összetevőit továbbra is megnézheted.</p></div>@endif
     <div class="breadcrumb-sec">
         <div class="container">
             <div class="breadcrumb-sec-content">
@@ -27,27 +28,19 @@
             </div>
         </div>
     </div>
-    <section class="mt-5">
+    <section class="city-product-page">
         <div class="container">
             <div class="item-details border-bottom pb-4">
                 <div class="row mb-4 justify-content-between">
                     <div class="col-lg-5 col-12 mb-3">
-                        <div class="item-img-cover">
-                            {{-- image --}}
-
-                            <div class="card h-100 overflow-hidden rounded-0 border-0 position-relative">
-                                <!-- new big-view -->
-                                <div class="sp-loading"><img src="https://via.placeholder.com/1100x1220" alt=""
-                                        class="rounded-4"><br>LOADING IMAGES</div>
-                                <div class="sp-wrap">
-                                    @foreach ($getitemdata['item_images'] as $key => $firstimage)
-                                        <a href="{{ @helper::image_path($firstimage->image_name) }}">
-                                            <img src="{{ @helper::image_path($firstimage->image_name) }}" alt=""
-                                                class="rounded-4"></a>
-                                    @endforeach
-                                </div>
-                                <!-- new big-view -->
-                            </div>
+                        <div class="city-product-gallery">
+                            @forelse ($getitemdata['item_images'] as $image)
+                                <a href="{{ helper::image_path($image->image_name) }}" target="_blank" rel="noopener noreferrer">
+                                    <img src="{{ helper::image_path($image->image_name) }}" alt="{{ $getitemdata->item_name }}" width="620" height="550" {{ $loop->first ? 'fetchpriority=high' : 'loading=lazy' }}>
+                                </a>
+                            @empty
+                                <img src="{{ helper::image_path('item-placeholder.png') }}" alt="{{ $getitemdata->item_name }}" width="620" height="550">
+                            @endforelse
                         </div>
                     </div>
                     <div class="col-lg-7 col-12">
@@ -91,7 +84,7 @@
                                     <img class="col-1 {{ session()->get('direction') == 2 ? 'ms-1' : 'me-1' }}"
                                         @if ($getitemdata->item_type == 1) src="{{ helper::image_path('veg.svg') }}" @else src="{{ helper::image_path('nonveg.svg') }}" @endif
                                         alt="">
-                                    <span class="item-title">{{ $getitemdata->item_name }}</span>
+                                    <h1 class="item-title">{{ $getitemdata->item_name }}</h1>
                                 </div>
                             </div>
                             <div class="row my-2 align-items-center">
@@ -148,193 +141,7 @@
                                 <div class="product-detail-countdown d-flex border-bottom gap-2 my-3 pb-3" id="countdown">
                                 </div>
                             @endif
-                            @if (!empty($getitemdata->addons_group) && count($getitemdata->addons_group) > 0)
-                                <div class="row align-items-center">
-                                    <div class="col-lg-12 col-md-12 col-sm-12 m-auto">
-                                        <div class="addon-item-details scroll-addon-details">
-                                            @foreach ($getitemdata['addons_group'] as $addons_group)
-                                                @php
-                                                    $availableAddons = collect($getitemdata['addons'])->where(
-                                                        'addongroup_id',
-                                                        $addons_group->id,
-                                                    );
-                                                @endphp
-                                                @if ($availableAddons->isNotEmpty())
-                                                    <div class="item-addons-list mt-3 border-bottom pb-3"
-                                                        id="item_addons_group_{{ $getitemdata['id'] }}_{{ $addons_group->id }}">
-                                                        <h5 class="mb-1 fs-6">{{ $addons_group->name }}</h5>
-                                                        <div class="d-flex align-items-center gap-1 pb-1">
-                                                            @if ($addons_group->selection_type == 1)
-                                                                <i class="fa-solid fa-triangle-exclamation addon_group_color fs-8"
-                                                                    id="addon_required_icon_{{ $addons_group->id }}_{{ $getitemdata['id'] }}"></i>
-                                                                <span class="fs-8 fw-600 addon_group_color"
-                                                                    id="addon_required_text_{{ $addons_group->id }}_{{ $getitemdata['id'] }}">{{ trans('labels.required') }}</span>
-                                                                <span class="fs-8">•</span>
-                                                            @elseif ($addons_group->selection_type == 2)
-                                                                <span
-                                                                    class="fs-8">({{ trans('labels.optional') }})</span>
-                                                                <span class="fs-8">•</span>
-                                                            @endif
-                                                            @if ($addons_group->selection_count == 1)
-                                                                <span class="fs-8">{{ trans('labels.select') }}
-                                                                    1</span>
-                                                            @else
-                                                                <span class="fs-8">{{ trans('labels.min') }}
-                                                                    {{ $addons_group->min_count }} |
-                                                                    {{ trans('labels.max') }}
-                                                                    {{ $addons_group->max_count }}
-                                                                </span>
-                                                            @endif
-                                                        </div>
-                                                        @foreach ($getitemdata['addons'] as $addons)
-                                                            @if ($addons->addongroup_id == $addons_group->id)
-                                                                <div
-                                                                    class="mx-2 {{ session()->get('direction') == '2' ? 'd-flex gap-2' : 'form-check' }}">
-                                                                    @php
-                                                                        if ($addons_group->selection_count == 1) {
-                                                                            $type = 'radio';
-                                                                        } elseif ($addons_group->selection_count == 2) {
-                                                                            $type = 'checkbox';
-                                                                        }
-                                                                    @endphp
-                                                                    <input
-                                                                        class="form-check-input cursor-pointer addons_chk_{{ $getitemdata['id'] }} {{ session()->get('direction') == '2' ? 'ms-0' : '' }}"
-                                                                        type="{{ $type }}"
-                                                                        value="{{ $addons->id }}"
-                                                                        data-addons-id="{{ $addons->id }}"
-                                                                        data-addons-price="{{ $addons->price }}"
-                                                                        data-addons-name="{{ $addons->name }}"
-                                                                        onclick="getaddons('{{ $getitemdata['id'] }}')"
-                                                                        name="addons_id_{{ $addons_group->id }}_{{ $getitemdata['id'] }}"
-                                                                        id="addons_{{ $addons_group->id }}_{{ $getitemdata['id'] }}_{{ $addons->id }}">
-                                                                    <div
-                                                                        class="d-flex justify-content-between w-100 {{ session()->get('direction') == '2' ? 'ps-2' : 'pe-2' }}">
-                                                                        <label class="form-check-label cursor-pointer fs-7"
-                                                                            for="addons_{{ $addons_group->id }}_{{ $getitemdata['id'] }}_{{ $addons->id }}">{{ $addons->name }}</label>
-                                                                        <label class="form-check-label cursor-pointer fs-7"
-                                                                            for="addons_{{ $addons_group->id }}_{{ $getitemdata['id'] }}_{{ $addons->id }}">
-                                                                            {{ helper::currency_format($addons->price) }}
-                                                                        </label>
-                                                                    </div>
-                                                                </div>
-                                                            @endif
-                                                        @endforeach
-                                                        @if ($addons_group->selection_type == 1)
-                                                            <span
-                                                                class="addons_error_{{ $addons_group->id }}_{{ $getitemdata['id'] }} text-danger fs-7 ms-2"></span>
-                                                        @endif
-                                                    </div>
-                                                @endif
-                                            @endforeach
-                                        </div>
-                                    </div>
-                                </div>
-                            @endif
-                            {{-- Item Extra --}}
-                            @if (!empty($getitemdata->extras) && count($getitemdata->extras) > 0)
-                                <div class="item-details mt-3">
-                                    <h5 class="mb-1 fs-6">{{ trans('labels.extras') }}</h5>
-                                    <div class="item-addons-list mt-2 border-bottom pb-3 px-2">
-                                        @foreach ($getitemdata->extras as $extras)
-                                            <div
-                                                class="{{ session()->get('direction') == '2' ? 'd-flex' : 'form-check' }}">
-                                                <input
-                                                    class="form-check-input cursor-pointer extras_chk_{{ $getitemdata['id'] }} {{ session()->get('direction') == '2' ? 'ms-0' : '' }}"
-                                                    type="checkbox" value="{{ $extras->id }}"
-                                                    data-extras-id="{{ $extras->id }}"
-                                                    data-extras-price="{{ $extras->price }}"
-                                                    data-extras-name="{{ $extras->name }}"
-                                                    id="extras_{{ $extras->id }}_{{ $getitemdata['id'] }}"
-                                                    name="extras_id_{{ $getitemdata['id'] }}">
-                                                <div
-                                                    class="d-flex justify-content-between align-items-center w-100 text-black">
-                                                    <label class="form-check-label cursor-pointer me-2 fs-7"
-                                                        for="extras_{{ $extras->id }}_{{ $getitemdata['id'] }}">{{ $extras->name }}</label>
-                                                    <label class="form-check-label cursor-pointer me-2 fs-7"
-                                                        for="extras_{{ $extras->id }}_{{ $getitemdata['id'] }}">
-                                                        {{ helper::currency_format($extras->price) }}
-                                                    </label>
-                                                </div>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            @endif
-                            <input type="hidden" name="addongroup" id="addongroup_{{ $getitemdata['id'] }}"
-                                data-addongroup_val="{{ $getitemdata['addons_group'] }}">
-                            <input type="hidden" name="slug" id="slug_{{ $getitemdata['id'] }}"
-                                value="{{ $getitemdata['slug'] }}">
-                            <input type="hidden" name="item_name" id="item_name_{{ $getitemdata['id'] }}"
-                                value="{{ $getitemdata['item_name'] }}">
-                            <input type="hidden" name="item_type" id="item_type_{{ $getitemdata['id'] }}"
-                                value="{{ $getitemdata['item_type'] }}">
-                            <input type="hidden" name="image_name" id="image_name_{{ $getitemdata['id'] }}"
-                                value="{{ $getitemdata['item_image']->image_name }}">
-                            <input type="hidden" name="tax" id="item_tax_{{ $getitemdata['id'] }}"
-                                value="{{ $getitemdata['tax'] }}">
-                            <input type="hidden" name="item_price" id="item_price_{{ $getitemdata['id'] }}"
-                                value="{{ $price }}">
-                            <input type="hidden" name="request_url" id="request_url_{{ $getitemdata['slug'] }}"
-                                value="{{ request()->segments()[0] }}">
-                            <input type="hidden" name="login_required" id="login_required_{{ $getitemdata['slug'] }}"
-                                value="{{ helper::appdata()->login_required }}">
-                            <input type="hidden" name="checklogin" id="checklogin_{{ $getitemdata['slug'] }}"
-                                value="{{ Auth::user() && Auth::user()->type == 2 }}">
-                            <input type="hidden" name="customer_login" id="customer_login_{{ $getitemdata['slug'] }}"
-                                value="{{ App\Models\SystemAddons::where('unique_identifier', 'customer_login')->first() }}">
-                            <div class="border-bottom border-top py-3">
-                                <div class="row g-3 align-items-center">
-                                    <div class="col-md-auto col-12">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <div>
-                                                <p class="mb-0">{{ trans('labels.quantity') }} :</p>
-                                            </div>
-                                            <div class="btn item-quantity">
-                                                <button class="btn btn-sm item-quantity-minus"
-                                                    onclick="changeqty('{{ $getitemdata['slug'] }}','minus')">-</button>
-                                                <input class="item-quantity-input" type="text" value="1"
-                                                    readonly="" id="item_qty_{{ $getitemdata['slug'] }}">
-                                                <button class="btn btn-sm item-quantity-plus"
-                                                    onclick="changeqty('{{ $getitemdata['slug'] }}','plus')">+</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4 col-sm-6 col-6">
-                                        <button
-                                            class="btn btn-secondary w-100 m-0 fs-7 fw-500 rounded-3 d-flex gap-3 justify-content-center align-items-center cart"
-                                            onclick="addtocart('{{ URL::to('addtocart') }}','{{ $getitemdata['id'] }}','0')">
-                                            {{ trans('labels.add_to_cart') }}
-                                            <div class="loader d-none cart_loader"></div>
-                                        </button>
-                                    </div>
-                                    <div class="col-md-4 col-sm-6 col-6">
-                                        @if (@helper::checkaddons('customer_login'))
-                                            @if (helper::appdata()->login_required == 1)
-                                                <button
-                                                    class="btn btn-primary w-100 m-0 fs-7 fw-500 rounded-3 d-flex gap-3 justify-content-center align-items-center quick_order"
-                                                    @if (helper::appdata()->is_checkout_login_required == 1) onclick="showlogin()" @else  onclick="addtocart('{{ URL::to('addtocart') }}','{{ $getitemdata['id'] }}','1')" @endif>
-                                                    {{ trans('labels.quick_order') }}
-                                                    <div class="loader d-none quick_order_loader"></div>
-                                                </button>
-                                            @else
-                                                <button
-                                                    class="btn btn-primary w-100 m-0 fs-7 fw-500 rounded-3 d-flex gap-3 justify-content-center align-items-center quick_order"
-                                                    onclick="addtocart('{{ URL::to('addtocart') }}','{{ $getitemdata['id'] }}','1')">
-                                                    {{ trans('labels.quick_order') }}
-                                                    <div class="loader d-none quick_order_loader"></div>
-                                                </button>
-                                            @endif
-                                        @else
-                                            <button
-                                                class="btn btn-primary w-100 m-0 fs-7 fw-500 rounded-3 d-flex gap-3 justify-content-center align-items-center quick_order"
-                                                onclick="addtocart('{{ URL::to('addtocart') }}','{{ $getitemdata['id'] }}','1')">
-                                                {{ trans('labels.quick_order') }}
-                                                <div class="loader d-none quick_order_loader"></div>
-                                            </button>
-                                        @endif
-                                    </div>
-                                </div>
-                            </div>
+                            @include('web.city.builder', ['builderItem' => $getitemdata, 'builderModal' => false, 'builderAvailable' => $getitemdata->is_orderable])
                             <div class="d-flex flex-wrap justify-content-between mt-3 align-items-center">
                                 <div class="col-sm-6">
                                     <div class="wishlist set-fav-{{ $getitemdata->id }}">
@@ -674,7 +481,7 @@
                                                     <button class="btn btn-primary fs-7 write-review"
                                                         data-item-id="{{ $getitemdata->id }}"
                                                         data-item-name="{{ $getitemdata->item_name }}"
-                                                        data-item-image="{{ helper::image_path($getitemdata['item_image']->image_name) }}">{{ trans('labels.write_review') }}</button>
+                                                        data-item-image="{{ helper::image_path($getitemdata->item_image?->image_name ?? 'item-placeholder.png') }}">{{ trans('labels.write_review') }}</button>
                                                 @else
                                                     <button class="btn btn-primary fs-7"
                                                         onclick="showlogin()">{{ trans('labels.write_review') }}</button>
@@ -781,15 +588,7 @@
         }
     </style>
 
-    <script src="{{ url(env('ASSETSPATHURL') . 'web-assets/js/item-image-carousel/main.js') }}"></script>
-    <script src="{{ url(env('ASSETSPATHURL') . 'web-assets/js/item-image-carousel/zoom-image.js') }}"></script>
-
-    <script src="{{ url(env('ASSETSPATHURL') . 'web-assets/js/smoothproducts.js') }}"></script>
     <script>
-        $('.sp-wrap').smoothproducts();
-        window.onload = function() {
-            getaddons("{{ $getitemdata['id'] }}"); // Call the function
-        };
 
         var topdeals = "{{ $getitemdata->is_top_deals == 1 ? 1 : 0 }}";
 

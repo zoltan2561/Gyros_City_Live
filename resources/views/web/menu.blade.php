@@ -1,107 +1,57 @@
 @extends('web.layout.default')
-@section('page_title')
-    | {{ trans('labels.menu') }} | {{ @$categorydata->category_name }}
+@section('page_title', '| Étlap · '.($categorydata->category_name ?? ''))
+@section('styles')
+<link rel="stylesheet" href="{{ url('public/city/menu.css') }}?v=20261020-2">
+@endsection
+@section('scripts')
+<script src="{{ url('public/city/menu.js') }}?v=20261020-2" defer></script>
 @endsection
 @section('content')
-    @if (!empty($categorydata))
-        <div class="breadcrumb-sec mb-3">
-            <div class="container">
-                <div class="breadcrumb-sec-content">
-                    <nav class="text-dark breadcrumb-divider" aria-label="breadcrumb">
-                        <ol class="breadcrumb">
-                            <li class="breadcrumb-item">
-                                <a class="text-dark fw-600" href="{{ URL::to('/') }}">{{ trans('labels.home') }}</a>
-                            </li>
-
-                            {{-- ÚJ: Kategóriák link a lista oldalra --}}
-                            <li class="breadcrumb-item">
-                                <a class="text-dark fw-600" href="{{ url('categories') }}">{{ trans('labels.categories') }}</a>
-                            </li>
-
-                            {{-- Aktuális kategória neve --}}
-                            <li class="breadcrumb-item active" aria-current="page">
-                                {{ $currentCategory->category_name ?? \Illuminate\Support\Str::headline(str_replace('-', ' ', request('category'))) }}
-                            </li>
-                        </ol>
-
-                    </nav>
-                </div>
+@php $menuCategories = helper::get_categories(); @endphp
+<div class="city-menu-page">
+    <section class="city-menu-intro"><div class="container"><div><p class="city-eyebrow">Gyros City · Étlap</p><h1>{{ $categorydata->category_name }}</h1><p>Válassz egy kedvencet, és állítsd össze úgy, ahogy szereted.</p></div><a class="city-menu-back" href="{{ route('categories') }}">← Összes kategória</a></div></section>
+    <div class="container city-menu-layout">
+        <aside class="city-menu-sidebar">
+            <h2>Kategóriák</h2>
+            <nav class="city-menu-categories" aria-label="Étlap kategóriái">
+                @foreach ($menuCategories as $category)
+                <a href="{{ url('/menu?'.http_build_query(['category' => $category->slug])) }}" @class(['is-current' => $category->id === $categorydata->id]) @if ($category->id === $categorydata->id) aria-current="page" @endif>
+                    <img src="{{ helper::image_path($category->image) }}" width="38" height="38" alt="" loading="lazy"><span>{{ $category->category_name }}</span><span class="city-menu-count">{{ $category->item_info->count() }}</span>
+                </a>
+                @endforeach
+            </nav>
+        </aside>
+        <section class="city-menu-results" aria-labelledby="menu-results-title">
+            <div class="city-menu-toolbar">
+                <div><p class="city-eyebrow">Kínálatunk</p><h2 id="menu-results-title">{{ $getitemlist->total() }} tétel az étlapon</h2></div>
+                <form method="get" action="{{ url('/menu') }}" class="city-menu-search" role="search">
+                    <input type="hidden" name="category" value="{{ $categorydata->slug }}">
+                    @if (request()->filled('subcategory'))<input type="hidden" name="subcategory" value="{{ request('subcategory') }}">@endif
+                    <label for="menu-search" class="visually-hidden">Keresés ebben a kategóriában</label>
+                    <input id="menu-search" type="search" name="q" maxlength="100" value="{{ request('q') }}" placeholder="Mit keresel?" autocomplete="off">
+                    <button type="submit" aria-label="Étel keresése"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></button>
+                </form>
             </div>
-        </div>
-        <section class="menu-section">
-            <div class="container">
-                <div class="row">
-                    <div class="filter-sidebar mb-3">
-                        <div class="sidebar-wrap" id="style-3">
-
-
-                            {{-- ÚJ: Vissza a kategóriákhoz gomb, ha van category param --}}
-                            @if(request()->has('category'))
-                                <a href="{{ url('categories') }}"
-                                   class="back-btn"
-                                   aria-label="Vissza a kategóriákhoz">
-                                    ← Vissza
-                                </a>
-                            @endif
-
-                        @if (count($subcategories) > 0 || count($getitemlist) > 0 )
-                            <a href="{{ URL::to('/menu?category='.$categorydata->slug) }}"
-                                class="@if(!isset($_GET['subcategory'])) active @endif">{{ trans('labels.all') }}</a>
-                            @endif
-
-
-                            @foreach ($subcategories as $key => $subcatdata)
-                                <a href="{{ URL::to('/menu?category=' . $categorydata->slug . '&subcategory=' . $subcatdata->slug) }}"
-                                    class="@if(isset($_GET['subcategory']) && $_GET['subcategory'] == $subcatdata->slug) active @endif">{{ ucfirst($subcatdata->subcategory_name) }}</a>
-                            @endforeach
-                        </div>
-                    </div>
-                    @if (count($getitemlist) > 0)
-                        <div class="menu my-0">
-                            <div class="row g-4 boxes">
-                                @foreach ($getitemlist as $itemdata)
-                                    @include('web.home1.itemview')
-                                @endforeach
-                            </div>
-                        </div>
-                        <div class="mt-5 d-flex justify-content-center">
-                            {{ $getitemlist->appends(request()->query())->links() }}
-                        </div>
-                    @else
-                        @include('web.nodata')
-                    @endif
-                </div>
+            @if ($subcategories->isNotEmpty())
+            <nav class="city-menu-subcategories" aria-label="Alkategóriák">
+                <a href="{{ url('/menu?'.http_build_query(['category'=>$categorydata->slug, 'q'=>request('q')])) }}" @if (!request('subcategory')) aria-current="page" @endif>Összes</a>
+                @foreach ($subcategories as $subcategory)
+                <a href="{{ url('/menu?'.http_build_query(['category'=>$categorydata->slug,'subcategory'=>$subcategory->slug,'q'=>request('q')])) }}" @if (request('subcategory') === $subcategory->slug) aria-current="page" @endif>{{ $subcategory->subcategory_name }}</a>
+                @endforeach
+            </nav>
+            @endif
+            @if (request()->filled('q'))<p class="city-menu-search-note">Keresés: „{{ request('q') }}” <a href="{{ url('/menu?'.http_build_query(['category'=>$categorydata->slug,'subcategory'=>request('subcategory')])) }}">Keresés törlése ×</a></p>@endif
+            @if ($getitemlist->isNotEmpty())
+            <div class="city-menu-food-grid">
+                @foreach ($getitemlist as $itemdata) @include('web.city.item-card') @endforeach
             </div>
+            <div class="city-menu-pagination">{{ $getitemlist->appends(request()->query())->links() }}</div>
+            <p class="city-menu-availability-note">A szürkített ételek jelenleg nem rendelhetők. Az összetevőiket továbbra is megnézheted.</p>
+            @else
+            <div class="city-menu-empty"><h3>Most nincs ilyen találat.</h3><p>Próbálj másik ételnevet, vagy válassz a kategóriák közül.</p><a href="{{ url('/menu?category='.$categorydata->slug) }}" class="city-button">Kategória összes étele</a></div>
+            @endif
         </section>
-        @include('web.subscribeform')
-    @else
-        @include('web.nodata')
-    @endif
+    </div>
+    <div class="container city-menu-help"><p>Kérdésed van a rendeléshez?</p><a href="tel:+36205976297">06 20 597 6297 ↗</a><a href="{{ route('cart') }}" class="city-button">Megnézem a kosaram →</a></div>
+</div>
 @endsection
-
-<style>
-    .back-btn{
-        border-radius: 9999px;        /* szép “pill” forma */
-        padding: .45rem .9rem;
-        line-height: 1;
-        display: inline-flex;
-        align-items: center;
-        gap: .35rem;
-        transition: all .2s ease;
-        box-shadow: 0 1px 0 rgba(0,0,0,.02);
-        text-decoration: none !important;
-    }
-    .back-btn:hover{
-        transform: translateY(-1px);
-        box-shadow: 0 6px 16px rgba(0,0,0,.08);
-        background-color: #ffffff;    /* finom kiemelés */
-    }
-    .back-btn:active{
-        transform: translateY(0);
-        box-shadow: 0 3px 10px rgba(0,0,0,.06) inset;
-    }
-    .back-btn:focus-visible{
-        outline: 3px solid #86b7fe;   /* jó fókusz kontraszt */
-        outline-offset: 2px;
-    }
-</style>

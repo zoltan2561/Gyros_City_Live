@@ -7,6 +7,19 @@ use Illuminate\Support\Facades\DB;
 
 class Item extends Model
 {
+    public function getIsOrderableAttribute(): bool
+    {
+        return (int) $this->item_status === 1 && !(bool) $this->today_unavailable;
+    }
+
+    public function scopeVisibleOnMenu($query)
+    {
+        // Items are physically deleted by the existing admin. Status 0/2 means unavailable.
+        return $query->whereHas('category_info', function ($category) {
+            $category->where('is_available', 1)->where('is_deleted', 2);
+        });
+    }
+
     protected $table = 'item';
     protected $fillable = ['cat_id', 'subcat_id', 'item_name', 'slug', 'image', 'item_type', 'has_variation', 'attribute', 'price', 'original_price', 'addons_id', 'item_description', 'preparation_time', 'tax', 'avg_ratting', 'discount_percentage', 'item_status', 'is_featured', 'is_deleted', 'delivery_time'];
 

@@ -79,9 +79,11 @@ class OtherPagesController extends Controller
     //subscribe
     public function subscribe(Request $request)
     {
-        Subscribe::create([
-            'email' => $request->subscribe_email,
-        ]);
+        $request->validate(['subscribe_email' => ['required', 'email:rfc', 'max:254']]);
+        $email = strtolower(trim($request->subscribe_email));
+        if (!Subscribe::whereRaw('LOWER(TRIM(email)) = ?', [$email])->exists()) {
+            Subscribe::create(['email' => $email]);
+        }
         return redirect()->back()->with('success', trans('messages.success'));
     }
 }

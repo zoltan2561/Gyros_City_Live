@@ -21,6 +21,7 @@
     <section>
         <div class="container">
             <div class="cart-view my-5">
+                <div id="city-cart-gifts" aria-live="polite"></div>
                 @if (count($getcartlist) > 0)
                     <div class="row">
                         <div class="col-lg-12 col-md-12 col-sm-12 col-12">
@@ -42,6 +43,7 @@
                                             $total_item_qty = 0;
                                         @endphp
                                         @foreach ($getcartlist as $cartitems)
+                                            @php $isAvailable = $cartAvailability->get($cartitems->item_id)?->is_orderable ?? false; @endphp
                                             {{-- ⬇⬇⬇ SOR AZONOSÍTÓ A KÖNNYŰ ELTÁVOLÍTÁSHOZ --}}
                                             <tr id="row-{{ $cartitems->id }}" data-cart-row>
                                                 <td>
@@ -61,6 +63,7 @@
                                                                     @endif
                                                                     class="item-type-image" alt="">
                                                                 {{ $cartitems->item_name }}
+                                                                @if (!$isAvailable)<span class="d-block small text-danger mt-2">Jelenleg nem elérhető. Kérjük, vedd ki a kosárból.</span>@endif
                                                             </h5>
                                                             @if ($cartitems->addons_id != '' || $cartitems->extras_id != '')
                                                                 <small>
@@ -89,7 +92,7 @@
                                                     <nav aria-label="Page navigation example">
                                                         <ul class="qtladd mb-0 {{ session()->get('direction') == '2' ? 'rtl' : '' }}">
                                                             <li>
-                                                                <button class="qty_button"
+                                                                <button class="qty_button" aria-label="{{ $cartitems->item_name }} mennyiségének csökkentése"
                                                                         onclick="qtyupdate('{{ $cartitems['id'] }}','minus','{{ URL::to('/cart/qtyupdate') }}')">
                                                                     <span aria-hidden="true"><i class="fa-light fa-minus fs-10"></i></span>
                                                                 </button>
@@ -100,7 +103,7 @@
                                                                        value="{{ $cartitems->qty }}" readonly>
                                                             </li>
                                                             <li>
-                                                                <button class="qty_button"
+                                                                <button class="qty_button" aria-label="{{ $cartitems->item_name }} mennyiségének növelése" @disabled(!$isAvailable)
                                                                         onclick="qtyupdate('{{ $cartitems['id'] }}','plus','{{ URL::to('/cart/qtyupdate') }}')">
                                                                     <span aria-hidden="true"><i class="fa-light fa-plus fs-10"></i></span>
                                                                 </button>
@@ -116,7 +119,7 @@
                                                         {{-- ⬇⬇⬇ TÖRLÉS GOMB (NEM LINK), NINCS NAVIGÁCIÓ --}}
                                                         <button type="button"
                                                                 class="tbl_remove btn-remove"
-                                                                title="{{ trans('labels.delete') }}"
+                                                                title="{{ trans('labels.delete') }}" aria-label="{{ $cartitems->item_name }} törlése a kosárból"
                                                                 data-id="{{ $cartitems['id'] }}"
                                                                 data-row="#row-{{ $cartitems['id'] }}"
                                                                 data-url="{{ url('/cart/deleteitem') }}">
@@ -183,7 +186,6 @@
                 e.stopPropagation();
 
                 var id    = btn.getAttribute('data-id');
-                var rowSel= btn.getAttribute('data-row') || ('#row-' + id);
                 var url   = btn.getAttribute('data-url') || '{{ url('/cart/deleteitem') }}';
                 var token = getCsrf();
 
@@ -204,15 +206,8 @@
                         try { out = await res.json(); }
                         catch (_) { out = null; }
 
-                        if ((out && out.status === 1) || out === 1 || out === '1' || res.ok) {
-                            var row = document.querySelector(rowSel) || btn.closest('[data-cart-row]');
-                            if (row) row.remove();
-
-                            // opcionális: ha van számláló elem az oldalon
-                            var counter = document.querySelector('.js-cart-count');
-                            if (counter && out && typeof out.data !== 'undefined') {
-                                counter.textContent = out.data;
-                            }
+                        if ((out && out.status === 1) || out === 1 || out === '1') {
+                            location.reload();
                         } else {
                             alert((out && out.message) ? out.message : 'Hiba a törlésnél.');
                         }

@@ -1,0 +1,237 @@
+- generic [active] [ref=f19e1]:
+  - link "Ugrás a tartalomhoz" [ref=f19e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - main [ref=f19e3]:
+    - generic [ref=f19e4]:
+      - navigation [ref=f19e7]:
+        - generic [ref=f19e8]:
+          - link "Gyros City Gyros City" [ref=f19e9] [cursor=pointer]:
+            - /url: http://127.0.0.1:8016
+            - img "Gyros City" [ref=f19e10]
+            - generic [ref=f19e11]: Gyros City
+          - generic [ref=f19e12]: 
+          - text:   
+      - list [ref=f19e18]:
+        - listitem [ref=f19e19]:
+          - link " Kezdőlap" [ref=f19e20] [cursor=pointer]:
+            - /url: http://127.0.0.1:8016
+            - generic [ref=f19e21]: 
+            - paragraph [ref=f19e22]: Kezdőlap
+        - listitem [ref=f19e23]:
+          - link " . Étlap" [ref=f19e24] [cursor=pointer]:
+            - /url: http://127.0.0.1:8016/categories
+            - generic [ref=f19e25]: 
+            - paragraph [ref=f19e26]: . Étlap
+        - listitem [ref=f19e27]:
+          - link " 2 Kosár" [ref=f19e28] [cursor=pointer]:
+            - /url: http://127.0.0.1:8016/cart
+            - generic [ref=f19e29]:
+              - generic [ref=f19e30]: 
+              - generic [ref=f19e31]: "2"
+            - paragraph [ref=f19e32]: Kosár
+        - listitem [ref=f19e33]:
+          - link " Kívánságlista" [ref=f19e34] [cursor=pointer]:
+            - /url: http://127.0.0.1:8016/login
+            - generic [ref=f19e35]: 
+            - paragraph [ref=f19e36]: Kívánságlista
+        - listitem [ref=f19e37]:
+          - link " Fiók" [ref=f19e38] [cursor=pointer]:
+            - /url: http://127.0.0.1:8016/login
+            - generic [ref=f19e39]: 
+            - paragraph [ref=f19e40]: Fiók
+      - generic [ref=f19e41]:
+        - navigation "breadcrumb" [ref=f19e45]:
+          - list [ref=f19e46]:
+            - listitem [ref=f19e47]:
+              - link "Kezdőlap" [ref=f19e48] [cursor=pointer]:
+                - /url: http://127.0.0.1:8016
+            - listitem [ref=f19e49]:
+              - text: ">"
+              - link "Kategóriák" [ref=f19e50] [cursor=pointer]:
+                - /url: http://127.0.0.1:8016/categories
+            - listitem [ref=f19e51]: "> Pizzak Qa"
+        - generic [ref=f19e54]:
+          - generic [ref=f19e56]:
+            - link "Vissza a kategóriákhoz" [ref=f19e57] [cursor=pointer]:
+              - /url: http://127.0.0.1:8016/categories
+              - text: ← Vissza
+            - link "Összes" [ref=f19e58] [cursor=pointer]:
+              - /url: http://127.0.0.1:8016/menu?category=pizzak-qa
+          - generic [ref=f19e60]:
+            - article "Sonk?s pizza ? teszt" [ref=f19e62]:
+              - link "Sonk?s pizza ? teszt részletei" [ref=f19e63] [cursor=pointer]:
+                - /url: http://127.0.0.1:8016/item-qa-item-0
+                - img "Sonk?s pizza ? teszt" [ref=f19e64]
+              - generic [ref=f19e65]:
+                - paragraph [ref=f19e66]: Pizzák · teszt
+                - generic [ref=f19e67]:
+                  - heading [level=3] [ref=f19e68]:
+                    - link "Sonk?s pizza ? teszt" [ref=f19e69] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8016/item-qa-item-0
+                  - button "Sonk?s pizza ? teszt allergének" [ref=f19e70] [cursor=pointer]: i
+                - paragraph [ref=f19e71]: Kiz?r?lag a friss?t?s kipr?b?l?s?hoz.
+                - generic [ref=f19e72]:
+                  - strong [ref=f19e74]: 2,500 HUF
+                  - button "Sonk?s pizza ? teszt hozzáadása" [ref=f19e75] [cursor=pointer]:
+                    - generic [ref=f19e76]: Hozzáadom
+                    - generic [aria-hidden] [ref=f19e77]: 
+            - article "Sajtos pizza ? teszt" [ref=f19e79]:
+              - link "Sajtos pizza ? teszt részletei" [ref=f19e80] [cursor=pointer]:
+                - /url: http://127.0.0.1:8016/item-qa-item-1
+                - img "Sajtos pizza ? teszt" [ref=f19e81]
+              - generic [ref=f19e82]:
+                - paragraph [ref=f19e83]: Pizzák · teszt
+                - generic [ref=f19e84]:
+                  - heading [level=3] [ref=f19e85]:
+                    - link "Sajtos pizza ? teszt" [ref=f19e86] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8016/item-qa-item-1
+                  - button "Sajtos pizza ? teszt allergének" [ref=f19e87] [cursor=pointer]: i
+                - paragraph [ref=f19e88]: Kiz?r?lag a friss?t?s kipr?b?l?s?hoz.
+                - generic [ref=f19e89]:
+                  - strong [ref=f19e91]: 2,500 HUF
+                  - button "Sajtos pizza ? teszt hozzáadása" [ref=f19e92] [cursor=pointer]:
+                    - generic [ref=f19e93]: Hozzáadom
+                    - generic [aria-hidden] [ref=f19e94]: 
+            - article "Kaka?s palacsinta ? teszt" [ref=f19e96]:
+              - link "Kaka?s palacsinta ? teszt részletei" [ref=f19e97] [cursor=pointer]:
+                - /url: http://127.0.0.1:8016/item-qa-item-2
+                - img "Kaka?s palacsinta ? teszt" [ref=f19e98]
+              - generic [ref=f19e99]:
+                - paragraph [ref=f19e100]: Pizzák · teszt
+                - generic [ref=f19e101]:
+                  - heading [level=3] [ref=f19e102]:
+                    - link "Kaka?s palacsinta ? teszt" [ref=f19e103] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8016/item-qa-item-2
+                  - button "Kaka?s palacsinta ? teszt allergének" [ref=f19e104] [cursor=pointer]: i
+                - paragraph [ref=f19e105]: Kiz?r?lag a friss?t?s kipr?b?l?s?hoz.
+                - generic [ref=f19e106]:
+                  - strong [ref=f19e108]: 500 HUF
+                  - button "Kaka?s palacsinta ? teszt hozzáadása" [ref=f19e109] [cursor=pointer]:
+                    - generic [ref=f19e110]: Hozzáadom
+                    - generic [aria-hidden] [ref=f19e111]: 
+            - article "Lekv?ros palacsinta ? teszt" [ref=f19e113]:
+              - link "Lekv?ros palacsinta ? teszt részletei" [ref=f19e114] [cursor=pointer]:
+                - /url: http://127.0.0.1:8016/item-qa-item-3
+                - img "Lekv?ros palacsinta ? teszt" [ref=f19e115]
+              - generic [ref=f19e116]:
+                - paragraph [ref=f19e117]: Pizzák · teszt
+                - generic [ref=f19e118]:
+                  - heading [level=3] [ref=f19e119]:
+                    - link "Lekv?ros palacsinta ? teszt" [ref=f19e120] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8016/item-qa-item-3
+                  - button "Lekv?ros palacsinta ? teszt allergének" [ref=f19e121] [cursor=pointer]: i
+                - paragraph [ref=f19e122]: Kiz?r?lag a friss?t?s kipr?b?l?s?hoz.
+                - generic [ref=f19e123]:
+                  - strong [ref=f19e125]: 500 HUF
+                  - button "Lekv?ros palacsinta ? teszt hozzáadása" [ref=f19e126] [cursor=pointer]:
+                    - generic [ref=f19e127]: Hozzáadom
+                    - generic [aria-hidden] [ref=f19e128]: 
+            - article "Elfogyott pizza ? teszt, nem elérhető" [ref=f19e130]:
+              - link "Elfogyott pizza ? teszt részletei" [ref=f19e131] [cursor=pointer]:
+                - /url: http://127.0.0.1:8016/item-qa-item-4
+                - img "Elfogyott pizza ? teszt" [ref=f19e132]
+              - generic [ref=f19e133]: Ma nem elérhető
+              - generic [ref=f19e134]:
+                - paragraph [ref=f19e135]: Pizzák · teszt
+                - generic [ref=f19e136]:
+                  - heading [level=3] [ref=f19e137]:
+                    - link "Elfogyott pizza ? teszt" [ref=f19e138] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8016/item-qa-item-4
+                  - button "Elfogyott pizza ? teszt allergének" [ref=f19e139] [cursor=pointer]: i
+                - paragraph [ref=f19e140]: Kiz?r?lag a friss?t?s kipr?b?l?s?hoz.
+                - generic [ref=f19e141]:
+                  - strong [ref=f19e143]: 500 HUF
+                  - button "Nem elérhető" [disabled] [ref=f19e144]
+        - generic [ref=f19e150]:
+          - heading "Hírlevél" [level=1] [ref=f19e151]
+          - paragraph [ref=f19e152]: Iratkozz fel hírlevelünkre
+          - paragraph [ref=f19e153]: Értesülj elsőként az újdonságokról és akciókról.
+          - generic [ref=f19e154]:
+            - textbox "E-mail" [ref=f19e155]
+            - button "Feliratkozás" [ref=f19e156] [cursor=pointer]
+        - generic [ref=f19e159]:
+          - generic [ref=f19e161]:
+            - generic [ref=f19e162]:
+              - link [ref=f19e163] [cursor=pointer]:
+                - /url: http://127.0.0.1:8016
+                - img "footer_logo" [ref=f19e164]
+              - heading "Gyros City Vásárosnamény" [level=1] [ref=f19e165]
+              - paragraph [ref=f19e166]: "Minden nap: 8:00 - 22:00 Kiszállítás 11:00-21:30"
+            - generic [ref=f19e167]:
+              - generic [ref=f19e168]:
+                - generic [ref=f19e169]:
+                  - heading "Oldalak" [level=4] [ref=f19e170]
+                  - list [ref=f19e171]:
+                    - listitem [ref=f19e172]:
+                      - link "Bemutatkozás" [ref=f19e173] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8016/abous-us
+                    - listitem [ref=f19e174]:
+                      - link "Általános Szerződési Feltételek (ÁSZF)" [ref=f19e175] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8016/privacy-policy
+                    - listitem [ref=f19e176]:
+                      - link "Kiszállítással kapcsolatos információk" [ref=f19e177] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8016/refund-policy
+                    - listitem [ref=f19e178]:
+                      - link "Adatvédelmi Tájékoztató[GDPR]" [ref=f19e179] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8016/terms-conditions
+                    - listitem [ref=f19e180]:
+                      - link "Allergén táblázat" [ref=f19e181] [cursor=pointer]:
+                        - /url: alergens.html
+                - generic [ref=f19e182]:
+                  - heading "Egyéb" [level=4] [ref=f19e183]
+                  - list [ref=f19e184]:
+                    - listitem [ref=f19e185]:
+                      - link "Menü" [ref=f19e186] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8016/categories
+                    - listitem [ref=f19e187]:
+                      - link "GYIK" [ref=f19e188] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8016/faq
+                    - listitem [ref=f19e189]:
+                      - link "Kapcsolat" [ref=f19e190] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8016/contactus
+                    - listitem [ref=f19e191]:
+                      - link "Galéria" [ref=f19e192] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8016/gallery
+                - generic [ref=f19e193]:
+                  - heading "Kapcsolat" [level=4] [ref=f19e194]
+                  - list [ref=f19e195]:
+                    - link " 06205976297" [ref=f19e196] [cursor=pointer]:
+                      - /url: callto:06205976297
+                      - listitem [ref=f19e197]:
+                        - generic [ref=f19e198]: 
+                        - paragraph [ref=f19e199]: "06205976297"
+                    - link " info@gyroscity.eu" [ref=f19e200] [cursor=pointer]:
+                      - /url: mailto:info@gyroscity.eu
+                      - listitem [ref=f19e201]:
+                        - generic [ref=f19e202]: 
+                        - paragraph [ref=f19e203]: info@gyroscity.eu
+                  - link "f" [ref=f19e206] [cursor=pointer]:
+                    - /url: https://www.facebook.com/gyroscity
+              - img "Barion" [ref=f19e207]
+          - 'link "© 2026 BY: pZoli.com" [ref=f19e210] [cursor=pointer]':
+            - /url: https://pzoli.com
+      - text: 
+      - generic [ref=f19e214]:
+        - paragraph [ref=f19e216]: A megfelelő élmény biztosításához sütikre van szükség.
+        - button "Sütik engedélyezése" [ref=f19e218] [cursor=pointer]
+  - text:       
+  - dialog [ref=f19e219]:
+    - generic [ref=f19e220]:
+      - generic [ref=f19e221]:
+        - heading "Jár egy kis ajándék!" [level=2] [ref=f19e222]
+        - button "Bezárás" [ref=f19e223] [cursor=pointer]
+      - generic [ref=f19e225]:
+        - generic [ref=f19e226]: Ajándék a rendelésed mellé
+        - heading "K?t pizza mell? aj?nd?k palacsinta" [level=2] [ref=f19e227]
+        - paragraph [ref=f19e228]: 1 db ajándék jár. Válaszd ki, melyiket kéred!
+        - generic [ref=f19e229]:
+          - generic [ref=f19e230]:
+            - text: 1. ajándék
+            - combobox "1. ajándék" [ref=f19e231]:
+              - option "Válassz ételt vagy ízt" [selected]
+              - option "Kaka?s palacsinta ? teszt · 0 Ft"
+              - option "Lekv?ros palacsinta ? teszt · 0 Ft"
+          - button "Ajándék kiválasztása" [ref=f19e233] [cursor=pointer]
+          - alert
+      - link "Tovább a kosárhoz →" [ref=f19e235] [cursor=pointer]:
+        - /url: http://127.0.0.1:8016/cart

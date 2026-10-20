@@ -1,0 +1,638 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - navigation [ref=e6]:
+        - generic [ref=e7]:
+          - link [ref=e8] [cursor=pointer]:
+            - /url: http://localhost/Gyros_City_Live
+            - img "logo" [ref=e9]
+          - list [ref=e12]:
+            - listitem [ref=e13]:
+              - link "English" [ref=e14] [cursor=pointer]:
+                - /url: http://localhost/Gyros_City_Live/language-en
+            - listitem [ref=e15]:
+              - link "Hungarian" [ref=e16] [cursor=pointer]:
+                - /url: http://localhost/Gyros_City_Live/language-hu
+            - listitem [ref=e17]:
+              - link "Ukrainian" [ref=e18] [cursor=pointer]:
+                - /url: http://localhost/Gyros_City_Live/language-uk
+          - generic [ref=e19]:
+            - generic [ref=e20]:
+              - link "Kezdőlap" [ref=e21] [cursor=pointer]:
+                - /url: http://localhost/Gyros_City_Live
+              - link "Menü" [ref=e22] [cursor=pointer]:
+                - /url: http://localhost/Gyros_City_Live/categories
+              - link "GYIK" [ref=e23] [cursor=pointer]:
+                - /url: http://localhost/Gyros_City_Live/faq
+              - link "Kapcsolat" [ref=e24] [cursor=pointer]:
+                - /url: "http://localhost/Gyros_City_Live/contactus "
+            - generic [ref=e25]:
+              - list [ref=e27]:
+                - listitem [ref=e28]:
+                  - link "English" [ref=e29] [cursor=pointer]:
+                    - /url: http://localhost/Gyros_City_Live/language-en
+                - listitem [ref=e30]:
+                  - link "Hungarian" [ref=e31] [cursor=pointer]:
+                    - /url: http://localhost/Gyros_City_Live/language-hu
+                - listitem [ref=e32]:
+                  - link "Ukrainian" [ref=e33] [cursor=pointer]:
+                    - /url: http://localhost/Gyros_City_Live/language-uk
+              - generic [ref=e34]:
+                - textbox "Keresés…" [ref=e35]
+                - link:
+                  - /url: http://localhost/Gyros_City_Live/search
+              - link "0" [ref=e37] [cursor=pointer]:
+                - /url: http://localhost/Gyros_City_Live/cart
+              - generic:
+                - link:
+                  - /url: http://localhost/Gyros_City_Live/login
+      - generic [ref=e39]:
+        - generic [ref=e40]:
+          - heading "Ajánlatok" [level=5] [ref=e42]
+          - button "Close" [ref=e43]
+        - generic [ref=e48]:
+          - generic [ref=e49]: MEGA30
+          - heading "Special Online Order Offer" [level=5] [ref=e50]
+          - paragraph [ref=e51]: Lorem Ipsum is simply dummy text of the printing and typesetting industry
+      - list [ref=e54]:
+        - listitem [ref=e55]:
+          - link [ref=e56] [cursor=pointer]:
+            - /url: http://localhost/Gyros_City_Live
+            - paragraph [ref=e57]: Kezdőlap
+        - listitem [ref=e58]:
+          - link [ref=e59] [cursor=pointer]:
+            - /url: http://localhost/Gyros_City_Live/search
+            - paragraph [ref=e60]: Keresés
+        - listitem [ref=e61]:
+          - link [ref=e62] [cursor=pointer]:
+            - /url: http://localhost/Gyros_City_Live/cart
+            - generic [ref=e63]: "0"
+            - paragraph [ref=e64]: Kosár
+        - listitem [ref=e65]:
+          - link [ref=e66] [cursor=pointer]:
+            - /url: http://localhost/Gyros_City_Live/login
+            - paragraph [ref=e67]: Kívánságlista
+        - listitem [ref=e68]:
+          - link [ref=e69] [cursor=pointer]:
+            - /url: http://localhost/Gyros_City_Live/login
+            - paragraph [ref=e70]: Fiók
+      - generic [ref=e71]:
+        - generic [ref=e73]:
+          - generic [ref=e75]:
+            - img "slider" [ref=e76]
+            - generic [ref=e77]:
+              - heading "‎" [level=5] [ref=e78]
+              - paragraph
+          - button [ref=e79]
+          - button [ref=e80]
+        - generic [ref=e81]:
+          - generic [ref=e84]:
+            - generic [ref=e85]:
+              - generic [ref=e86]:
+                - heading "Kategóriák" [level=1] [ref=e87]
+                - paragraph [ref=e88]: Top kategóriák
+              - link "Összes megtekintése" [ref=e90] [cursor=pointer]:
+                - /url: http://localhost/Gyros_City_Live/categories
+            - generic [ref=e91]:
+              - generic [ref=e92]:
+                - link [ref=e93] [cursor=pointer]:
+                  - /url: http://localhost/Gyros_City_Live/menu?category=italok
+                  - img "category" [ref=e96]
+                - generic [ref=e97]:
+                  - paragraph [ref=e98]: Italok
+                  - paragraph [ref=e99]: 28 Termék
+              - generic [ref=e100]:
+                - link [ref=e101] [cursor=pointer]:
+                  - /url: http://localhost/Gyros_City_Live/menu?category=gyros
+                  - img "category" [ref=e104]
+                - generic [ref=e105]:
+                  - paragraph [ref=e106]: Gyros
+                  - paragraph [ref=e107]: 6 Termék
+              - generic [ref=e108]:
+                - link [ref=e109] [cursor=pointer]:
+                  - /url: http://localhost/Gyros_City_Live/menu?category=gyros-talak
+                  - img "category" [ref=e112]
+                - generic [ref=e113]:
+                  - paragraph [ref=e114]: Gyros Tálak
+                  - paragraph [ref=e115]: 5 Termék
+              - generic [ref=e116]:
+                - link [ref=e117] [cursor=pointer]:
+                  - /url: http://localhost/Gyros_City_Live/menu?category=kebab
+                  - img "category" [ref=e120]
+                - generic [ref=e121]:
+                  - paragraph [ref=e122]: Kebab
+                  - paragraph [ref=e123]: 6 Termék
+              - generic [ref=e124]:
+                - link [ref=e125] [cursor=pointer]:
+                  - /url: http://localhost/Gyros_City_Live/menu?category=kezmuves-hamburger
+                  - img "category" [ref=e128]
+                - generic [ref=e129]:
+                  - paragraph [ref=e130]: Kézműves Hamburger
+                  - paragraph [ref=e131]: 13 Termék
+              - generic [ref=e132]:
+                - link [ref=e133] [cursor=pointer]:
+                  - /url: http://localhost/Gyros_City_Live/menu?category=orias-hamurger
+                  - img "category" [ref=e136]
+                - generic [ref=e137]:
+                  - paragraph [ref=e138]: Óriás Hamurger
+                  - paragraph [ref=e139]: 4 Termék
+              - generic [ref=e140]:
+                - link [ref=e141] [cursor=pointer]:
+                  - /url: http://localhost/Gyros_City_Live/menu?category=hamburgerek
+                  - img "category" [ref=e144]
+                - generic [ref=e145]:
+                  - paragraph [ref=e146]: Hamburgerek
+                  - paragraph [ref=e147]: 9 Termék
+              - generic [ref=e148]:
+                - link [ref=e149] [cursor=pointer]:
+                  - /url: http://localhost/Gyros_City_Live/menu?category=sultek
+                  - img "category" [ref=e152]
+                - generic [ref=e153]:
+                  - paragraph [ref=e154]: Sültek
+                  - paragraph [ref=e155]: 14 Termék
+              - generic [ref=e156]:
+                - link [ref=e157] [cursor=pointer]:
+                  - /url: http://localhost/Gyros_City_Live/menu?category=hot-dog
+                  - img "category" [ref=e160]
+                - generic [ref=e161]:
+                  - paragraph [ref=e162]: Hot-Dog
+                  - paragraph [ref=e163]: 6 Termék
+              - generic [ref=e164]:
+                - link [ref=e165] [cursor=pointer]:
+                  - /url: http://localhost/Gyros_City_Live/menu?category=szendvicsek
+                  - img "category" [ref=e168]
+                - generic [ref=e169]:
+                  - paragraph [ref=e170]: Szendvicsek
+                  - paragraph [ref=e171]: 3 Termék
+              - generic [ref=e172]:
+                - link [ref=e173] [cursor=pointer]:
+                  - /url: http://localhost/Gyros_City_Live/menu?category=salatak
+                  - img "category" [ref=e176]
+                - generic [ref=e177]:
+                  - paragraph [ref=e178]: Saláták
+                  - paragraph [ref=e179]: 3 Termék
+              - generic [ref=e180]:
+                - link [ref=e181] [cursor=pointer]:
+                  - /url: http://localhost/Gyros_City_Live/menu?category=desszertek
+                  - img "category" [ref=e184]
+                - generic [ref=e185]:
+                  - paragraph [ref=e186]: Desszertek
+                  - paragraph [ref=e187]: 4 Termék
+              - generic [ref=e188]:
+                - link [ref=e189] [cursor=pointer]:
+                  - /url: http://localhost/Gyros_City_Live/menu?category=kesz-etelek
+                  - img "category" [ref=e192]
+                - generic [ref=e193]:
+                  - paragraph [ref=e194]: Kész ételek
+                  - paragraph [ref=e195]: 1 Termék
+              - generic [ref=e196]:
+                - link [ref=e197] [cursor=pointer]:
+                  - /url: http://localhost/Gyros_City_Live/menu?category=menuk
+                  - img "category" [ref=e200]
+                - generic [ref=e201]:
+                  - paragraph [ref=e202]: Menük
+                  - paragraph [ref=e203]: 17 Termék
+          - img "shape-img" [ref=e205]
+          - img "shape-img" [ref=e207]
+        - generic [ref=e208]:
+          - generic [ref=e209]:
+            - generic [ref=e210]:
+              - generic [ref=e211]:
+                - heading "Népszerű" [level=1] [ref=e212]
+                - paragraph [ref=e213]: Top trendek
+              - link "Összes megtekintése" [ref=e215] [cursor=pointer]:
+                - /url: http://localhost/Gyros_City_Live/view-all?type=topitems
+            - generic [ref=e216]:
+              - generic [ref=e218]:
+                - link [ref=e219] [cursor=pointer]:
+                  - /url: http://localhost/Gyros_City_Live/item-gyros-kifliben-menu
+                  - img "dishes" [ref=e221]
+                - generic [ref=e222]:
+                  - generic [ref=e223]:
+                    - generic [ref=e224]: Gyros
+                    - paragraph [ref=e227]: "0.0"
+                  - heading [level=5] [ref=e228]:
+                    - link [ref=e230] [cursor=pointer]:
+                      - /url: http://localhost/Gyros_City_Live/item-gyros-kifliben-menu
+                      - paragraph [ref=e231]: Gyros kifliben menü
+                - generic [ref=e233]:
+                  - generic [ref=e234]: 2,490 HUF
+                  - button "Kosárba" [ref=e235]
+              - generic [ref=e237]:
+                - link [ref=e238] [cursor=pointer]:
+                  - /url: http://localhost/Gyros_City_Live/item-gyros-tortillaban
+                  - img "dishes" [ref=e240]
+                - generic [ref=e241]:
+                  - generic [ref=e242]:
+                    - generic [ref=e243]: Gyros
+                    - paragraph [ref=e246]: "0.0"
+                  - heading [level=5] [ref=e247]:
+                    - link [ref=e249] [cursor=pointer]:
+                      - /url: http://localhost/Gyros_City_Live/item-gyros-tortillaban
+                      - paragraph [ref=e250]: Gyros tortillában
+                - generic [ref=e252]:
+                  - generic [ref=e253]: 1,790 HUF
+                  - button "Kosárba" [ref=e254]
+              - generic [ref=e256]:
+                - link [ref=e257] [cursor=pointer]:
+                  - /url: http://localhost/Gyros_City_Live/item-soproni-radler-2-meggy
+                  - img "dishes" [ref=e259]
+                - generic [ref=e260]:
+                  - generic [ref=e261]:
+                    - generic [ref=e262]: Italok
+                    - paragraph [ref=e265]: "0.0"
+                  - heading [level=5] [ref=e266]:
+                    - link [ref=e268] [cursor=pointer]:
+                      - /url: http://localhost/Gyros_City_Live/item-soproni-radler-2-meggy
+                      - paragraph [ref=e269]: Soproni Radler 2% meggy
+                - generic [ref=e271]:
+                  - generic [ref=e272]: 670 HUF
+                  - button "Kosárba" [ref=e273]
+              - generic [ref=e275]:
+                - link [ref=e276] [cursor=pointer]:
+                  - /url: http://localhost/Gyros_City_Live/item-gyros-tal-sajttal
+                  - img "dishes" [ref=e278]
+                - generic [ref=e279]:
+                  - generic [ref=e280]:
+                    - generic [ref=e281]: Gyros Tálak
+                    - paragraph [ref=e284]: "0.0"
+                  - heading [level=5] [ref=e285]:
+                    - link [ref=e287] [cursor=pointer]:
+                      - /url: http://localhost/Gyros_City_Live/item-gyros-tal-sajttal
+                      - paragraph [ref=e288]: Gyros-tál, sajttal
+                - generic [ref=e290]:
+                  - generic [ref=e291]: 2,830 HUF
+                  - button "Kosárba" [ref=e292]
+              - generic [ref=e294]:
+                - link [ref=e295] [cursor=pointer]:
+                  - /url: http://localhost/Gyros_City_Live/item-city-burger-menu
+                  - img "dishes" [ref=e297]
+                - generic [ref=e298]:
+                  - generic [ref=e299]:
+                    - generic [ref=e300]: Kézműves Hamburger
+                    - paragraph [ref=e303]: "0.0"
+                  - heading [level=5] [ref=e304]:
+                    - link [ref=e306] [cursor=pointer]:
+                      - /url: http://localhost/Gyros_City_Live/item-city-burger-menu
+                      - paragraph [ref=e307]: City-burger menü
+                - generic [ref=e309]:
+                  - generic [ref=e310]: 2,660 HUF
+                  - button "Kosárba" [ref=e311]
+              - generic [ref=e313]:
+                - link [ref=e314] [cursor=pointer]:
+                  - /url: http://localhost/Gyros_City_Live/item-city-burger
+                  - img "dishes" [ref=e316]
+                - generic [ref=e317]:
+                  - generic [ref=e318]:
+                    - generic [ref=e319]: Kézműves Hamburger
+                    - paragraph [ref=e322]: "0.0"
+                  - heading [level=5] [ref=e323]:
+                    - link [ref=e325] [cursor=pointer]:
+                      - /url: http://localhost/Gyros_City_Live/item-city-burger
+                      - paragraph [ref=e326]: City Burger
+                - generic [ref=e328]:
+                  - generic [ref=e329]: 2,260 HUF
+                  - button "Kosárba" [ref=e330]
+              - generic [ref=e332]:
+                - link [ref=e333] [cursor=pointer]:
+                  - /url: http://localhost/Gyros_City_Live/item-city-burger-plusz
+                  - img "dishes" [ref=e335]
+                - generic [ref=e336]:
+                  - generic [ref=e337]:
+                    - generic [ref=e338]: Kézműves Hamburger
+                    - paragraph [ref=e341]: "0.0"
+                  - heading [level=5] [ref=e342]:
+                    - link [ref=e344] [cursor=pointer]:
+                      - /url: http://localhost/Gyros_City_Live/item-city-burger-plusz
+                      - paragraph [ref=e345]: City Burger Plusz
+                - generic [ref=e347]:
+                  - generic [ref=e348]: 2,420 HUF
+                  - button "Kosárba" [ref=e349]
+              - generic [ref=e351]:
+                - link [ref=e352] [cursor=pointer]:
+                  - /url: http://localhost/Gyros_City_Live/item-city-burger-maxi
+                  - img "dishes" [ref=e354]
+                - generic [ref=e355]:
+                  - generic [ref=e356]:
+                    - generic [ref=e357]: Kézműves Hamburger
+                    - paragraph [ref=e360]: "0.0"
+                  - heading [level=5] [ref=e361]:
+                    - link [ref=e363] [cursor=pointer]:
+                      - /url: http://localhost/Gyros_City_Live/item-city-burger-maxi
+                      - paragraph [ref=e364]: City Burger Maxi
+                - generic [ref=e366]:
+                  - generic [ref=e367]: 2,640 HUF
+                  - button "Kosárba" [ref=e368]
+          - img "shape-img" [ref=e370]
+          - img "shape-img" [ref=e372]
+        - generic [ref=e373]:
+          - generic [ref=e374]:
+            - generic [ref=e375]:
+              - generic [ref=e376]:
+                - heading "Mai ajánlat" [level=1] [ref=e377]
+                - paragraph [ref=e378]: Top ajánlat
+              - link "Összes megtekintése" [ref=e380] [cursor=pointer]:
+                - /url: http://localhost/Gyros_City_Live/view-all?type=todayspecial
+            - generic [ref=e384]:
+              - link [ref=e386] [cursor=pointer]:
+                - /url: http://localhost/Gyros_City_Live/item-csirke-doner-pitaban
+                - img "dishes" [ref=e387]
+              - generic [ref=e388]:
+                - generic [ref=e389]:
+                  - generic [ref=e390]: Kebab
+                  - paragraph [ref=e392]: "0.0"
+                - heading [level=5] [ref=e393]:
+                  - link [ref=e395] [cursor=pointer]:
+                    - /url: http://localhost/Gyros_City_Live/item-csirke-doner-pitaban
+                    - paragraph [ref=e396]: Csirke Döner (pitában)
+                - generic [ref=e398]:
+                  - paragraph [ref=e400]: 1,890 HUF
+                  - button "Kosárba" [ref=e402]
+          - img "shape-img" [ref=e404]
+          - img "shape-img" [ref=e406]
+        - generic [ref=e407]:
+          - generic [ref=e408]:
+            - generic [ref=e409]:
+              - generic [ref=e410]:
+                - heading "Ajánlott" [level=1] [ref=e411]
+                - paragraph [ref=e412]: Top ajánlott
+              - link "Összes megtekintése" [ref=e414] [cursor=pointer]:
+                - /url: http://localhost/Gyros_City_Live/view-all?type=recommended
+            - generic [ref=e415]:
+              - generic [ref=e417]:
+                - generic [ref=e418]:
+                  - generic [ref=e419]:
+                    - generic [ref=e420]: Italok
+                    - paragraph [ref=e423]: "0.0"
+                  - heading [level=5] [ref=e424]:
+                    - link [ref=e426] [cursor=pointer]:
+                      - /url: http://localhost/Gyros_City_Live/item-pepsi-1l
+                      - paragraph [ref=e427]: Pepsi 1L
+                - generic [ref=e429]:
+                  - generic [ref=e430]: 940 HUF
+                  - button "Kosárba" [ref=e431]
+                - link [ref=e432] [cursor=pointer]:
+                  - /url: http://localhost/Gyros_City_Live/item-pepsi-1l
+                  - img "dishes" [ref=e434]
+              - generic [ref=e436]:
+                - generic [ref=e437]:
+                  - generic [ref=e438]:
+                    - generic [ref=e439]: Kebab
+                    - paragraph [ref=e442]: "0.0"
+                  - heading [level=5] [ref=e443]:
+                    - link [ref=e445] [cursor=pointer]:
+                      - /url: http://localhost/Gyros_City_Live/item-kebab-tal
+                      - paragraph [ref=e446]: Kebab-tál
+                - generic [ref=e448]:
+                  - generic [ref=e449]: 2,990 HUF
+                  - button "Kosárba" [ref=e450]
+                - link [ref=e451] [cursor=pointer]:
+                  - /url: http://localhost/Gyros_City_Live/item-kebab-tal
+                  - img "dishes" [ref=e453]
+              - generic [ref=e455]:
+                - generic [ref=e456]:
+                  - generic [ref=e457]:
+                    - generic [ref=e458]: Italok
+                    - paragraph [ref=e461]: "0.0"
+                  - heading [level=5] [ref=e462]:
+                    - link [ref=e464] [cursor=pointer]:
+                      - /url: http://localhost/Gyros_City_Live/item-pepsi-022
+                      - paragraph [ref=e465]: Pepsi 0,22
+                - generic [ref=e467]:
+                  - generic [ref=e468]: 480 HUF
+                  - button "Kosárba" [ref=e469]
+                - link [ref=e470] [cursor=pointer]:
+                  - /url: http://localhost/Gyros_City_Live/item-pepsi-022
+                  - img "dishes" [ref=e472]
+              - generic [ref=e474]:
+                - generic [ref=e475]:
+                  - generic [ref=e476]:
+                    - generic [ref=e477]: Hot-Dog
+                    - paragraph [ref=e480]: "0.0"
+                  - heading [level=5] [ref=e481]:
+                    - link [ref=e483] [cursor=pointer]:
+                      - /url: http://localhost/Gyros_City_Live/item-hot-dog-sajtos-chilis
+                      - paragraph [ref=e484]: Hot-dog Sajtos-Chilis
+                - generic [ref=e486]:
+                  - generic [ref=e487]: 1,430 HUF
+                  - button "Kosárba" [ref=e488]
+                - link [ref=e489] [cursor=pointer]:
+                  - /url: http://localhost/Gyros_City_Live/item-hot-dog-sajtos-chilis
+                  - img "dishes" [ref=e491]
+              - generic [ref=e493]:
+                - generic [ref=e494]:
+                  - generic [ref=e495]:
+                    - generic [ref=e496]: Italok
+                    - paragraph [ref=e499]: "0.0"
+                  - heading [level=5] [ref=e500]:
+                    - link [ref=e502] [cursor=pointer]:
+                      - /url: http://localhost/Gyros_City_Live/item-soproni-radler-2-meggy
+                      - paragraph [ref=e503]: Soproni Radler 2% meggy
+                - generic [ref=e505]:
+                  - generic [ref=e506]: 670 HUF
+                  - button "Kosárba" [ref=e507]
+                - link [ref=e508] [cursor=pointer]:
+                  - /url: http://localhost/Gyros_City_Live/item-soproni-radler-2-meggy
+                  - img "dishes" [ref=e510]
+              - generic [ref=e512]:
+                - generic [ref=e513]:
+                  - generic [ref=e514]:
+                    - generic [ref=e515]: Hot-Dog
+                    - paragraph [ref=e518]: "0.0"
+                  - heading [level=5] [ref=e519]:
+                    - link [ref=e521] [cursor=pointer]:
+                      - /url: http://localhost/Gyros_City_Live/item-hot-dog-zoldseges
+                      - paragraph [ref=e522]: Hot-dog zöldséges
+                - generic [ref=e524]:
+                  - generic [ref=e525]: 1,250 HUF
+                  - button "Kosárba" [ref=e526]
+                - link [ref=e527] [cursor=pointer]:
+                  - /url: http://localhost/Gyros_City_Live/item-hot-dog-zoldseges
+                  - img "dishes" [ref=e529]
+              - generic [ref=e531]:
+                - generic [ref=e532]:
+                  - generic [ref=e533]:
+                    - generic [ref=e534]: Italok
+                    - paragraph [ref=e537]: "0.0"
+                  - heading [level=5] [ref=e538]:
+                    - link [ref=e540] [cursor=pointer]:
+                      - /url: http://localhost/Gyros_City_Live/item-soproni-zero-citrom-00
+                      - paragraph [ref=e541]: Soproni zéró citrom 0,0%
+                - generic [ref=e543]:
+                  - generic [ref=e544]: 620 HUF
+                  - button "Kosárba" [ref=e545]
+                - link [ref=e546] [cursor=pointer]:
+                  - /url: http://localhost/Gyros_City_Live/item-soproni-zero-citrom-00
+                  - img "dishes" [ref=e548]
+              - generic [ref=e550]:
+                - generic [ref=e551]:
+                  - generic [ref=e552]:
+                    - generic [ref=e553]: Italok
+                    - paragraph [ref=e556]: "0.0"
+                  - heading [level=5] [ref=e557]:
+                    - link [ref=e559] [cursor=pointer]:
+                      - /url: http://localhost/Gyros_City_Live/item-asvanyviz-05
+                      - paragraph [ref=e560]: Ásványviz 0,5
+                - generic [ref=e562]:
+                  - generic [ref=e563]: 370 HUF
+                  - button "Kosárba" [ref=e564]
+                - link [ref=e565] [cursor=pointer]:
+                  - /url: http://localhost/Gyros_City_Live/item-asvanyviz-05
+                  - img "dishes" [ref=e567]
+          - img "shape-img" [ref=e569]
+          - img "shape-img" [ref=e571]
+        - generic [ref=e575]:
+          - generic [ref=e577]:
+            - heading "GYIK" [level=1] [ref=e578]
+            - paragraph [ref=e579]: GYIK
+          - generic [ref=e580]:
+            - generic [ref=e581]:
+              - heading [level=2] [ref=e582]:
+                - button "Jelenelg még nincs adat" [expanded] [ref=e583]
+              - generic "Jelenelg még nincs adat" [ref=e584]: Tedd fel kérdésed a kapcsolat menüpontnál
+            - generic [ref=e586]:
+              - heading [level=2] [ref=e587]:
+                - button "Figyelem!" [expanded] [ref=e588]
+              - generic "Figyelem!" [ref=e589]: "Az oldal jelenleg még fejlesztés alatt áll bármi hibát észlelsz kérlek jelezd az : info@gyroscity.eu címen vagy telefonon.Köszönjük! The site is currently under development, if you notice any errors, please report them to: info@gyroscity.eu or by phone. Thank you!"
+        - generic [ref=e596]:
+          - heading "Hírlevél" [level=1] [ref=e597]
+          - paragraph [ref=e598]: Iratkozz fel hírlevelünkre
+          - paragraph [ref=e599]: Értesülj elsőként az újdonságokról és akciókról.
+          - generic [ref=e600]:
+            - textbox "E-mail" [ref=e601]
+            - button "Feliratkozás" [ref=e602]
+        - generic [ref=e605]:
+          - generic [ref=e607]:
+            - generic [ref=e608]:
+              - link [ref=e609] [cursor=pointer]:
+                - /url: http://localhost/Gyros_City_Live
+                - img "footer_logo" [ref=e610]
+              - heading "Gyros City Vásárosnamény" [level=1] [ref=e611]
+              - paragraph [ref=e612]: "Minden nap: 8:00 - 22:00 Kiszállítás 11:00-21:30"
+            - generic [ref=e613]:
+              - generic [ref=e614]:
+                - generic [ref=e615]:
+                  - heading "Oldalak" [level=4] [ref=e616]
+                  - list [ref=e617]:
+                    - listitem [ref=e618]:
+                      - link "Bemutatkozás" [ref=e619] [cursor=pointer]:
+                        - /url: http://localhost/Gyros_City_Live/abous-us
+                    - listitem [ref=e620]:
+                      - link "Általános Szerződési Feltételek (ÁSZF)" [ref=e621] [cursor=pointer]:
+                        - /url: http://localhost/Gyros_City_Live/privacy-policy
+                    - listitem [ref=e622]:
+                      - link "Kiszállítással kapcsolatos információk" [ref=e623] [cursor=pointer]:
+                        - /url: http://localhost/Gyros_City_Live/refund-policy
+                    - listitem [ref=e624]:
+                      - link "Adatvédelmi Tájékoztató[GDPR]" [ref=e625] [cursor=pointer]:
+                        - /url: http://localhost/Gyros_City_Live/terms-conditions
+                    - listitem [ref=e626]:
+                      - link "Allergén táblázat" [ref=e627] [cursor=pointer]:
+                        - /url: alergens.html
+                - generic [ref=e628]:
+                  - heading "Egyéb" [level=4] [ref=e629]
+                  - list [ref=e630]:
+                    - listitem [ref=e631]:
+                      - link "Menü" [ref=e632] [cursor=pointer]:
+                        - /url: http://localhost/Gyros_City_Live/categories
+                    - listitem [ref=e633]:
+                      - link "GYIK" [ref=e634] [cursor=pointer]:
+                        - /url: http://localhost/Gyros_City_Live/faq
+                    - listitem [ref=e635]:
+                      - link "Kapcsolat" [ref=e636] [cursor=pointer]:
+                        - /url: http://localhost/Gyros_City_Live/contactus
+                    - listitem [ref=e637]:
+                      - link "Galéria" [ref=e638] [cursor=pointer]:
+                        - /url: http://localhost/Gyros_City_Live/gallery
+                - generic [ref=e639]:
+                  - heading "Kapcsolat" [level=4] [ref=e640]
+                  - list [ref=e641]:
+                    - link [ref=e642] [cursor=pointer]:
+                      - /url: callto:06205976297
+                      - listitem [ref=e643]:
+                        - paragraph [ref=e644]: "06205976297"
+                    - link [ref=e645] [cursor=pointer]:
+                      - /url: mailto:info@gyroscity.eu
+                      - listitem [ref=e646]:
+                        - paragraph [ref=e647]: info@gyroscity.eu
+                  - link "f" [ref=e650] [cursor=pointer]:
+                    - /url: https://www.facebook.com/gyroscity
+              - img "Barion" [ref=e651]
+          - 'link "© 2026 BY: pZoli.com" [ref=e654] [cursor=pointer]':
+            - /url: https://pzoli.com
+      - generic [ref=e658]:
+        - paragraph [ref=e660]: A megfelelő élmény biztosításához sütikre van szükség.
+        - button "Sütik engedélyezése" [ref=e662]
+  - dialog [ref=e663]:
+    - generic [ref=e665]:
+      - generic [ref=e666]:
+        - heading "Allergének" [level=1] [ref=e667]
+        - button "Close" [ref=e668]
+      - button "Bezárás" [ref=e670]
+  - generic [ref=e674]:
+    - button [ref=e675]
+    - generic [ref=e678]:
+      - heading [level=2] [ref=e679]: Hírlevél
+      - paragraph [ref=e680]: Iratkozz fel hírlevelünkre
+      - generic [ref=e681]:
+        - text: E-mail
+        - textbox [ref=e683]:
+          - /placeholder: E-mail
+        - button [ref=e684]: Feliratkozás
+  - generic [ref=e687]:
+    - generic [ref=e688]:
+      - heading [level=5] [ref=e689]: Nyitvatartás
+      - button [ref=e690]
+    - list [ref=e692]:
+      - listitem [ref=e693]:
+        - text: Monday
+        - generic [ref=e694]: 8:00 AM – 12:00 PM 12:00 PM – 10:00 PM
+      - listitem [ref=e695]:
+        - text: Tuesday
+        - generic [ref=e696]: 8:00 AM – 12:00 PM 12:00 PM – 10:00 PM
+      - listitem [ref=e697]:
+        - text: Wednesday
+        - generic [ref=e698]: 8:00 AM – 12:00 PM 12:00 PM – 10:00 PM
+      - listitem [ref=e699]:
+        - text: Thursday
+        - generic [ref=e700]: 8:00 AM – 12:00 PM 12:00 PM – 10:00 PM
+      - listitem [ref=e701]:
+        - text: Friday
+        - generic [ref=e702]: 8:00 AM – 12:00 PM 12:00 PM – 10:00 PM
+      - listitem [ref=e703]:
+        - text: Saturday
+        - generic [ref=e704]: 08:00 AM – 12:00pm 12:00 PM – 10:00 PM
+      - listitem [ref=e705]:
+        - text: Sunday
+        - generic [ref=e706]: 8:00 AM – 12:00 PM 12:00 PM – 10:00 PM
+    - button [ref=e708]: Bezárás
+  - generic [ref=e711]:
+    - generic [ref=e712]:
+      - heading [level=5] [ref=e713]: Vásárlás vendégként
+      - button [ref=e714]
+    - generic [ref=e715]:
+      - paragraph [ref=e716]: Nincs fiókod? Semmi gond — vendégként is vásárolhatsz, később létrehozhatsz fiókot.
+      - generic [ref=e717]:
+        - link [ref=e719] [cursor=pointer]:
+          - /url: javascript:void(0)
+          - text: Fiók létrehozása
+        - generic [ref=e720]: Folytatás vendégként
+  - generic [ref=e724]:
+    - generic [ref=e725]:
+      - heading [level=4] [ref=e726]: Értékelés írása
+      - button [ref=e727]
+    - generic [ref=e728]:
+      - generic [ref=e730]:
+        - generic [ref=e732]:
+          - radio [ref=e733]
+          - radio [ref=e734]
+          - radio [ref=e735]
+          - radio [ref=e736]
+          - radio [checked] [ref=e737]
+        - generic [ref=e738]:
+          - generic [ref=e739]: Írj értékelést (Opcionális)
+          - textbox [ref=e740]:
+            - /placeholder: Message
+      - generic [ref=e742]:
+        - button [ref=e744]: Bezárás
+        - button [ref=e746]: Mentés

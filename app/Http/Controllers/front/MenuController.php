@@ -16,11 +16,15 @@ class MenuController extends Controller
 {
     public function index(Request $request)
     {
+        $request->validate(['q' => 'nullable|string|max:100']);
         $user_id = @Auth::user()->id;
         $session_id = Session::getId();
         $topdeals = helper::top_deals();
 
         $categorydata = Category::where('slug', $request->category)->where('is_available', 1)->where('is_deleted', 2)->first();
+        if (!$categorydata) {
+            return redirect()->route('categories');
+        }
         $subcategories = Subcategory::where('cat_id', @$categorydata->id)->where('is_available', 1)->where('is_deleted', 2)->get();
 
 
@@ -37,7 +41,7 @@ class MenuController extends Controller
                         ->where('cart.buynow', '=', '0');
                 })
                 ->groupBy('item.id', 'cart.item_id')
-                ->where('item.item_status', '1')
+                ->visibleOnMenu()
                 ->where('item.cat_id', @$categorydata->id)
                 ->orderBy('item.reorder_id');
         } else {
@@ -48,17 +52,20 @@ class MenuController extends Controller
                         ->where('cart.buynow', '=', '0');
                 })
                 ->groupBy('item.id', 'cart.item_id')
-                ->where('item.item_status', '1')
+                ->visibleOnMenu()
                 ->where('item.cat_id', @$categorydata->id)
                 ->orderBy('item.reorder_id');
         }
 
         if ($request->has('subcategory') && $request->subcategory != "") {
-            $subcatdata = Subcategory::where('slug', $request->subcategory)->first();
+            $subcatdata = Subcategory::where('slug', $request->subcategory)->where('cat_id', $categorydata->id)->where('is_available', 1)->where('is_deleted', 2)->first();
             if (empty($subcatdata)) {
                 return redirect()->back();
             }
             $getitemlist = $getitemlist->where('item.subcat_id', @$subcatdata->id);
+        }
+        if ($request->filled('q')) {
+            $getitemlist->where('item.item_name', 'like', '%'.trim($request->input('q')).'%');
         }
         $getitemlist = $getitemlist->orderByDesc('item.id')->paginate(16);
         return view('web.menu', compact('topdeals', 'categorydata', 'subcategories', 'getitemlist'));

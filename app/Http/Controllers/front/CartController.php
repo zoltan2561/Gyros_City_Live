@@ -34,6 +34,7 @@ class CartController extends Controller
         }
 
         $getcartlist = $q->orderByDesc('id')->get();
+        $cartAvailability = Item::visibleOnMenu()->whereIn('id', $getcartlist->pluck('item_id'))->get()->keyBy('id');
 
         $getsettings = Settings::first();
         $tax_name = $tax_price = [];
@@ -58,11 +59,16 @@ class CartController extends Controller
         }
 
         $taxArr = ['tax' => $tax_name, 'rate' => $tax_price];
-        return view('web.cart.cart', compact('getcartlist', 'getsettings', 'taxArr'));
+        return view('web.cart.cart', compact('getcartlist', 'getsettings', 'taxArr', 'cartAvailability'));
     }
 
     public function addtocart(Request $request)
     {
+        $request->validate(['slug' => 'required|string', 'qty' => 'required|integer|min:1|max:100', 'buynow' => 'nullable|integer|in:0,1']);
+        $itemdata = Item::visibleOnMenu()->where('slug', $request->slug)->first();
+        if (!$itemdata || !$itemdata->is_orderable) {
+            return response()->json(['status' => 0, 'message' => 'Ez az étel jelenleg nem elérhető.', 'buynow' => (int) $request->buynow]);
+        }
         try {
             // buynow mindig legyen 0/1, ne NULL
             $buynow = (int)$request->input('buynow', 0);
@@ -76,8 +82,6 @@ class CartController extends Controller
                     Cart::where('buynow', 1)->where('session_id', Session::getId())->delete();
                 }
             }
-
-            $itemdata = Item::where('slug', $request->slug)->firstOrFail();
 
             // 2) konzisztens kulcs mentése
             $cart = new Cart();
@@ -93,11 +97,17 @@ class CartController extends Controller
             }
 
             $cart->item_id            = $itemdata->id;
-            $cart->item_name          = $request->item_name;
-            $cart->item_type          = $request->item_type;
-            $cart->item_image         = $request->image_name;
-            $cart->tax                = $request->tax;
-            $cart->item_price         = helper::number_format($request->item_price);
+            $cart->item_name          = $itemdata->item_name;
+            $cart->item_type          = $itemdata->item_type;
+            $cart->item_image         = $itemdata->item_image?->image_name ?? 'item-placeholder.png';
+            $cart->tax                = $itemdata->tax ?? '';
+            $price = (float) $itemdata->price;
+            if ($itemdata->is_top_deals == 1 && ($deal = helper::top_deals())) {
+                $price = (int) $deal->offer_type === 1
+                    ? ($price > $deal->offer_amount ? $price - $deal->offer_amount : $price)
+                    : $price * (1 - $deal->offer_amount / 100);
+            }
+            $cart->item_price         = helper::number_format($price);
             $cart->addons_id          = $request->addons_id ?: null;
             $cart->addons_name        = $request->addons_name ?: null;
             $cart->addons_price       = $request->addons_price ?: null;
@@ -128,6 +138,7 @@ class CartController extends Controller
             ], 200);
 
         } catch (\Throwable $th) {
+            report($th);
             return response()->json([
                 'status' => 0,
                 'message' => trans('messages.wrong'),
@@ -169,6 +180,10 @@ class CartController extends Controller
             ->sum('qty');
 
         if ($request->type === 'plus') {
+            $item = Item::visibleOnMenu()->find($row->item_id);
+            if (!$item || !$item->is_orderable) {
+                return response()->json(['status' => 0, 'message' => 'Ez az étel jelenleg nem elérhető.']);
+            }
             if ($total_count >= helper::appdata()->max_order_qty) {
                 $msg = trans('messages.order_qty_less_then') . ' : ' . helper::appdata()->max_order_qty;
                 return response()->json(['status' => 2, 'message' => $msg], 200);

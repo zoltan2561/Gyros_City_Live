@@ -1,0 +1,276 @@
+- generic [active] [ref=f79e1]:
+  - link "Ugrás a tartalomhoz" [ref=f79e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - main [ref=f79e3]:
+    - generic [ref=f79e4]:
+      - navigation [ref=f79e7]:
+        - generic [ref=f79e8]:
+          - link [ref=f79e9] [cursor=pointer]:
+            - /url: http://localhost/Gyros_City_Live
+            - img "Gyros City" [ref=f79e10]
+          - generic: 
+          - generic [ref=f79e11]:
+            - generic [ref=f79e12]:
+              - link "Kezdőlap" [ref=f79e13] [cursor=pointer]:
+                - /url: http://localhost/Gyros_City_Live
+              - link "Menü" [ref=f79e14] [cursor=pointer]:
+                - /url: http://localhost/Gyros_City_Live/categories
+              - link "GYIK" [ref=f79e15] [cursor=pointer]:
+                - /url: http://localhost/Gyros_City_Live/faq
+              - link "Kapcsolat" [ref=f79e16] [cursor=pointer]:
+                - /url: "http://localhost/Gyros_City_Live/contactus "
+            - generic [ref=f79e17]:
+              - generic [ref=f79e19] [cursor=pointer]
+              - link "" [ref=f79e21] [cursor=pointer]:
+                - /url: http://localhost/Gyros_City_Live/search
+              - link " 0" [ref=f79e24] [cursor=pointer]:
+                - /url: http://localhost/Gyros_City_Live/cart
+                - generic [ref=f79e25]: 
+                - generic [ref=f79e26]: "0"
+              - link "" [ref=f79e28] [cursor=pointer]:
+                - /url: http://localhost/Gyros_City_Live/login
+      - text:   .   
+      - generic [ref=f79e30]:
+        - generic [ref=f79e31]:
+          - generic [ref=f79e33]:
+            - generic [ref=f79e34]:
+              - paragraph [ref=f79e35]: Gyros City · Étlap
+              - heading "Gyros" [level=1] [ref=f79e36]
+              - paragraph [ref=f79e37]: Válassz egy kedvencet, és állítsd össze úgy, ahogy szereted.
+            - link "← Összes kategória" [ref=f79e38] [cursor=pointer]:
+              - /url: http://localhost/Gyros_City_Live/categories
+          - generic [ref=f79e39]:
+            - complementary [ref=f79e40]:
+              - heading "Kategóriák" [level=2] [ref=f79e41]
+              - navigation "Étlap kategóriái" [ref=f79e42]:
+                - link "Italok 28" [ref=f79e43] [cursor=pointer]:
+                  - /url: http://localhost/Gyros_City_Live/menu?category=italok
+                  - generic [ref=f79e44]: Italok
+                  - generic [ref=f79e45]: "28"
+                - link "Gyros 6" [ref=f79e46] [cursor=pointer]:
+                  - /url: http://localhost/Gyros_City_Live/menu?category=gyros
+                  - generic [ref=f79e47]: Gyros
+                  - generic [ref=f79e48]: "6"
+                - link "Gyros Tálak 5" [ref=f79e49] [cursor=pointer]:
+                  - /url: http://localhost/Gyros_City_Live/menu?category=gyros-talak
+                  - generic [ref=f79e50]: Gyros Tálak
+                  - generic [ref=f79e51]: "5"
+                - link "Kebab 6" [ref=f79e52] [cursor=pointer]:
+                  - /url: http://localhost/Gyros_City_Live/menu?category=kebab
+                  - generic [ref=f79e53]: Kebab
+                  - generic [ref=f79e54]: "6"
+                - link "Kézműves Hamburger 13" [ref=f79e55] [cursor=pointer]:
+                  - /url: http://localhost/Gyros_City_Live/menu?category=kezmuves-hamburger
+                  - generic [ref=f79e56]: Kézműves Hamburger
+                  - generic [ref=f79e57]: "13"
+                - link "Óriás Hamurger 4" [ref=f79e58] [cursor=pointer]:
+                  - /url: http://localhost/Gyros_City_Live/menu?category=orias-hamurger
+                  - generic [ref=f79e59]: Óriás Hamurger
+                  - generic [ref=f79e60]: "4"
+                - link "Hamburgerek 9" [ref=f79e61] [cursor=pointer]:
+                  - /url: http://localhost/Gyros_City_Live/menu?category=hamburgerek
+                  - generic [ref=f79e62]: Hamburgerek
+                  - generic [ref=f79e63]: "9"
+                - link "Sültek 14" [ref=f79e64] [cursor=pointer]:
+                  - /url: http://localhost/Gyros_City_Live/menu?category=sultek
+                  - generic [ref=f79e65]: Sültek
+                  - generic [ref=f79e66]: "14"
+                - link "Hot-Dog 6" [ref=f79e67] [cursor=pointer]:
+                  - /url: http://localhost/Gyros_City_Live/menu?category=hot-dog
+                  - generic [ref=f79e68]: Hot-Dog
+                  - generic [ref=f79e69]: "6"
+                - link "Szendvicsek 3" [ref=f79e70] [cursor=pointer]:
+                  - /url: http://localhost/Gyros_City_Live/menu?category=szendvicsek
+                  - generic [ref=f79e71]: Szendvicsek
+                  - generic [ref=f79e72]: "3"
+                - link "Saláták 3" [ref=f79e73] [cursor=pointer]:
+                  - /url: http://localhost/Gyros_City_Live/menu?category=salatak
+                  - generic [ref=f79e74]: Saláták
+                  - generic [ref=f79e75]: "3"
+                - link "Desszertek 4" [ref=f79e76] [cursor=pointer]:
+                  - /url: http://localhost/Gyros_City_Live/menu?category=desszertek
+                  - generic [ref=f79e77]: Desszertek
+                  - generic [ref=f79e78]: "4"
+                - link "Kész ételek 1" [ref=f79e79] [cursor=pointer]:
+                  - /url: http://localhost/Gyros_City_Live/menu?category=kesz-etelek
+                  - generic [ref=f79e80]: Kész ételek
+                  - generic [ref=f79e81]: "1"
+                - link "Menük 17" [ref=f79e82] [cursor=pointer]:
+                  - /url: http://localhost/Gyros_City_Live/menu?category=menuk
+                  - generic [ref=f79e83]: Menük
+                  - generic [ref=f79e84]: "17"
+            - region [ref=f79e85]:
+              - generic [ref=f79e86]:
+                - generic [ref=f79e87]:
+                  - paragraph [ref=f79e88]: Kínálatunk
+                  - heading "6 tétel az étlapon" [level=2] [ref=f79e89]
+                - search [ref=f79e90]:
+                  - generic [ref=f79e91]: Keresés ebben a kategóriában
+                  - searchbox "Keresés ebben a kategóriában" [ref=f79e92]
+                  - button "Étel keresése" [ref=f79e93] [cursor=pointer]:
+                    - generic [aria-hidden] [ref=f79e94]: 
+              - generic [ref=f79e95]:
+                - article "Gyros kifliben menü" [ref=f79e97]:
+                  - link "Gyros kifliben menü részletei" [ref=f79e98] [cursor=pointer]:
+                    - /url: http://localhost/Gyros_City_Live/item-gyros-kifliben-menu
+                    - img "Gyros kifliben menü" [ref=f79e99]
+                  - generic [ref=f79e100]:
+                    - generic [ref=f79e101]:
+                      - heading [level=3] [ref=f79e102]:
+                        - link "Gyros kifliben menü" [ref=f79e103] [cursor=pointer]:
+                          - /url: http://localhost/Gyros_City_Live/item-gyros-kifliben-menu
+                      - button "Gyros kifliben menü allergének" [ref=f79e104] [cursor=pointer]: i
+                    - paragraph [ref=f79e105]: gyros kifliben, sültburgonya 15 dkg, 0,33l dobozos üdítő választható ízben
+                    - generic [ref=f79e106]:
+                      - strong [ref=f79e108]: 2,490 HUF
+                      - button "Gyros kifliben menü hozzáadása" [ref=f79e109] [cursor=pointer]:
+                        - generic [ref=f79e110]: Hozzáadom
+                        - generic [aria-hidden] [ref=f79e111]: 
+                - article "Gyros tortillában menü" [ref=f79e113]:
+                  - link "Gyros tortillában menü részletei" [ref=f79e114] [cursor=pointer]:
+                    - /url: http://localhost/Gyros_City_Live/item-gyros-tortillaban-menu
+                    - img "Gyros tortillában menü" [ref=f79e115]
+                  - generic [ref=f79e116]:
+                    - generic [ref=f79e117]:
+                      - heading [level=3] [ref=f79e118]:
+                        - link "Gyros tortillában menü" [ref=f79e119] [cursor=pointer]:
+                          - /url: http://localhost/Gyros_City_Live/item-gyros-tortillaban-menu
+                      - button "Gyros tortillában menü allergének" [ref=f79e120] [cursor=pointer]: i
+                    - paragraph [ref=f79e121]: gyros tortillában, sültburgonya 15 dkg, 0,33l dobozos üdítő választható ízben
+                    - generic [ref=f79e122]:
+                      - strong [ref=f79e124]: 2,490 HUF
+                      - button "Gyros tortillában menü hozzáadása" [ref=f79e125] [cursor=pointer]:
+                        - generic [ref=f79e126]: Hozzáadom
+                        - generic [aria-hidden] [ref=f79e127]: 
+                - article "Gyros pitában menü" [ref=f79e129]:
+                  - link "Gyros pitában menü részletei" [ref=f79e130] [cursor=pointer]:
+                    - /url: http://localhost/Gyros_City_Live/item-gyros-pitaban-menu
+                    - img "Gyros pitában menü" [ref=f79e131]
+                  - generic [ref=f79e132]:
+                    - generic [ref=f79e133]:
+                      - heading [level=3] [ref=f79e134]:
+                        - link "Gyros pitában menü" [ref=f79e135] [cursor=pointer]:
+                          - /url: http://localhost/Gyros_City_Live/item-gyros-pitaban-menu
+                      - button "Gyros pitában menü allergének" [ref=f79e136] [cursor=pointer]: i
+                    - paragraph [ref=f79e137]: gyros pitában, sültburgonya 15 dkg, 0,33l dobozos üdítő választható ízben
+                    - generic [ref=f79e138]:
+                      - strong [ref=f79e140]: 2,490 HUF
+                      - button "Gyros pitában menü hozzáadása" [ref=f79e141] [cursor=pointer]:
+                        - generic [ref=f79e142]: Hozzáadom
+                        - generic [aria-hidden] [ref=f79e143]: 
+                - article "Gyros tortillában" [ref=f79e145]:
+                  - link "Gyros tortillában részletei" [ref=f79e146] [cursor=pointer]:
+                    - /url: http://localhost/Gyros_City_Live/item-gyros-tortillaban
+                    - img "Gyros tortillában" [ref=f79e147]
+                  - generic [ref=f79e148]:
+                    - generic [ref=f79e149]:
+                      - heading [level=3] [ref=f79e150]:
+                        - link "Gyros tortillában" [ref=f79e151] [cursor=pointer]:
+                          - /url: http://localhost/Gyros_City_Live/item-gyros-tortillaban
+                      - button "Gyros tortillában allergének" [ref=f79e152] [cursor=pointer]: i
+                    - paragraph [ref=f79e153]: Gyros tortilla, Gyros-hús (csirkemell), Gyros mártás, Paradicsom, Paprika, Uborka, Lilahagyma. Választható önt...
+                    - generic [ref=f79e154]:
+                      - strong [ref=f79e156]: 1,790 HUF
+                      - button "Gyros tortillában hozzáadása" [ref=f79e157] [cursor=pointer]:
+                        - generic [ref=f79e158]: Hozzáadom
+                        - generic [aria-hidden] [ref=f79e159]: 
+                - article "Gyros pitában, nem elérhető" [ref=f79e161]:
+                  - link "Gyros pitában részletei" [ref=f79e162] [cursor=pointer]:
+                    - /url: http://localhost/Gyros_City_Live/item-gyros-pitaban
+                    - img "Gyros pitában" [ref=f79e163]
+                  - generic [ref=f79e164]: Jelenleg nem elérhető
+                  - generic [ref=f79e165]:
+                    - generic [ref=f79e166]:
+                      - heading [level=3] [ref=f79e167]:
+                        - link "Gyros pitában" [ref=f79e168] [cursor=pointer]:
+                          - /url: http://localhost/Gyros_City_Live/item-gyros-pitaban
+                      - button "Gyros pitában allergének" [ref=f79e169] [cursor=pointer]: i
+                    - paragraph [ref=f79e170]: Gyros pita, csirkemell gyros hús, gyros mártás, sült burgonya, paradicsom,uborka, lilahagyma, ketchup
+                    - generic [ref=f79e171]:
+                      - strong [ref=f79e173]: 1,790 HUF
+                      - button "Nem elérhető" [disabled] [ref=f79e174]
+                - article "Gyros kifliben" [ref=f79e176]:
+                  - link "Gyros kifliben részletei" [ref=f79e177] [cursor=pointer]:
+                    - /url: http://localhost/Gyros_City_Live/item-gyros-kifliben
+                    - img "Gyros kifliben" [ref=f79e178]
+                  - generic [ref=f79e179]:
+                    - generic [ref=f79e180]:
+                      - heading [level=3] [ref=f79e181]:
+                        - link "Gyros kifliben" [ref=f79e182] [cursor=pointer]:
+                          - /url: http://localhost/Gyros_City_Live/item-gyros-kifliben
+                      - button "Gyros kifliben allergének" [ref=f79e183] [cursor=pointer]: i
+                    - paragraph [ref=f79e184]: Gyros kifli, Gyros-hús (csirkemell), Gyros mártás, Paradicsom, Paprika, Uborka, Lilahagyma. Választható öntete...
+                    - generic [ref=f79e185]:
+                      - strong [ref=f79e187]: 1,790 HUF
+                      - button "Gyros kifliben hozzáadása" [ref=f79e188] [cursor=pointer]:
+                        - generic [ref=f79e189]: Hozzáadom
+                        - generic [aria-hidden] [ref=f79e190]: 
+              - paragraph [ref=f79e191]: A szürkített ételek jelenleg nem rendelhetők. Az összetevőiket továbbra is megnézheted.
+          - generic [ref=f79e192]:
+            - paragraph [ref=f79e193]: Kérdésed van a rendeléshez?
+            - link "06 20 597 6297 ↗" [ref=f79e194] [cursor=pointer]:
+              - /url: tel:+36205976297
+            - link "Megnézem a kosaram →" [ref=f79e195] [cursor=pointer]:
+              - /url: http://localhost/Gyros_City_Live/cart
+        - generic [ref=f79e198]:
+          - generic [ref=f79e200]:
+            - generic [ref=f79e201]:
+              - link [ref=f79e202] [cursor=pointer]:
+                - /url: http://localhost/Gyros_City_Live
+                - img "Gyros City" [ref=f79e203]
+              - heading "Gyros City Vásárosnamény" [level=1] [ref=f79e204]
+              - paragraph [ref=f79e205]: "Minden nap: 8:00 - 22:00 Kiszállítás 11:00-21:30"
+            - generic [ref=f79e206]:
+              - generic [ref=f79e207]:
+                - generic [ref=f79e208]:
+                  - heading "Oldalak" [level=4] [ref=f79e209]
+                  - list [ref=f79e210]:
+                    - listitem [ref=f79e211]:
+                      - link "Bemutatkozás" [ref=f79e212] [cursor=pointer]:
+                        - /url: http://localhost/Gyros_City_Live/abous-us
+                    - listitem [ref=f79e213]:
+                      - link "Általános Szerződési Feltételek (ÁSZF)" [ref=f79e214] [cursor=pointer]:
+                        - /url: http://localhost/Gyros_City_Live/privacy-policy
+                    - listitem [ref=f79e215]:
+                      - link "Kiszállítással kapcsolatos információk" [ref=f79e216] [cursor=pointer]:
+                        - /url: http://localhost/Gyros_City_Live/refund-policy
+                    - listitem [ref=f79e217]:
+                      - link "Adatvédelmi Tájékoztató[GDPR]" [ref=f79e218] [cursor=pointer]:
+                        - /url: http://localhost/Gyros_City_Live/terms-conditions
+                    - listitem [ref=f79e219]:
+                      - link "Allergén táblázat" [ref=f79e220] [cursor=pointer]:
+                        - /url: alergens.html
+                - generic [ref=f79e221]:
+                  - heading "Egyéb" [level=4] [ref=f79e222]
+                  - list [ref=f79e223]:
+                    - listitem [ref=f79e224]:
+                      - link "Menü" [ref=f79e225] [cursor=pointer]:
+                        - /url: http://localhost/Gyros_City_Live/categories
+                    - listitem [ref=f79e226]:
+                      - link "GYIK" [ref=f79e227] [cursor=pointer]:
+                        - /url: http://localhost/Gyros_City_Live/faq
+                    - listitem [ref=f79e228]:
+                      - link "Kapcsolat" [ref=f79e229] [cursor=pointer]:
+                        - /url: http://localhost/Gyros_City_Live/contactus
+                    - listitem [ref=f79e230]:
+                      - link "Galéria" [ref=f79e231] [cursor=pointer]:
+                        - /url: http://localhost/Gyros_City_Live/gallery
+                - generic [ref=f79e232]:
+                  - heading "Kapcsolat" [level=4] [ref=f79e233]
+                  - list [ref=f79e234]:
+                    - link " 06205976297" [ref=f79e235] [cursor=pointer]:
+                      - /url: callto:06205976297
+                      - listitem [ref=f79e236]:
+                        - generic [ref=f79e237]: 
+                        - paragraph [ref=f79e238]: "06205976297"
+                    - link " info@gyroscity.eu" [ref=f79e239] [cursor=pointer]:
+                      - /url: mailto:info@gyroscity.eu
+                      - listitem [ref=f79e240]:
+                        - generic [ref=f79e241]: 
+                        - paragraph [ref=f79e242]: info@gyroscity.eu
+                  - link "f" [ref=f79e245] [cursor=pointer]:
+                    - /url: https://www.facebook.com/gyroscity
+              - img "Barion" [ref=f79e246]
+          - 'link "© 2026 BY: pZoli.com" [ref=f79e249] [cursor=pointer]':
+            - /url: https://pzoli.com
+  - text:       

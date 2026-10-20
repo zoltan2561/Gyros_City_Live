@@ -9,4 +9,9 @@ class Shippingarea extends Model
 {
     use HasFactory;
     protected $table = 'shipping_area';
+
+    public function getCityNamesAttribute(): array
+    {
+        return \App\Services\DeliveryAreaNames::fromLabel((string) $this->name);
+    }
 }

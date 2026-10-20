@@ -195,7 +195,7 @@ h5{ font-size:28px; margin:0; letter-spacing:1px; }
                         {{ $orderdata->order_type == '1' ? trans('labels.delivery_date') : trans('labels.pickup_date') }}
                         :
                        <small class="fw-500 text-uppercase fs-10 text-center text-dark line-1">
-    {{($orderdata->created_at) }} 
+    {{ helper::date_format($orderdata->delivery_date) }}
 </small>
 
 

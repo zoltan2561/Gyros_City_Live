@@ -74,19 +74,7 @@
                                                 {{ helper::date_format($orderdata->created_at) }}
                                             </p>
                                         </div>
-                                        <div class="d-flex">
-                                            <p class="fw-semibold fs-7 mb-2">
-                                                {{ $orderdata->order_type == '1' ? trans('labels.delivery_date') : trans('labels.pickup_date') }}
-                                                : </p>&nbsp;
-                                            <p class="fw-400 fs-7 text-muted mb-2">
-                                                {{ helper::date_format($orderdata->delivery_date) }}</p>
-                                        </div>
-                                        <div class="d-flex">
-                                            <p class="fw-semibold fs-7 mb-2">
-                                                {{ $orderdata->order_type == '1' ? trans('labels.delivery_time') : trans('labels.pickup_time') }}
-                                                : </p>&nbsp;
-                                            <p class="fw-400 fs-7 text-muted mb-2">{{ $orderdata->delivery_time }}</p>
-                                        </div>
+                                        @include('web.orders.delivery-schedule')
                                         <div class="d-flex">
                                             <p class="fw-semibold fs-7 mb-2">{{ trans('labels.order_status') }} : </p>&nbsp;
                                             @if ($orderdata->status_type == '1')

@@ -5,8 +5,8 @@
         <nav class="navbar navbar-expand-lg sticky-top p-0">
             <div class="container navbar-container">
                 <a class="navbar-brand" href="{{ route('home') }}">
-                    <img class="img-resposive img-fluid" src="{{ helper::image_path(@helper::appdata()->logo) }}"
-                         alt="logo">
+                    <img class="img-resposive img-fluid city-brand-logo" src="{{ url('public/city/logo.webp') }}" width="118" height="84"
+                         alt="Gyros City">
                 </a>
                 <!-- language-btn -->
                 @if (@helper::checkaddons('language'))
@@ -38,7 +38,7 @@
                     <div class="navbar-nav mx-auto">
                         <a class="nav-link px-3 {{ request()->is('/') ? 'active' : '' }}"
                            href="{{ route('home') }}">{{ trans('labels.home') }}</a>
-                        <a class="nav-link px-3 {{ request()->is('categories') ? 'active' : '' }}"
+                        <a class="nav-link px-3 {{ request()->is('categories', 'menu', 'item-*') ? 'active' : '' }}"
                            href="{{ route('categories') }}">{{ trans('labels.menu') }}</a>
 
                         <a class="nav-link px-3 {{ request()->is('faq') ? 'active' : '' }}"
@@ -200,9 +200,9 @@
                 </a>
             </li>
             <li class="text-center">
-                <a href="{{ route('search') }}" class="{{ request()->is('search') ? 'active1' : '' }}">
-                    <i class="fa-light fa-magnifying-glass"></i>
-                    <p class="mb-0">{{ trans('labels.search') }}</p>
+                <a href="{{ route('categories') }}" class="{{ request()->is('categories','menu') ? 'active1' : '' }}">
+                    <i class="fa-light fa-utensils"></i>
+                    <p class="mb-0">Étlap</p>
                 </a>
             </li>
             <li class="text-center">

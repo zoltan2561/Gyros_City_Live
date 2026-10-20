@@ -1,0 +1,176 @@
+- generic [active] [ref=f23e1]:
+  - link "Ugrás a tartalomhoz" [ref=f23e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - main [ref=f23e3]:
+    - generic [ref=f23e4]:
+      - navigation [ref=f23e7]:
+        - generic [ref=f23e8]:
+          - link "Gyros City Gyros City" [ref=f23e9] [cursor=pointer]:
+            - /url: http://127.0.0.1:8016
+            - img "Gyros City" [ref=f23e10]
+            - generic [ref=f23e11]: Gyros City
+          - generic [ref=f23e12]: 
+          - text:   
+      - list [ref=f23e18]:
+        - listitem [ref=f23e19]:
+          - link " Kezdőlap" [ref=f23e20] [cursor=pointer]:
+            - /url: http://127.0.0.1:8016
+            - generic [ref=f23e21]: 
+            - paragraph [ref=f23e22]: Kezdőlap
+        - listitem [ref=f23e23]:
+          - link " Étlap" [ref=f23e24] [cursor=pointer]:
+            - /url: http://127.0.0.1:8016/categories
+            - generic [ref=f23e25]: 
+            - paragraph [ref=f23e26]: Étlap
+        - listitem [ref=f23e27]:
+          - link " 2 . Kosár" [ref=f23e28] [cursor=pointer]:
+            - /url: http://127.0.0.1:8016/cart
+            - generic [ref=f23e29]:
+              - generic [ref=f23e30]: 
+              - generic [ref=f23e31]: "2"
+            - paragraph [ref=f23e32]: . Kosár
+        - listitem [ref=f23e33]:
+          - link " Kívánságlista" [ref=f23e34] [cursor=pointer]:
+            - /url: http://127.0.0.1:8016/login
+            - generic [ref=f23e35]: 
+            - paragraph [ref=f23e36]: Kívánságlista
+        - listitem [ref=f23e37]:
+          - link " Fiók" [ref=f23e38] [cursor=pointer]:
+            - /url: http://127.0.0.1:8016/login
+            - generic [ref=f23e39]: 
+            - paragraph [ref=f23e40]: Fiók
+      - generic [ref=f23e41]:
+        - navigation "breadcrumb" [ref=f23e45]:
+          - list [ref=f23e46]:
+            - listitem [ref=f23e47]:
+              - link "Kezdőlap" [ref=f23e48] [cursor=pointer]:
+                - /url: http://127.0.0.1:8016
+            - listitem [ref=f23e49]: "> Kosár"
+        - generic [ref=f23e54]:
+          - table [ref=f23e57]:
+            - rowgroup [ref=f23e58]:
+              - row [ref=f23e59]:
+                - columnheader "Termék" [ref=f23e60]
+                - columnheader "Ár" [ref=f23e61]
+                - columnheader "Menny." [ref=f23e62]
+                - columnheader "Összesen" [ref=f23e63]
+                - columnheader "Művelet" [ref=f23e64]
+            - rowgroup [ref=f23e65]:
+              - row [ref=f23e66]:
+                - cell [ref=f23e67]:
+                  - heading "Sajtos pizza ? teszt" [level=5] [ref=f23e70]
+                - cell [ref=f23e71]:
+                  - heading "2,500 HUF" [level=4] [ref=f23e72]
+                - cell [ref=f23e73]:
+                  - navigation "Page navigation example" [ref=f23e74]:
+                    - list [ref=f23e75]:
+                      - listitem [ref=f23e76]:
+                        - button [ref=f23e77] [cursor=pointer]:
+                          - generic [ref=f23e79]: 
+                      - listitem [ref=f23e80]:
+                        - textbox [ref=f23e81]: "1"
+                      - listitem [ref=f23e82]:
+                        - button [ref=f23e83] [cursor=pointer]:
+                          - generic [ref=f23e85]: 
+                - cell [ref=f23e86]:
+                  - heading "2,500 HUF" [level=4] [ref=f23e87]
+                - cell [ref=f23e88]:
+                  - button "" [ref=f23e90] [cursor=pointer]
+              - row [ref=f23e92]:
+                - cell [ref=f23e93]:
+                  - heading "Sonk?s pizza ? teszt" [level=5] [ref=f23e96]
+                - cell [ref=f23e97]:
+                  - heading "2,500 HUF" [level=4] [ref=f23e98]
+                - cell [ref=f23e99]:
+                  - navigation "Page navigation example" [ref=f23e100]:
+                    - list [ref=f23e101]:
+                      - listitem [ref=f23e102]:
+                        - button [ref=f23e103] [cursor=pointer]:
+                          - generic [ref=f23e105]: 
+                      - listitem [ref=f23e106]:
+                        - textbox [ref=f23e107]: "1"
+                      - listitem [ref=f23e108]:
+                        - button [ref=f23e109] [cursor=pointer]:
+                          - generic [ref=f23e111]: 
+                - cell [ref=f23e112]:
+                  - heading "2,500 HUF" [level=4] [ref=f23e113]
+                - cell [ref=f23e114]:
+                  - button "" [ref=f23e116] [cursor=pointer]
+          - generic [ref=f23e118]:
+            - link " Vásárlás folytatása" [ref=f23e120] [cursor=pointer]:
+              - /url: http://127.0.0.1:8016
+              - generic [ref=f23e121]: 
+              - text: Vásárlás folytatása
+            - button "Folytatás" [ref=f23e123] [cursor=pointer]
+        - generic [ref=f23e129]:
+          - heading "Hírlevél" [level=1] [ref=f23e130]
+          - paragraph [ref=f23e131]: Iratkozz fel hírlevelünkre
+          - paragraph [ref=f23e132]: Értesülj elsőként az újdonságokról és akciókról.
+          - generic [ref=f23e133]:
+            - textbox "E-mail" [ref=f23e134]
+            - button "Feliratkozás" [ref=f23e135] [cursor=pointer]
+        - generic [ref=f23e138]:
+          - generic [ref=f23e140]:
+            - generic [ref=f23e141]:
+              - link [ref=f23e142] [cursor=pointer]:
+                - /url: http://127.0.0.1:8016
+                - img "footer_logo" [ref=f23e143]
+              - heading "Gyros City Vásárosnamény" [level=1] [ref=f23e144]
+              - paragraph [ref=f23e145]: "Minden nap: 8:00 - 22:00 Kiszállítás 11:00-21:30"
+            - generic [ref=f23e146]:
+              - generic [ref=f23e147]:
+                - generic [ref=f23e148]:
+                  - heading "Oldalak" [level=4] [ref=f23e149]
+                  - list [ref=f23e150]:
+                    - listitem [ref=f23e151]:
+                      - link "Bemutatkozás" [ref=f23e152] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8016/abous-us
+                    - listitem [ref=f23e153]:
+                      - link "Általános Szerződési Feltételek (ÁSZF)" [ref=f23e154] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8016/privacy-policy
+                    - listitem [ref=f23e155]:
+                      - link "Kiszállítással kapcsolatos információk" [ref=f23e156] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8016/refund-policy
+                    - listitem [ref=f23e157]:
+                      - link "Adatvédelmi Tájékoztató[GDPR]" [ref=f23e158] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8016/terms-conditions
+                    - listitem [ref=f23e159]:
+                      - link "Allergén táblázat" [ref=f23e160] [cursor=pointer]:
+                        - /url: alergens.html
+                - generic [ref=f23e161]:
+                  - heading "Egyéb" [level=4] [ref=f23e162]
+                  - list [ref=f23e163]:
+                    - listitem [ref=f23e164]:
+                      - link "Menü" [ref=f23e165] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8016/categories
+                    - listitem [ref=f23e166]:
+                      - link "GYIK" [ref=f23e167] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8016/faq
+                    - listitem [ref=f23e168]:
+                      - link "Kapcsolat" [ref=f23e169] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8016/contactus
+                    - listitem [ref=f23e170]:
+                      - link "Galéria" [ref=f23e171] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8016/gallery
+                - generic [ref=f23e172]:
+                  - heading "Kapcsolat" [level=4] [ref=f23e173]
+                  - list [ref=f23e174]:
+                    - link " 06205976297" [ref=f23e175] [cursor=pointer]:
+                      - /url: callto:06205976297
+                      - listitem [ref=f23e176]:
+                        - generic [ref=f23e177]: 
+                        - paragraph [ref=f23e178]: "06205976297"
+                    - link " info@gyroscity.eu" [ref=f23e179] [cursor=pointer]:
+                      - /url: mailto:info@gyroscity.eu
+                      - listitem [ref=f23e180]:
+                        - generic [ref=f23e181]: 
+                        - paragraph [ref=f23e182]: info@gyroscity.eu
+                  - link "f" [ref=f23e185] [cursor=pointer]:
+                    - /url: https://www.facebook.com/gyroscity
+              - img "Barion" [ref=f23e186]
+          - 'link "© 2026 BY: pZoli.com" [ref=f23e189] [cursor=pointer]':
+            - /url: https://pzoli.com
+      - generic [ref=f23e193]:
+        - paragraph [ref=f23e195]: A megfelelő élmény biztosításához sütikre van szükség.
+        - button "Sütik engedélyezése" [ref=f23e197] [cursor=pointer]
+  - text:       

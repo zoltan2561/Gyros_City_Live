@@ -2,6 +2,9 @@
 @section('content')
     @include('admin.breadcrumb')
     <div class="container-fluid">
+        @if ((int) Auth::user()->type === 1)
+            <div class="d-flex justify-content-end mb-3"><a class="btn btn-primary" href="{{ route('admin.newsletter.index') }}">{{ trans('newsletter.title') }}</a></div>
+        @endif
         <div class="row">
             <div class="col-12">
                 <div class="card border-0">

@@ -28,8 +28,11 @@ class ItemController extends Controller
                     ->where('favorite.user_id', '=', $user_id);
             })
             ->where('item.slug', '=', $request->slug)
-            ->where('item.item_status', '1')
+            ->visibleOnMenu()
             ->first();
+        if (!$iteminfo || !$iteminfo->is_orderable) {
+            return response()->json(['status' => 0, 'message' => 'Ez az étel jelenleg nem elérhető.']);
+        }
         $itemdata = array(
             "id" => $iteminfo->id,
             "slug" => $iteminfo->slug,
@@ -73,7 +76,7 @@ class ItemController extends Controller
                 })
                 ->groupBy('item.id', 'cart.item_id')
                 ->where('item.slug', '=', $request->slug)
-                ->where('item.item_status', '1')
+                ->visibleOnMenu()
                 ->first();
             $getitemdata['addons_group'] = AddonsGroup::select('id', 'name', 'selection_type', 'selection_count', 'min_count', 'max_count')->whereIn('id', explode(',', $getitemdata->addons_id))->where('is_deleted', 2)->where('is_available', 1)->orderByDesc('id')->get();
             $getitemdata['addons'] = Addons::select('id', 'addongroup_id', 'name', 'price')->where('is_deleted', 2)->where('is_available', 1)->orderByDesc('id')->get();
@@ -95,7 +98,7 @@ class ItemController extends Controller
                 ->orderByDesc('item.id')
                 ->where('item.id', '!=', @$getitemdata->id)
                 ->where('item.cat_id', '=', @$getitemdata->cat_id)
-                ->where('item.item_status', '1')
+                ->visibleOnMenu()
                 ->take(3)->get();
         } else {
             $getitemdata = Item::with('category_info', 'subcategory_info', 'item_images')->select('item.*', DB::raw('(case when item.price is null then 0 else item.price end) as item_price'), DB::raw('(case when cart.item_id is null then 0 else 1 end) as is_cart'))
@@ -106,7 +109,7 @@ class ItemController extends Controller
                 })
                 ->groupBy('item.id', 'cart.item_id')
                 ->where('item.slug', '=', $request->slug)
-                ->where('item.item_status', '1')
+                ->visibleOnMenu()
                 ->first();
             $getitemdata['addons_group'] = AddonsGroup::select('id', 'name', 'selection_type', 'selection_count', 'min_count', 'max_count')->whereIn('id', explode(',', $getitemdata->addons_id))->where('is_deleted', 2)->where('is_available', 1)->orderByDesc('id')->get();
             $getitemdata['addons'] = Addons::select('id', 'addongroup_id', 'name', 'price')->where('is_deleted', 2)->where('is_available', 1)->orderByDesc('id')->get();
@@ -123,7 +126,7 @@ class ItemController extends Controller
                 ->orderByDesc('item.id')
                 ->where('item.id', '!=', @$getitemdata->id)
                 ->where('item.cat_id', '=', @$getitemdata->cat_id)
-                ->where('item.item_status', '1')
+                ->visibleOnMenu()
                 ->take(3)->get();
         }
         $itemreviewdata = Ratting::with('user_info')->select('id', 'ratting', 'comment', 'item_id', 'user_id', 'created_at')->where('item_id', $getitemdata->id)->where('status', 1)->get();
@@ -162,7 +165,7 @@ class ItemController extends Controller
                     })
                     ->groupBy('order_details.item_id', 'item.id', 'cart.item_id')
                     ->where('item.item_name', 'like', '%' . $request->itemname . '%')
-                    ->where('item.item_status', '1')
+                    ->visibleOnMenu()
                     ->orderByDesc('item.id')->paginate(16);
             }
         } else {
@@ -177,7 +180,7 @@ class ItemController extends Controller
                     })
                     ->groupBy('order_details.item_id', 'item.id', 'cart.item_id')
                     ->where('item.item_name', 'like', '%' . $request->itemname . '%')
-                    ->where('item.item_status', '1')
+                    ->visibleOnMenu()
                     ->orderByDesc('item.id')->paginate(16);
             }
         }
@@ -208,7 +211,7 @@ class ItemController extends Controller
                             ->where('cart.user_id', '=', $user_id)
                             ->where('cart.buynow', '=', '0');
                     })
-                    ->groupBy('item.id', 'cart.item_id')->where('item.item_status', '1');
+                    ->groupBy('item.id', 'cart.item_id')->visibleOnMenu();
                 if ($request->has('type') && $request->type != "") {
                     if ($request->type == "todayspecial") {
                         $getsearchitems = $getsearchitems->where('item.is_featured', '1')->orderBy('item.reorder_id');
@@ -250,7 +253,7 @@ class ItemController extends Controller
                             ->where('cart.session_id', '=', $session_id)
                             ->where('cart.buynow', '=', '0');
                     })
-                    ->groupBy('item.id', 'cart.item_id')->where('item.item_status', '1');
+                    ->groupBy('item.id', 'cart.item_id')->visibleOnMenu();
                 if ($request->has('type') && $request->type != "") {
                     if ($request->type == "todayspecial") {
                         $getsearchitems = $getsearchitems->where('item.is_featured', '1')->orderBy('item.reorder_id');

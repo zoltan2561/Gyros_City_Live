@@ -30,8 +30,8 @@
                 <div class="row justify-content-between g-4 footer-area py-4">
                     <div class="col-lg-4 left-side mt-3">
                         <a href="{{ route('home') }}">
-                            <img src="{{ helper::image_path(@helper::appdata()->logo) }}" height="55" class="my-3"
-                                alt="footer_logo">
+                            <img src="{{ url('public/city/logo.webp') }}" height="70" width="98" class="my-3"
+                                alt="Gyros City">
                         </a>
                         <h1>{{ @helper::appdata()->footer_title }}</h1>
                         <p class="mb-0">{{ @helper::appdata()->footer_description }}</p>
@@ -117,25 +117,28 @@
             </div>
         <div class="container" style="max-width: 800px;">
     <div class="d-flex flex-column align-items-center text-center py-1">
-        <a href="https://pzoli.com" target="_blank" class="matrix-text fs-6 mb-0 text-decoration-none">
-            © <script>document.write(new Date().getFullYear())</script> BY: pZoli.com
+        <a href="https://szoftlab.hu" target="_blank" rel="noopener noreferrer" class="city-footer-credit">
+            © <script>document.write(new Date().getFullYear())</script> Szoftlab.hu
         </a>
     </div>
 </div>
 
 <style>
-.matrix-text {
-    color: #00ff66; /* Matrix-zöld */
-    font-family: 'Courier New', monospace;
-    text-shadow: 0 0 5px #00ff66;
-    transition: color 0.3s ease-in-out;
-    padding: 2px 6px;
-    background: #000;          /* fekete háttér csak a szöveg mögött */
+footer .city-footer-credit {
+    display: inline-block;
+    color: #a3a3a3;
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 1.6;
+    padding: 10px 6px;
+    text-decoration: none;
 }
 
-.matrix-text:hover {
-    color: #ffffff;
-    text-shadow: 0 0 10px #00ff66, 0 0 20px #00ff66;
+footer .city-footer-credit:hover,
+footer .city-footer-credit:focus-visible {
+    color: #eeeeee;
+    text-decoration: underline;
+    text-underline-offset: 3px;
 }
 </style>
 

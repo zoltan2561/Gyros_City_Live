@@ -1,9 +1,22 @@
+<IfModule mod_alias.c>
+    # Backups may contain their own .htaccess, so reject the URL before their rewrite rules.
+    RedirectMatch 403 "(?i)(?:^|/)LIVE_source(?:/|$)"
+</IfModule>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
     </IfModule>
 
     RewriteEngine On
+
+    # This legacy application uses the project root as its webroot.
+    # Deny private files before Apache serves existing files or directories.
+    RewriteRule (^|/)\.(?!well-known(?:/|$)) - [F,L,NC]
+    RewriteRule ^(?:app|bootstrap|config|cron|database|routes|tests|vendor|node_modules|LIVE_source)(?:/|$) - [F,L,NC]
+    RewriteRule ^storage(?:/(?!app/public(?:/|$))|$) - [F,L,NC]
+    RewriteRule ^storage/app/public/.*\.(?:php[0-9]?|phtml|phar)(?:/|$) - [F,L,NC]
+    RewriteRule \.(?:sql|sqlite3?|log|bak|backup)(?:/|$) - [F,L,NC]
 
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .

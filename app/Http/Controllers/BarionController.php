@@ -134,9 +134,8 @@ class BarionController extends Controller
             ];
 
             // Barion service meghívása – domainen fog működni, nincs localhost hardcode
-            $env    = app()->environment('prod') ? 'prod' : 'test';
             /** @var BarionService $barion */
-            $barion = app(BarionService::class, ['env' => $env]);
+            $barion = app(BarionService::class);
 
             // ideiglenes azonosító a Barion kéréshez (NEM a végső order ID)
             $tmpOrderId  = time();

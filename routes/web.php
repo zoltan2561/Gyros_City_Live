@@ -40,7 +40,7 @@ use App\Http\Controllers\front\WalletController;
 use App\Http\Controllers\admin\LangController;
 use App\Http\Controllers\admin\ShippingareaController;
 use App\Http\Controllers\admin\TaxController;
-use App\Http\Controllers\Admin\WhyChooseUsController;
+use App\Http\Controllers\admin\WhyChooseUsController;
 use App\Http\Controllers\BarionController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;

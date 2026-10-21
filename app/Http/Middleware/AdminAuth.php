@@ -24,7 +24,7 @@ class AdminAuth
         if (Auth::user() && in_array(Auth::user()->type,[1,4])){
             return $next($request);
         }
-        Auth::logout();
+        // A customer may still have an admin tab polling; denial must preserve their login.
         return redirect('admin');
     }
 }

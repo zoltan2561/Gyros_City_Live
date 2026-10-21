@@ -24,10 +24,12 @@ class BarionService
     private string $env;
 
     /**
-     * @param string $env 'test' vagy 'prod'
+     * @param string|null $env 'test', 'prod', or null to use the application environment
      */
-    public function __construct(string $env = 'prod')
+    public function __construct(?string $env = null)
     {
+        // Use the same environment for payment creation, redirects and callbacks.
+        $env ??= app()->environment('production', 'prod') ? 'prod' : 'test';
         $this->env = $env;
         $this->cfg = BarionSetting::where('env', $env)->where('is_enabled', 1)->firstOrFail();
 

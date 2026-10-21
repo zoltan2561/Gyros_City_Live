@@ -7,6 +7,37 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Kiadás előtti ellenőrzés – 2026. október 21.
+
+Ellenőrzött példány: `C:\xampp\htdocs\Gyros_City_Live`, helyi alapcommit: `cc48686`. A GitHub `main` az ellenőrzéskor még `96fc3c0`; a mai javítások helyi, nem commitolt módosítások. Git deploy csak a végleges változások külön engedélyezett commitja/push-a és a távoli SHA ellenőrzése után viheti át ezeket.
+
+**Állapot: zárt tesztdomain előkészíthető, a 2026. október 22-i élesítés még nincs jóváhagyható állapotban.** A backup szükséges, de nem helyettesíti az alábbi hibák rendezését és a tárhelyen végzett próbát.
+
+Helyben igazolt eredmények:
+
+- PHP: `php vendor/phpunit/phpunit/phpunit` – 120 teszt, 502 ellenőrzés, sikeres. A Barion környezetválasztás hat új esetéből három a javítás előtt hibázott, utána mind sikeres.
+- JavaScript: `node --test tests/frontend/*.test.cjs` – 32/32 sikeres. A PHP/JavaScript szintaktikai ellenőrzés, `composer validate --no-check-publish`, helyi `composer check-platform-reqs --no-dev`, `composer dump-autoload --optimize --no-scripts --strict-psr` és `php artisan view:cache` is sikeres. A helyi PHP 8.2.12; a tárhely PHP-verziója és bővítményei külön ellenőrizendők.
+- A helyi adatbázisban a `gift_promotions`, `newsletters`, `newsletter_deliveries` táblák és a két migráció bejegyzése megvan. Mind a 166 hivatkozott termékkép megtalálható. Ez nem igazolja a teszt- vagy éles tárhely állapotát.
+- A `.htaccess` javítása után 21 helyi HTTP-ellenőrzés igazolta a privát fájlok tiltását és a nyilvános oldalak/assetek elérhetőségét. Előtte a Git-metaadatok, naplók, QA-fájlok és a `LIVE_source` SQL-mentése is elérhető volt HTTP-n. A mentés saját `.htaccess` fájlja miatt külön URL-tiltás is szükséges volt. A tárhelyen ugyanezt a védelmet tényleges HTTP-kérésekkel ellenőrizni kell.
+- Két adminvezérlő névtere és egy route-import a kisbetűs `admin` könyvtárhoz lett igazítva. Natív Linux-futtatás ebben a körben nem történt.
+- A Barion-indítás, visszatérés és callback közös környezetválasztást használ: `APP_ENV=production` vagy `prod` esetén `prod`, más környezetben `test`. Hiányzó tesztbeállításnál nincs visszaesés az éles kulcsra. Valódi fizetést ez az ellenőrzés nem indított.
+
+Nyitott kiadási hibák:
+
+1. `composer audit --locked --no-dev --format=json`: 71 advisory-bejegyzés 18 csomagnál, köztük 2 critical és 22 high besorolás. Ezek érintett verziókra vonatkozó jelzések, nem 71 igazolt alkalmazásszintű támadási út. A lockolt Laravel `9.52.16` verziót a [környezetmanipulációs közlemény](https://github.com/laravel/framework/security/advisories/GHSA-gv7v-rgg6-548h) is érinti; a PHPSpreadsheet `1.29.0` verzióhoz is vannak [biztonsági közlemények](https://github.com/PHPOffice/PhpSpreadsheet/security/advisories/GHSA-q4q6-r8wh-5cgh). A frissítések és a fennmaradó kockázatok áttekintése még szükséges. Csak `composer update --dry-run` futott: a több mint száz csomagot érintő teljes frissítés nem lett alkalmazva, a lockfájl nem változott.
+2. A helyi böngészős teszt kétszer is hibás, `storage/app/public/` előtag nélküli asset-URL-eket látott a feltöltött kosár körül: 82 hibás erőforráskérés, 8 JavaScript-hiba (`$`/`toastr` nincs definiálva). Egyszerű HTTP-újraolvasáskor az útvonalak helyesek voltak; a kiváltó ok még nincs igazolva. Az 18, 360/390/1440 px-es oldalellenőrzés nem talált oldalszintű vízszintes túlcsordulást, és a vendégkosár megmaradt frissítés/visszalépés után, de a böngészős ellenőrzés összességében HIBÁS. A saját próbatétel törölve lett. A tesztdomainen a teljes böngészős folyamat újraellenőrzendő.
+3. `php artisan route:list --except-vendor --json` hiányzó `MyFatoorahController` miatt hibázik. A 365 vezérlős útvonal vizsgálatakor 12 hibás regisztráció volt: MyFatoorah (4), értékelésmodul (5), `/validate_data`, `POST /auth`, `/admin/item/list`. A használat és a kívánt működés tisztázásáig nincs hamis siker-válasz vagy automatikusan törölt útvonal. `route:cache` nem került bekapcsolásra.
+
+A mai, Git-alapú teszttelepítés feltételei:
+
+- Elkülönített, hozzáférésvédett domain és adatbázismásolat; saját szerveroldali környezeti beállítások. `APP_ENV=staging`, `APP_DEBUG=false`, megfelelő `APP_URL`, domainhez illő session-cookie, `ASSETSPATHURL=storage/app/public/`. A helyi `.env`, sessionök és QA-segédek nem másolandók fel. Az éles környezeti fájlt nem írjuk felül.
+- A `storage/app/public` képei és régi CSS/JS-állományai, továbbá a `storage/installed` nincsenek Gitben: új tárhelyen külön előkészítendők. A futási könyvtárak legyenek írhatók; a feltöltések a következő Git deploy során is maradjanak meg.
+- A tesztoldal ne használjon éles levelezést, értesítésküldést, éles Barion-kulcsot vagy átmásolt automatikus cronfeladatokat. A helyi adatbázisban csak engedélyezett `prod` Barion-beállítás volt: a tesztfizetéshez külön `test` sor, tesztkulcs és a tesztdomainhez tartozó visszatérési/callback URL kell. A callbacknek a kívülről érkező Barion-értesítést is fogadnia kell.
+- A `cron/*.php` HTTP-n tiltott; ütemezésük szerveroldali PHP CLI-parancsként ellenőrizendő. A régi `decide_unprocessed.php` éles domainre mutató URL-t tartalmaz, ezért teszttárhelyen nem indítandó el.
+- A tárhelyen a lockból történő `composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader` és platformellenőrzés szükséges; `composer update` ne legyen deploylépés. `config:cache` a sok közvetlen `env()`-hívás miatt külön kompatibilitási próba nélkül továbbra sem használható.
+
+Holnapi élesítés előtt a nyitott hibák rendezése és a tesztdomainen igazolt rendelés/kosár/belépés/admin/hang/Barion-folyamat szükséges. Közvetlenül a zárás utáni váltás előtt friss adatbázis- és fájlmentés kell, visszaállítási próbával, lezárt folyamatban lévő fizetésekkel. Az éles adatbázist megtartva csak a két megnevezett új migráció jöhet szóba, ha a táblák és a migrációbejegyzések még hiányoznak; általános migrálás vagy helyi dump visszatöltése nem kiadási lépés. Éles szerver, adatbázis, `.env`, GitHub vagy automatikus deploy nem lett módosítva ebben az ellenőrzésben.
+
 ## Gyros City frissítés – 2026. október 20.
 
 Az admin rendelési hangfigyelése a `public/city/admin-order-alerts.js` fájlba került. A `getorder` végpont a még el nem fogadott (`status_type=1`), nem POS rendelések azonosítóit adja vissza; nem az olvasatlan jelzőt vagy a darabszám változását figyeli, és éjfélkor sem felejti el a függő rendelést. Az első jelzés után 180 másodpercenként, a következő sikeres öt másodperces ellenőrzéskor újra jelez, amíg a rendelés el nem hagyja ezt az állapotot. A jelzés az értesítő ablak bezárásától független; időpontját a böngésző a webhelyhez és adminhoz kötött localStorage-kulcson őrzi, így az „OK” miatti újratöltés sem törli. Letiltott böngészőtár esetén az aktuális oldalon tovább működik, de újratöltések között nem tudja megőrizni az időpontot.
@@ -67,7 +98,7 @@ Visszaállításkor a két új tábla megtartható; a `down()` törölné a hír
 
 Az átvett 13 funkcióteszt izolált SQLite-adatbázissal és helyettesített levelezővel fut. A teljes adminfelület, mentés, nem mentett módosítás miatti küldéstiltás, próbalevél, kötegelt küldés, frissítés utáni állapot és leiratkozás MariaDB QA-adatbázison, mesterséges címekkel és igazoltan `log` levelezővel is ellenőrizve. Az adminoldalak 360, 390 és 1440 px-en nem lógnak túl. A normál helyi adatbázisban nem jött létre hírlevél vagy kézbesítés; valódi SMTP-kézbesítés nem lett tesztelve.
 
-### Szombati élesítés előkészítése – LIVE_source mentés
+### A 2026. október 22-i élesítés előkészítése – LIVE_source mentés
 
 A 2026. október 20-án átadott mentésben 63 adatbázistábla van. A helyi adatbázisban ezek oszlopnevei egyeznek a mentéssel; ez nem teljes típus-, index-, adattartalom- vagy éles szerverellenőrzés. A mentésből hiányzó új táblák: `gift_promotions`, `newsletters`, `newsletter_deliveries`. A két új migráció csak ezeket hozza létre; visszavonásuk viszont törölné az új funkciók adatait.
 

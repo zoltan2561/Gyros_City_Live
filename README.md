@@ -7,6 +7,14 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Megjegyzett bejelentkezés – 2026. október 21.
+
+A vásárlói és az admin/pultos jelszavas belépés automatikusan megjegyzett bejelentkezést kér. A közös `web` guard `remember` ideje 43 200 perc (30 × 24 óra), az OTP-s belépésre is érvényes. A rövidebb szerveres munkamenet lejárata után a titkosított, HttpOnly bejelentkezési süti visszaállítja a hitelesítést. A normál munkamenet saját lejárati beállítása változatlan.
+
+Kijelentkezéskor a megjegyzett süti és a szerveres munkamenet megszűnik; a régi megjegyzett süti nem használható újra. Az admin kijelentkezése is érvényteleníti a munkamenetet és új CSRF-tokent készít. A korábbi kosárátvitel megmarad. A 30 napos süti a következő sikeres belépéskor jön létre. Git deploy után esetleges konfiguráció-cache-t `php artisan config:clear` paranccsal kell törölni, majd egyszer újra bejelentkezni. Migráció vagy `.env`-módosítás nem szükséges.
+
+Ellenőrzés: 185 PHP-teszt / 835 ellenőrzés sikeres; PHP 8.4 alatt 25 kapcsolódó teszt sikeres. Az új izolált tesztek vásárló, tulajdonos és pultos esetén ellenőrzik a süti 30 napos lejáratát, a megjegyzett belépés visszaállítását és kijelentkezés utáni visszavonását; az OTP és elutasított fiókok is lefedettek. Helyi QA-adatbázison valódi böngésző-újraindítás után, kizárólag a megjegyzett sütit visszaadva a profil és a fiók kosara elérhető maradt; kijelentkezés után a régi süti visszautasítva. Tárhelyi telepítés és ottani próba még szükséges.
+
 ## Admin termékkezelő – 2026. október 21.
 
 A külön „Ma nem elérhető” gomb minden termék sorában megmaradt: egy kattintással letiltható mára, az „Újra elérhető” gombbal visszakapcsolható. A meglévő napi elérhetőségi végpontot használja, szerkesztőablak nélkül; a keresés és szűrők megmaradnak.

@@ -307,7 +307,7 @@ class UserController extends Controller
                 return redirect(route('login'))->with('error', trans('messages.invalid_user'));
             }
         } else {
-            if (Auth::attempt($request->only('email', 'password'))) {
+            if (Auth::attempt($request->only('email', 'password'), true)) {
                 if (Auth::user()->type == 2) {
                     if (Auth::user()->is_available == 1) {
                         if (Auth::user()->is_verified == 1) {

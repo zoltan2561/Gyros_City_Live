@@ -137,7 +137,7 @@ class AdminController extends Controller
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
         } else {
-            if (Auth::attempt($request->only('email', 'password'))) {
+            if (Auth::attempt($request->only('email', 'password'), true)) {
                 if (!Auth::user()) {
                     return Redirect::to('/auth')->with('error', Session::get('from_message'));
                 }
@@ -280,6 +280,8 @@ class AdminController extends Controller
     public function logout(Request $request)
     {
         Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
         return Redirect::to('admin/');
     }
 

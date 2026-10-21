@@ -7,7 +7,17 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
-## Kiadás előtti ellenőrzés – 2026. október 21.
+## Rendelési e-mailek – 2026. október 21.
+
+A webes vendégrendelések is kapnak értesítést a rendeléshez megadott érvényes e-mail-címre: rendelés beérkezése, elfogadás, elkészült/átvehető állapot, lezárás, törlés és futárhoz rendelés. A további egyedi státuszok a mentett státusznévvel jelennek meg. Regisztrált vásárlónál a korábbi e-mail-értesítési beállítás megmarad; elsődleges a rendelésben megadott cím. A rendelés-visszaigazolásból az étterem külön példányt kap.
+
+Az egységes HTML- és szöveges levél tartalmazza a rendelési számot, tételeket, kiegészítőket, extrákat és a mentett végösszeget. A Barion-visszaigazolás csak a rendelés adatbázis-tranzakciójának sikeres lezárása után készül. Azonos státusz ismételt mentése és az ismételt Barion-callback nem indít újabb ügyféllevelet. A küldési hiba naplózódik, de nem teszi sikertelenné a mentett rendelést; automatikus levél-újraküldés nincs. POS-rendelésekhez ez a webes értesítés nem fut.
+
+Ellenőrzés: `php vendor/phpunit/phpunit/phpunit --filter OrderNotificationTest` (izolált SQLite, hamisított levelezés és memóriabeli MIME-összeállítás; valódi címzetthez nem küld). A levélnézet 360, 390, 600 és 1200 px szélességen vízszintes túllógás nélkül ellenőrizve. A meglévő SMTP-beállítások változatlanok, migráció nem szükséges. A tárhelyi kézbesítés külön, saját tesztcímmel ellenőrizendő a Git deploy után; az izolált teszt nem bizonyít SMTP-kézbesítést vagy minden levelezőkliens megjelenését.
+
+## Korábbi kiadás előtti ellenőrzés – 2026. október 21.
+
+Az alábbi kiadási jelentés a korábbi ellenőrzés pillanatképe; a benne szereplő commitok és tesztszámok az akkori állapothoz tartoznak.
 
 Ellenőrzött példány: `C:\xampp\htdocs\Gyros_City_Live`, helyi alapcommit: `cc48686`. A GitHub `main` az ellenőrzéskor még `96fc3c0`; a mai javítások helyi, nem commitolt módosítások. Git deploy csak a végleges változások külön engedélyezett commitja/push-a és a távoli SHA ellenőrzése után viheti át ezeket.
 

@@ -173,6 +173,36 @@ class GiftPromotionsTest extends TestCase
         $this->postJson('/addtocart', ['slug' => 'item-1', 'qty' => 0])->assertStatus(422);
     }
 
+    /** @dataProvider optionalSupplementPrices */
+    public function test_cart_accepts_optional_supplements_and_preserves_their_totals(array $prices, int $addonsTotal, int $extrasTotal): void
+    {
+        $this->postJson('/addtocart', array_merge([
+            'slug' => 'item-1', 'qty' => 2, 'buynow' => 0,
+        ], $prices))->assertOk()->assertJson(['status' => 1]);
+
+        $this->assertSame(1, Cart::count());
+        $cart = Cart::firstOrFail();
+        $this->assertSame($addonsTotal, (int) $cart->addons_total_price);
+        $this->assertSame($extrasTotal, (int) $cart->extras_total_price);
+        $this->assertSame(1000, (int) $cart->item_price);
+        $this->assertSame(2, $cart->qty);
+    }
+
+    public static function optionalSupplementPrices(): array
+    {
+        return [
+            'omitted' => [[], 0, 0],
+            'empty strings' => [['addons_price' => '', 'extras_price' => ''], 0, 0],
+            'null values' => [['addons_price' => null, 'extras_price' => null], 0, 0],
+            'whitespace' => [['addons_price' => ' ', 'extras_price' => ' '], 0, 0],
+            'free choices' => [['addons_price' => '0', 'extras_price' => '0'], 0, 0],
+            'free addon without extras' => [['addons_price' => '0', 'extras_price' => ''], 0, 0],
+            'paid addons without extras' => [['addons_price' => '100| 200', 'extras_price' => ''], 300, 0],
+            'paid extras without addons' => [['addons_price' => '', 'extras_price' => '230| 150'], 0, 380],
+            'both selected' => [['addons_price' => '100| 200', 'extras_price' => '230| 150'], 300, 380],
+        ];
+    }
+
     public function test_a_gift_that_becomes_unavailable_is_invalidated(): void
     {
         $promotion = $this->promotion(); $this->line(1, 2);

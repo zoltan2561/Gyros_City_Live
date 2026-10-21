@@ -299,8 +299,9 @@ class BarionController extends Controller
         $isOk = in_array($status, ['succeeded','completed','authorized'], true);
 
         // 5) tranzakció + rendelés kezelése adatbázis tranzakcióban
+        $createdOrder = null;
         try {
-            \Illuminate\Support\Facades\DB::transaction(function () use ($paymentId, $state, $status, $isOk) {
+            \Illuminate\Support\Facades\DB::transaction(function () use ($paymentId, $state, $status, $isOk, &$createdOrder) {
                 /** @var \App\Models\BarionTransaction|null $txRow */
                 $txRow = \App\Models\BarionTransaction::where('payment_id', $paymentId)->lockForUpdate()->first();
 
@@ -500,7 +501,11 @@ class BarionController extends Controller
                     url('/success-'.$o->order_number),
                     now()->addMinutes(30)
                 );
+                $createdOrder = $o;
             });
+            if ($createdOrder) {
+                app(\App\Services\OrderNotifications::class)->placed($createdOrder);
+            }
         } catch (\Throwable $e) {
             \Log::error("Barion callback txn error for {$paymentId}: ".$e->getMessage());
             \App\Models\PaymentLog::create([

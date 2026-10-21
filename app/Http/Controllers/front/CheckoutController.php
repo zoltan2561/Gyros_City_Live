@@ -464,30 +464,10 @@ class CheckoutController extends Controller
                         $body = "Your Order " . $order_number . " has been placed.";
                         $noti = helper::push_notification($checkuser->token, $title, $body, "order", $order->id);
                     }
-                    $orderdata = Order::where('id', $order->id)->first();
-                    $itemdata = OrderDetails::where('order_id', $order->id)->get();
-                    if ($checkuser->is_mail == 1) {
-                        $invoice_helper = helper::create_order_invoice($checkuser->email, $checkuser->name, $order_number, $orderdata, $itemdata);
-                    }
                 } else {
                     Cart::where('session_id', Session::getId())->where('buynow', $buynow)->delete();
-
-                    $title = trans('labels.order_placed');
-                    $body = "Your Order " . $order_number . " has been placed.";
-                    $noti = helper::push_notification(125, $title, $body, "order", $order->id);
-
-                    $orderdata = Order::where('id', $order->id)->first();
-                    $itemdata = OrderDetails::where('order_id', $order->id)->get();
                 }
-
-
-
-                $admindata = User::select('id', 'name', 'email', 'mobile')->where('type', 1)->first();
-                if (Auth::user() && Auth::user()->type == 2) {
-                    $admin_invoice = helper::create_order_invoice($admindata->email, $checkuser->name, $order_number, $orderdata, $itemdata);
-                } else {
-                    $admin_invoice = helper::create_order_invoice($admindata->email, $request->name, $order_number, $orderdata, $itemdata);
-                }
+                app(\App\Services\OrderNotifications::class)->placed($order);
                 session()->forget('discount_data');
                 session()->forget('userdata');
 

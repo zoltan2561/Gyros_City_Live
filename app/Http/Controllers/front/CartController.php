@@ -111,11 +111,11 @@ class CartController extends Controller
             $cart->addons_id          = $request->addons_id ?: null;
             $cart->addons_name        = $request->addons_name ?: null;
             $cart->addons_price       = $request->addons_price ?: null;
-            $cart->addons_total_price = helper::number_format($request->addons_price === "" ? 0 : array_sum(explode('| ', $request->addons_price)));
+            $cart->addons_total_price = helper::number_format($request->filled('addons_price') ? array_sum(explode('| ', $request->addons_price)) : 0);
             $cart->extras_id          = $request->extras_id ?: null;
             $cart->extras_name        = $request->extras_name ?: null;
             $cart->extras_price       = $request->extras_price ?: null;
-            $cart->extras_total_price = helper::number_format($request->extras_price === "" ? 0 : array_sum(explode('| ', $request->extras_price)));
+            $cart->extras_total_price = helper::number_format($request->filled('extras_price') ? array_sum(explode('| ', $request->extras_price)) : 0);
             $cart->qty                = (int)$request->qty;
             $cart->buynow             = $buynow;
             $cart->save();

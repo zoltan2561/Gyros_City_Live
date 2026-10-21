@@ -78,6 +78,7 @@ class OrderController extends Controller
             $orderdata->status = $defaultsatus->id;
             $orderdata->status_type = $defaultsatus->type;
             if ($orderdata->save()) {
+                app(\App\Services\OrderNotifications::class)->statusChanged($orderdata);
                 return 1;
             } else {
                 return 0;

@@ -40,12 +40,6 @@
         </li>
     @endif
 
-
-    <li>
-        <a class="{{ request()->is('wallet*') ? 'active' : '' }}" href="{{ route('user-wallet') }}">
-            <i class="mx-2 fa-solid fa-wallet"></i>{{ trans('labels.my_wallet') }} </a>
-    </li>
-
    {{-- <li>
        <a class="{{ request()->is('refer-earn') ? 'active' : '' }}" href="{{ route('refer-earn') }}">
            <i class="mx-2 fa-solid fa-share-nodes"></i>{{ trans('labels.refer_earn') }} </a>
@@ -106,12 +100,6 @@
                         </li>
                     @endif
 
- <li class="mb-3 {{ request()->is('wallet*') ? 'active' : '' }}">
-                        <a class="text-black" href="{{ route('user-wallet') }}">
-                            <i
-                                class="fa-solid fa-wallet {{ session()->get('direction') == '2' ? 'ms-2' : 'me-2' }}"></i>{{ trans('labels.my_wallet') }}
-                        </a>
-                    </li>
                     {{--
                     <li class="mb-3 {{ request()->is('refer-earn') ? 'active' : '' }}">
                         <a class="text-black" href="{{ route('refer-earn') }}">

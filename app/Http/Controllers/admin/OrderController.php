@@ -60,7 +60,12 @@ class OrderController extends Controller
 
     public function update(Request $request)
     {
-        $orderdata = Order::find($request->id);
+        $orderdata = Order::findOrFail($request->id);
+        $defaultsatus = CustomStatus::where('order_type', $orderdata->order_type)->where('type', $request->statustype)->where('id', $request->status)->where('is_available', 1)->where('is_deleted', 2)->first();
+        abort_unless($defaultsatus, 422, 'Érvénytelen rendelési állapot.');
+        if ((int) $orderdata->status === (int) $defaultsatus->id && (int) $orderdata->status_type === (int) $defaultsatus->type) {
+            return 1;
+        }
         $user_info = User::find($orderdata->user_id);
 
         $title = "";
@@ -89,7 +94,7 @@ class OrderController extends Controller
             $body = 'Rendelés ' . $orderdata->order_number . 'Törölve az admin által.';
             $message_text = 'Rendelés' . $orderdata->order_number . 'törölve az admin által.';
 
-            if ($orderdata->user_id != null) {
+            if ($user_info) {
                 if ($orderdata->transaction_type != 1) {
                     if ($orderdata->user_id != null) {
                         $user_info->wallet += $orderdata->grand_total;
@@ -109,7 +114,7 @@ class OrderController extends Controller
             }
         }
 
-        if ($orderdata->user_id != null) {
+        if ($user_info) {
             if ($user_info->is_notification == 1) {
                 $noti = helper::push_notification($user_info->token, $title, $body, "order", $orderdata->id);
             }
@@ -118,13 +123,10 @@ class OrderController extends Controller
                 if (@helper::checkaddons('otp')) {
 
                     $status_sms = sms_helper::order_status_sms($user_info->mobile, $user_info->name, $title, $message_text);
-                } else {
-                    $status_email = helper::order_status_email($user_info->email, $user_info->name, $title, $message_text);
                 }
             }
         }
 
-        $defaultsatus = CustomStatus::where('order_type', $orderdata->order_type)->where('type', $request->statustype)->where('id', $request->status)->where('is_available', 1)->where('is_deleted', 2)->first();
         $orderdata->status = $defaultsatus->id;
         $orderdata->status_type = $defaultsatus->type;
 
@@ -135,6 +137,7 @@ class OrderController extends Controller
         }
 
         if ($orderdata->save()) {
+            app(\App\Services\OrderNotifications::class)->statusChanged($orderdata);
             return 1;
         } else {
             return 0;
@@ -143,20 +146,21 @@ class OrderController extends Controller
 
     public function assign_driver(Request $request)
     {
-        $orderdata = Order::find($request->order_id);
+        $orderdata = Order::findOrFail($request->order_id);
         $user_info = User::find($orderdata->user_id);
-        $driver_info = User::find($request->driver_id);
+        $driver_info = User::findOrFail($request->driver_id);
+        if ((int) $orderdata->driver_id === (int) $driver_info->id) return 1;
         // for user
-        if ($orderdata->user_id != null) {
+        if ($user_info) {
             $title = trans('messages.driver_assigned_title');
             $body = 'Delivery boy' . $driver_info->name . ' has been assigned to your Order ' . $orderdata->order_number;
             $message_text = 'Delivery boy ' . $driver_info->name . ' has been assigned to your Order ' . $orderdata->order_number;
-            $noti = helper::push_notification($user_info->token, $title, $body, "order", $orderdata->id);
+            if ($user_info->is_notification == 1 && $user_info->token) {
+                $noti = helper::push_notification($user_info->token, $title, $body, "order", $orderdata->id);
+            }
 
             if (@helper::checkaddons('otp')) {
                 $status_sms = sms_helper::order_status_sms($user_info->email, $user_info->name, $title, $message_text);
-            } else {
-                $status_email = helper::order_status_email($user_info->email, $user_info->name, $title, $message_text);
             }
         }
 
@@ -165,7 +169,9 @@ class OrderController extends Controller
         $title = trans('messages.new_order_assigned_title');
         $body = 'New Order ' . $orderdata->order_number . ' assigned to you';
         $message_text = 'New order ' . $orderdata->order_number . ' has been assigned to you.';
-        $noti = helper::push_notification($driver_info->token, $title, $body, "order", $orderdata->id);
+        if ($driver_info->token) {
+            $noti = helper::push_notification($driver_info->token, $title, $body, "order", $orderdata->id);
+        }
 
 
         $status_email = helper::order_status_email($driver_info->email, $driver_info->name, $title, $message_text);
@@ -173,6 +179,7 @@ class OrderController extends Controller
 
         $orderdata->driver_id = $request->driver_id;
         $orderdata->save();
+        app(\App\Services\OrderNotifications::class)->driverAssigned($orderdata);
 
         if (@helper::checkaddons('whatsapp_message')) {
             if (whatsapp_helper::whatsapp_message_config()->status_change == 1) {

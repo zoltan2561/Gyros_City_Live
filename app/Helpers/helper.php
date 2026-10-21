@@ -221,11 +221,12 @@ class helper
     }
     public static function create_order_invoice($user_email, $user_name, $order_number, $orderdata, $itemdata)
     {
-        $data = ['title' => trans('labels.order_placed'), 'email' => $user_email, 'name' => $user_name, 'order_number' => $order_number, 'orderdata' => $orderdata, 'itemdata' => $itemdata, 'logo' => helper::image_path(@helper::appdata()->logo)];
         try {
-            Mail::send('email.emailinvoice', $data, function ($message) use ($data) {
-                $message->to($data['email'])->subject($data['title']);
-            });
+            $email = trim((string) $user_email);
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL) || preg_match('/[\r\n]/', $email)) return 0;
+            Mail::to($email)->send(new \App\Mail\OrderNotificationMail($orderdata, collect($itemdata),
+                'Új rendelés érkezett', 'Új rendelés rögzítve. A részleteket alább találod.',
+                (string) $user_name, (string) (Settings::first()?->currency ?: 'HUF')));
             return 1;
         } catch (\Throwable $th) {
             return 0;
@@ -233,9 +234,9 @@ class helper
     }
     public static function order_status_email($email, $name, $title, $message_text)
     {
-        $data = ['email' => $email, 'name' => $name, 'title' => $title, 'message_text' => $message_text, 'logo' => helper::image_path(@helper::appdata()->logo)];
+        $data = ['email' => $email, 'name' => $name, 'title' => $title, 'message_text' => $message_text];
         try {
-            Mail::send('email.orderemail', $data, function ($message) use ($data) {
+            Mail::send('email.order-status', $data, function ($message) use ($data) {
                 $message->to($data['email'])->subject($data['title']);
             });
             return 1;

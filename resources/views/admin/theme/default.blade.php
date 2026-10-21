@@ -55,6 +55,10 @@
                                 {{ trans('messages.settings_note') }}</a>
                         </div>
                     @endif
+                    <div id="order-audio-warning" class="alert alert-warning" role="status" hidden>
+                        <span id="order-audio-message"></span>
+                        <button type="button" id="order-audio-enable" class="btn btn-sm btn-primary mt-2">Hangjelzés bekapcsolása</button>
+                    </div>
                     @yield('content')
                 </div>
             </div>
@@ -173,72 +177,10 @@
     @endif
 
 </script>
-<script type="text/javascript">
-  // New Notification + 2 percenként ismételt hang
-var noticount = 0;
-var reminderTimer = null;
-var reminderAudio = null;
-
-(function noti() {
-  $.ajax({
-    headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-    url: "{{ url('admin/getorder') }}",
-    method: 'GET',
-    dataType: "json",
-    success: function (response) {
-      noticount = localStorage.getItem("count");
-
-      // jelvény
-      if (response.count > 9) {
-        $('#notificationcount').text(response.count + "+");
-      } else {
-        $('#notificationcount').text(response.count);
-      }
-
-      if (response.count != 0) {
-        if (noticount != response.count) {
-          // új rendelés
-          localStorage.setItem("count", response.count);
-          jQuery("#order-modal").modal('show');
-
-          // új hang
-          var soundUrl = "{{ url(env('ASSETSPATHURL')) }}/admin-assets/notification/" + response.noti;
-          if (!reminderAudio || reminderAudio.src !== soundUrl) {
-            reminderAudio = new Audio(soundUrl);
-            reminderAudio.preload = 'auto';
-            reminderAudio.muted = false;
-            reminderAudio.volume = 1.0;
-            reminderAudio.playsInline = true;
-          }
-
-          // azonnali lejátszás
-          reminderAudio.currentTime = 0;
-          reminderAudio.play().catch(() => {});
-
-          // ismétlés 2 percenként, amíg nyitva van a modál
-          if (reminderTimer) clearInterval(reminderTimer);
-          reminderTimer = setInterval(function () {
-            if ($('#order-modal').is(':visible')) {
-              try {
-                reminderAudio.currentTime = 0;
-                reminderAudio.play().catch(() => {});
-              } catch (e) {}
-            } else {
-              clearInterval(reminderTimer);
-              reminderTimer = null;
-            }
-          }, 120000); // 2 perc = 120000 ms
-        }
-      } else {
-        localStorage.setItem("count", response.count);
-      }
-
-      setTimeout(noti, 5000); // 5 mp-enként lekérdezés
-    }
-  });
-})();
-
-</script>
+<script src="{{ url('public/city/admin-order-alerts.js') }}?v={{ filemtime(public_path('city/admin-order-alerts.js')) }}"
+        data-poll-url="{{ url('admin/getorder') }}"
+        data-audio-base="{{ url(env('ASSETSPATHURL') . 'admin-assets/notification') }}/"
+        data-storage-key="gycity:order-alerts:{{ url('admin/getorder') }}:{{ Auth::id() }}"></script>
 
 
 

@@ -115,10 +115,9 @@ class AdminController extends Controller
     }
     public function getorder()
     {
-        $todayorders = Order::with('user_info')->whereDate('created_at', Carbon::today())->where('is_notification', '=', '1')->count();
-        $data = Settings::first();
-        $noti = $data->notification_tune;
-        return response()->json(['count' => $todayorders, 'noti' => $noti]);
+        $orders = Order::where('status_type', 1)->where('order_from', '!=', 'pos')->orderBy('id')->pluck('id');
+        $noti = Settings::value('notification_tune');
+        return response()->json(['count' => $orders->count(), 'orders' => $orders, 'noti' => $noti]);
     }
     public function login()
     {

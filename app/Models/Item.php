@@ -7,6 +7,11 @@ use Illuminate\Support\Facades\DB;
 
 class Item extends Model
 {
+    public function getEditTokenAttribute(): string
+    {
+        return hash('sha256', json_encode($this->getRawOriginal()));
+    }
+
     public function getIsOrderableAttribute(): bool
     {
         return (int) $this->item_status === 1 && !(bool) $this->today_unavailable;

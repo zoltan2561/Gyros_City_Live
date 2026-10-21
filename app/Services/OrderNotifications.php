@@ -16,18 +16,7 @@ class OrderNotifications
 {
     public function placed(Order $order): bool
     {
-        $sent = $this->send($order, 'Rendelésed megérkezett', 'Megkaptuk a rendelésed. Az elfogadásáról külön értesítést küldünk.');
-        try {
-            $admin = User::where('type', 1)->first();
-            if ($admin && (string) $order->order_from !== 'pos') {
-                \App\Helpers\helper::create_order_invoice($admin->email, $admin->name, $order->order_number,
-                    $order, OrderDetails::where('order_id', $order->id)->get());
-            }
-        } catch (\Throwable $exception) {
-            Log::warning('Restaurant order notification failed', ['order_id' => $order->id,
-                'exception_class' => get_class($exception)]);
-        }
-        return $sent;
+        return $this->send($order, 'Rendelésed megérkezett', 'Megkaptuk a rendelésed. Az elfogadásáról külön értesítést küldünk.');
     }
 
     public function statusChanged(Order $order): bool

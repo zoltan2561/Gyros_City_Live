@@ -56,12 +56,7 @@ class OrderController extends Controller
                     }
                 }
             }
-            // TO ADMIN
             $title = trans('labels.order_cancelled');
-            $admin_message_text = 'Order ' . $orderdata->order_number . ' has been cancelled by User.';
-            $admindata = User::select('id', 'name', 'email', 'mobile')->where('type', 1)->first();
-
-            $status_email = helper::order_status_email($admindata->email, $admindata->name, $title, $admin_message_text);
 
             if (@helper::checkaddons('whatsapp_message')) {
                 if (whatsapp_helper::whatsapp_message_config()->status_change == 1) {

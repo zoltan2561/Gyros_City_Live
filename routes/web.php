@@ -377,6 +377,7 @@ Route::group(['prefix' => 'admin', 'namespace' => 'admin'], function () {
 		Route::post('item/store', [ItemController::class, 'store']);
 		Route::get('item/list', [ItemController::class, 'list']);
 		Route::post('item/update', [ItemController::class, 'update']);
+		Route::post('item/quick-update', [ItemController::class, 'quickUpdate']);
 		Route::post('item/showimage', [ItemController::class, 'showimage']);
 		Route::post('item/updateimage', [ItemController::class, 'updateimage']);
 		Route::post('item/storeimages', [ItemController::class, 'storeimages']);

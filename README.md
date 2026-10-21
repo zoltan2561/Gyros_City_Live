@@ -7,9 +7,25 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Admin termékkezelő – 2026. október 21.
+
+A terméklistában kép, ár, kategória, szöveges elérhetőség és mai ajánlat látszik. A kereső kategória-, állapot- és ajánlatszűrővel kombinálható; név, ár, módosítás ideje és étlapsorrend szerint rendezhető. A lista 20 soronként lapoz, az Excel/PDF az összes szűrt találatot exportálja. Mobilon a sorok kártyaként jelennek meg. A keresés és szűrők az URL-ben, illetve az adott böngészőlapon megmaradnak frissítés és a részletes szerkesztőből visszatérés után is.
+
+A gyorsszerkesztőben név, kategória, eladási/eredeti ár, aktív/szüneteltetett/mára elfogyott állapot és mai ajánlat menthető. A meglévő kosársorokat, összeállításokat, képeket és leírásokat megőrzi; kategóriaváltáskor a régi alkategóriát kiüríti. A termék slugja nem változik. Az adatellenőrzés és az elavult szerkesztésre adott 409-es válasz megakadályozza a hibás ár és a közben módosított termék felülírását. A részletes szerkesztő megmaradt.
+
+A sorrendezés külön, szűretlen nézetben, a teljes listán működik: fogantyús húzás vagy fel/le gombok, majd kifejezett mentés vagy mégse. A korábbi egymásba ágyazott mentési ciklus helyett minden pozíció egyszer, tranzakcióban mentődik. A képek és a törlési megerősítés a meglévő működést használják.
+
+Ellenőrzés: 172 PHP-teszt / 765 ellenőrzés és 32 JavaScript-teszt sikeres; PHP 8.4 alatt 69 kapcsolódó teszt sikeres. Elkülönített helyi MariaDB QA-adatbázison böngészőben igazolva a kombinált szűrés, lapozás/frissítés, gyors mentés, dupla küldés elleni védelem, hálózati hiba utáni adatmegőrzés/újrapróbálás, párhuzamos szerkesztés, Excel/PDF-letöltés és sorrend mentése/visszavonása. Lista és szerkesztő 360, 390, 820, 1024 és 1440 px-en túllógás nélkül ellenőrizve. Nincs migráció vagy npm-build; a két új `public/city/admin-products.*` fájl a Git kiadás része. A helyi QA-segédek nem kiadási fájlok. Tárhelyi telepítés és ellenőrzés még szükséges; régi útvonal-cache esetén `php artisan route:clear` kell az új mentési végponthoz.
+
+## Belépés utáni kosár és útvonal-cache – 2026. október 21.
+
+A `PreserveGuestCart` közvetlenül a vásárlói vezérlő jelszavas és OTP-s belépési műveletéhez kapcsolódik. Így egy korábbi, a kosárvédelmet még nem tartalmazó útvonal-cache mellett is lefut a vendégkosár átvitele. Két új teszt a javítás előtt mindkét belépésnél elvesző kosár-hozzárendelést mutatott; a javítás után a teljes csomag 158 tesztje, 697 ellenőrzése sikeres. PHP 8.4 alatt a kapcsolódó 40 teszt is sikeres.
+
+Elkülönített helyi QA-adatbázison, valódi böngészőkérésekkel 390 és 1200 px-en ellenőrizve: a kosársorok és extrák megmaradnak belépés, frissítés és profilból visszatérés után; kilépés után a fiók kosara nem látszik a vendégnek. Ez helyi bizonyíték: a bejelentett tesztdomain hibaoka és a javítás ottani működése még nincs igazolva. A tárhelyi Git deploy után `php artisan route:clear` és a vendégkosár → jelszavas belépés → kosár böngészős próba szükséges. Migráció nem kell.
+
 ## Rendelési e-mailek – 2026. október 21.
 
-A webes vendégrendelések is kapnak értesítést a rendeléshez megadott érvényes e-mail-címre: rendelés beérkezése, elfogadás, elkészült/átvehető állapot, lezárás, törlés és futárhoz rendelés. A további egyedi státuszok a mentett státusznévvel jelennek meg. Regisztrált vásárlónál a korábbi e-mail-értesítési beállítás megmarad; elsődleges a rendelésben megadott cím. A rendelés-visszaigazolásból az étterem külön példányt kap.
+A webes vendégrendelések is kapnak értesítést a rendeléshez megadott érvényes e-mail-címre: rendelés beérkezése, elfogadás, elkészült/átvehető állapot, lezárás, törlés és futárhoz rendelés. A további egyedi státuszok a mentett státusznévvel jelennek meg. Regisztrált vásárlónál a korábbi e-mail-értesítési beállítás megmarad; elsődleges a rendelésben megadott cím. Az admin nem kap e-mailt az új rendelésről vagy a vásárlói lemondásról. A vásárló és a kijelölt futár értesítése megmarad.
 
 Az egységes HTML- és szöveges levél tartalmazza a rendelési számot, tételeket, kiegészítőket, extrákat és a mentett végösszeget. A Barion-visszaigazolás csak a rendelés adatbázis-tranzakciójának sikeres lezárása után készül. Azonos státusz ismételt mentése és az ismételt Barion-callback nem indít újabb ügyféllevelet. A küldési hiba naplózódik, de nem teszi sikertelenné a mentett rendelést; automatikus levél-újraküldés nincs. POS-rendelésekhez ez a webes értesítés nem fut.
 

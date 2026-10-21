@@ -57,18 +57,48 @@ class ItemController extends Controller
 
     public function index(Request $request)
     {
-        $getitem = Item::with('category_info', 'subcategory_info', 'item_image')->select('item.*')->join('categories', 'item.cat_id', '=', 'categories.id')->where('categories.is_available', '1')->orderBy('item.reorder_id');
-        if ($request->has('search') && $request->search != "") {
-            $search = $request->search;
-            $getitem = $getitem->where(function ($query) use ($search) {
-                $query->where('item.item_name', 'like', '%' . $search . '%');
-            });
+        $getitem = Item::with('category_info', 'item_image')
+            ->whereHas('category_info', fn ($query) => $query->where('is_deleted', 2))
+            ->orderBy('reorder_id')->orderByDesc('id')->get();
+        $categories = Category::where('is_deleted', 2)->orderBy('reorder_id')->get();
+        return view('admin.item.item', compact('getitem', 'categories'));
+    }
+
+    public function quickUpdate(Request $request)
+    {
+        abort_if(env('Environment') === 'sendbox', 403, 'Bemutató módban nem menthető.');
+        $data = $request->validate([
+            'id' => ['required', 'integer', 'exists:item,id'],
+            'version' => ['required', 'string', 'size:64'],
+            'item_name' => ['required', 'string', 'max:255'],
+            'cat_id' => ['required', 'integer', \Illuminate\Validation\Rule::exists('categories', 'id')->where('is_deleted', 2)],
+            'price' => ['required', 'numeric', 'min:0', 'max:9999999.99'],
+            'original_price' => ['nullable', 'numeric', 'min:0', 'max:9999999.99'],
+            'availability' => ['required', \Illuminate\Validation\Rule::in(['active', 'paused', 'today'])],
+            'is_featured' => ['required', 'boolean'],
+        ]);
+        if (($data['original_price'] ?? 0) > 0 && $data['original_price'] < $data['price']) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['original_price' => 'Az eredeti ár nem lehet kisebb az eladási árnál.']);
         }
-        if ($request->has('option') && $request->option != "") {
-            $getitem = $getitem->where('item.item_type', $request->option == "veg" ? 1 : 2);
-        }
-        $getitem = $getitem->orderByDesc('item.id')->get();
-        return view('admin.item.item', compact('getitem'));
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($data) {
+            $item = Item::whereKey($data['id'])->lockForUpdate()->firstOrFail();
+            abort_unless(hash_equals($item->edit_token, $data['version']), 409,
+                'A terméket közben módosították. Frissítsd a listát, majd ellenőrizd az adatokat.');
+            if ((int) $item->cat_id !== (int) $data['cat_id']) $item->subcat_id = null;
+            $item->cat_id = $data['cat_id'];
+            $item->item_name = trim($data['item_name']);
+            $item->price = $data['price'];
+            $item->original_price = $data['original_price'] ?? 0;
+            $item->discount_percentage = $item->original_price > 0
+                ? round(100 - $item->price * 100 / $item->original_price, 1) : 0;
+            $item->is_featured = $data['is_featured'] ? 1 : 2;
+            $item->item_status = ['active' => 1, 'paused' => 2, 'today' => 0][$data['availability']];
+            $item->today_unavailable = $data['availability'] === 'today' ? 1 : 0;
+            $item->unavailable_date = $data['availability'] === 'today' ? now('Europe/Budapest')->toDateString() : null;
+            $item->save();
+            // Preserve existing cart snapshots and customisations; only the selected product is edited.
+            return response()->json(['success' => true, 'message' => 'A termék módosításait mentettük.']);
+        });
     }
     public function additem()
     {
@@ -233,15 +263,18 @@ class ItemController extends Controller
     }
     public function reorder_item(Request $request)
     {
-        $getitem = Item::all();
-        foreach ($getitem as $item) {
-            foreach ($request->order as $order) {
-                $item = Item::where('id', $order['id'])->first();
-                $item->reorder_id = $order['position'];
-                $item->save();
+        abort_if(env('Environment') === 'sendbox', 403);
+        $data = $request->validate([
+            'order' => ['required', 'array', 'min:1', 'max:10000'],
+            'order.*.id' => ['required', 'integer', 'distinct', 'exists:item,id'],
+            'order.*.position' => ['required', 'integer', 'min:1', 'distinct'],
+        ]);
+        \Illuminate\Support\Facades\DB::transaction(function () use ($data) {
+            foreach ($data['order'] as $row) {
+                Item::whereKey($row['id'])->update(['reorder_id' => $row['position']]);
             }
-        }
-        return response()->json(['status' => 1, 'msg' => 'Update Successfully!!'], 200);
+        });
+        return response()->json(['status' => 1, 'msg' => 'A sorrendet mentettük.']);
     }
 
 

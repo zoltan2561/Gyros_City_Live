@@ -164,14 +164,30 @@ class OrderNotificationTest extends TestCase
         $this->assertSame(10, $order->fresh()->status);
     }
 
-    public function test_restaurant_still_receives_a_copy_of_guest_orders(): void
+    public function test_guest_order_confirmation_does_not_send_an_admin_copy(): void
     {
         DB::table('users')->insert(['name' => 'Étterem', 'email' => 'restaurant@example.invalid', 'type' => 1]);
         app(OrderNotifications::class)->placed($this->order());
-        Mail::assertSent(OrderNotificationMail::class, fn ($mail) => $mail->hasTo('restaurant@example.invalid')
-            && $mail->title === 'Új rendelés érkezett' && $mail->summary['name'] === 'Teszt Vendég');
         Mail::assertSent(OrderNotificationMail::class, fn ($mail) => $mail->hasTo('guest@example.invalid'));
-        Mail::assertSent(OrderNotificationMail::class, 2);
+        Mail::assertNotSent(OrderNotificationMail::class, fn ($mail) => $mail->hasTo('restaurant@example.invalid'));
+        Mail::assertSent(OrderNotificationMail::class, 1);
+    }
+
+    public function test_customer_cancellation_only_emails_the_customer(): void
+    {
+        config(['mail.default' => 'array', 'mail.from.address' => 'orders@example.invalid']);
+        Mail::swap(new \Illuminate\Mail\MailManager($this->app));
+        Schema::table('users', fn (Blueprint $t) => $t->string('mobile')->nullable());
+        DB::table('users')->insert(['name' => 'Étterem', 'email' => 'restaurant@example.invalid', 'type' => 1]);
+        $order = $this->order();
+        $response = (new \App\Http\Controllers\front\OrderController())->statusupdate(new Request(['id' => $order->order_number]));
+        $this->assertSame(1, $response);
+        $this->assertSame(4, $order->fresh()->status_type);
+        $messages = Mail::mailer()->getSymfonyTransport()->messages();
+        $this->assertCount(1, $messages);
+        $message = $messages->first()->getOriginalMessage();
+        $this->assertSame('guest@example.invalid', $message->getTo()[0]->getAddress());
+        $this->assertStringContainsString('Rendelés törölve', $message->getSubject());
     }
 
     public function test_pos_orders_do_not_receive_web_order_emails(): void

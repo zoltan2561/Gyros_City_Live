@@ -1,131 +1,33 @@
-
-<table id="itemsTable" class="table table-striped table-bordered zero-configuration">
-
-    <thead>
-        <tr>
-            <th></th>
-            <th>#</th>
-            <th>{{ trans('labels.name') }}</th>
-            <th>{{ trans('labels.category') }}</th>
-            <th>{{ trans('labels.featured') }}</th>
-            <th>{{ trans('labels.status') }}</th>
-            <th>{{ __('Ma nem elérhető') }}</th>
-
-            <th>{{ trans('labels.created_date') }}</th>
-            <th>{{ trans('labels.updated_date') }}</th>
-            <th>{{ trans('labels.action') }}</th>
+<table id="itemsTable" class="table products-table">
+    <thead><tr><th>Sorrend</th><th>Termék</th><th>Kategória</th><th>Ár</th><th>Elérhetőség</th><th>Mai ajánlat</th><th>Műveletek</th><th>Módosítva</th></tr></thead>
+    <tbody id="productRows">
+    @foreach ($getitem as $item)
+        @php
+            $state = $item->today_unavailable ? 'today' : ((int) $item->item_status === 1 ? 'active' : 'paused');
+            $category = $categories->firstWhere('id', $item->cat_id);
+            $product = ['id' => $item->id, 'item_name' => $item->item_name, 'cat_id' => $item->cat_id,
+                'price' => $item->price, 'original_price' => $item->original_price, 'availability' => $state,
+                'is_featured' => (int) $item->is_featured === 1, 'version' => $item->edit_token,
+                'edit_url' => url('admin/item-'.$item->id)];
+        @endphp
+        <tr data-id="{{ $item->id }}" data-category="{{ $item->cat_id }}" data-state="{{ $state }}" data-featured="{{ (int) $item->is_featured === 1 ? '1' : '2' }}" data-product="{{ json_encode($product) }}">
+            <td>{{ $loop->index }}</td>
+            <td data-label="Termék"><div class="products-identity">
+                <span class="products-drag" aria-hidden="true">⠿</span>
+                <img class="products-photo" src="{{ $item->item_image?->image_url ?: helper::image_path('item-placeholder.png') }}" alt="" loading="lazy" width="48" height="48">
+                <div><button class="products-name" type="button" data-quick-edit>{{ $item->item_name }}</button><small>#{{ $item->id }}</small></div>
+            </div></td>
+            <td data-label="Kategória"><span class="products-category">{{ $item->category_info?->category_name }}</span>@if ((int) $category?->is_available !== 1)<small class="products-category-off">Kategória inaktív</small>@endif</td>
+            <td data-label="Ár" data-order="{{ $item->price }}"><strong class="products-price">{{ helper::currency_format($item->price) }}</strong>@if ($item->original_price > $item->price)<del>{{ helper::currency_format($item->original_price) }}</del>@endif</td>
+            <td data-label="Elérhetőség"><button type="button" class="products-state products-state-{{ $state }}" data-edit-state title="Elérhetőség módosítása: {{ $item->item_name }}"><span aria-hidden="true"></span>{{ ['active' => 'Aktív', 'today' => 'Mára elfogyott', 'paused' => 'Szüneteltetve'][$state] }}</button></td>
+            <td data-label="Mai ajánlat"><span class="products-featured {{ (int) $item->is_featured === 1 ? 'is-featured' : '' }}">{{ (int) $item->is_featured === 1 ? '★ Kiemelve' : 'Nincs kiemelve' }}</span></td>
+            <td data-label="Műveletek"><div class="products-row-actions">
+                <button type="button" class="btn products-quick-edit" data-quick-edit aria-label="Gyors szerkesztés: {{ $item->item_name }}"><i class="fa-regular fa-pen-to-square" aria-hidden="true"></i> Szerkesztés</button>
+                <a href="{{ url('admin/item-'.$item->id) }}" class="products-detail-link" aria-label="Részletes szerkesztés: {{ $item->item_name }}">Részletek</a>
+                <button type="button" class="products-delete" data-delete-url="{{ url('admin/item/delete') }}" aria-label="Termék törlése: {{ $item->item_name }}" title="Termék törlése"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
+            </div><div class="products-move-buttons"><button type="button" data-move="-1" aria-label="{{ $item->item_name }} mozgatása felfelé">↑ Fel</button><button type="button" data-move="1" aria-label="{{ $item->item_name }} mozgatása lefelé">↓ Le</button></div></td>
+            <td>{{ $item->updated_at?->format('Y-m-d H:i:s') }}</td>
         </tr>
-    </thead>
-    <tbody id="tabledetails" data-url="{{ url('admin/item/reorder_item') }}">
-        @php $i = 1; @endphp
-        @foreach ($getitem as $item)
-            <tr class="row1" data-id="{{ $item->id }}">
-                <td><a tooltip="{{ trans('labels.move') }}"><i class="fa-light fa-up-down-left-right mx-2"></i></a></td>
-                <td>@php echo $i++; @endphp</td>
-                <td><img @if ($item->item_type == 1) src="{{ helper::image_path('veg.svg') }}" @else src="{{ helper::image_path('nonveg.svg') }}" @endif
-                        class="item-type-img" alt=""> {{ $item->item_name }}</td>
-                <td>{{ @$item['category_info']->category_name }}</td>
-                <td>
-                    @if ($item->is_featured == 1)
-                        <a class="btn btn-sm btn-success square" tooltip="{{ trans('labels.active') }}"
-                            @if (env('Environment') == 'sendbox') onclick="myFunction()"
-                    @else onclick="StatusFeatured('{{ $item->id }}','2','{{ URL::to('admin/item/featured') }}')" @endif><i
-                                class="fa-sharp fa-solid fa-check"></i></a>
-                    @else
-                        <a class="btn btn-sm btn-danger square" tooltip="{{ trans('labels.deactive') }}"
-                            @if (env('Environment') == 'sendbox') onclick="myFunction()"
-                    @else onclick="StatusFeatured('{{ $item->id }}','1','{{ URL::to('admin/item/featured') }}')" @endif><i
-                                class="fa-sharp fa-solid fa-xmark"></i></a>
-                    @endif
-                </td>
-                <td>
-                    @if ($item->item_status == 1)
-                        <a class="btn btn-sm btn-success square" tooltip="{{ trans('labels.active') }}"
-                            @if (env('Environment') == 'sendbox') onclick="myFunction()"
-                    @else onclick="StatusUpdate('{{ $item->id }}','2','{{ URL::to('admin/item/status') }}')" @endif>
-                            <i class="fa-sharp fa-solid fa-check"></i></a>
-                    @else
-                        <a class="btn btn-sm btn-danger square" tooltip="{{ trans('labels.deactive') }}"
-                            @if (env('Environment') == 'sendbox') onclick="myFunction()"
-                    @else onclick="StatusUpdate('{{ $item->id }}','1','{{ URL::to('admin/item/status') }}')" @endif>
-                            <i class="fa-sharp fa-solid fa-xmark"></i></a>
-                    @endif
-                </td>
-
-
-                <td>
-                    @if ($item->today_unavailable == 0)
-                        {{-- Default: nem elérhető (piros X) --}}
-                        <a class="btn btn-sm btn-danger square"
-                           tooltip="Ma nem elérhető"
-                           onclick="ToggleTodayUnavailable('{{ $item->id }}','{{ route('admin.item.today-unavailable') }}')">
-                            <i class="fa-sharp fa-solid fa-xmark"></i>
-                        </a>
-                    @else
-                        {{-- Ha be van kapcsolva: elérhető (zöld pipa) --}}
-                        <a class="btn btn-sm btn-success square"
-                           tooltip="Ma elérhető (kattintva letiltod mára)"
-                           onclick="ToggleTodayUnavailable('{{ $item->id }}','{{ route('admin.item.today-unavailable') }}')">
-                            <i class="fa-sharp fa-solid fa-check"></i>
-                        </a>
-                    @endif
-                </td>
-
-
-
-
-
-                <td>
-                    {{ helper::date_format($item->created_at) }} <br>
-                    {{ helper::time_format($item->created_at) }}
-                </td>
-                <td>
-                    {{ helper::date_format($item->updated_at) }} <br>
-                    {{ helper::time_format($item->updated_at) }}
-                </td>
-                <td>
-                    <div class="d-flex flex-wrap gap-1">
-                        <a class="btn btn-sm btn-info square" tooltip="{{ trans('labels.edit') }}"
-                            href="{{ URL::to('admin/item-' . $item->id) }}"> <i class="fa-solid fa-pen-to-square"></i></a>
-                        <a class="btn btn-sm btn-danger square" tooltip="{{ trans('labels.delete') }}"
-                            @if (env('Environment') == 'sendbox') onclick="myFunction()"
-                        @else onclick="Delete('{{ $item->id }}','{{ URL::to('admin/item/delete') }}')" @endif>
-                            <i class="fa fa-trash"></i></a>
-                    </div>
-                </td>
-
-
-            </tr>
-        @endforeach
+    @endforeach
     </tbody>
 </table>
-<script>
-    function ToggleTodayUnavailable(id, url) {
-        // ha van, vedd a globális tokenből; ha nincs, így is jó:
-        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-
-        $.ajax({
-            url: url,
-            method: 'POST',
-            data: { id: id, _token: token },
-            beforeSend: function(){
-                // opcionális: loading állapot
-            },
-            success: function(res){
-                if (res && res.success) {
-                    // 1) Minimál: frissítsük az oldalt, biztos vizuális állapotváltás
-                    location.reload();
-
-                    // 2) Ha nem akarsz reloadot, akkor itt cseréld a gomb színét/ikonját
-                    // és tooltipjét (de a reload a legegyszerűbb és bombabiztos).
-                } else {
-                    alert('Nem sikerült frissíteni.');
-                }
-            },
-            error: function(xhr){
-                console.error(xhr.responseText || xhr.statusText);
-                alert('Hiba történt a frissítés közben.');
-            }
-        });
-    }
-</script>

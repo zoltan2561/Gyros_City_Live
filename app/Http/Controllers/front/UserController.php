@@ -19,6 +19,12 @@ use Illuminate\Support\Facades\Schema;   // + ezt add hozzá
 
 class UserController extends Controller
 {
+    public function __construct()
+    {
+        // Keep cart transfer attached to login even when a deployment retains older cached routes.
+        $this->middleware(\App\Http\Middleware\PreserveGuestCart::class)->only(['checklogin', 'verifyotp']);
+    }
+
     public function register()
     {
         if (@helper::checkaddons('customer_login')) {

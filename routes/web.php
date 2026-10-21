@@ -144,12 +144,12 @@ Route::group(['namespace' => 'front', 'middleware' => 'MaintenanceMiddleware'], 
             ->name('adduser');
 
         Route::get('/verification', [WebUserController::class, 'verification'])->name('verification');
-        Route::post('/verify-otp', [WebUserController::class, 'verifyotp'])->middleware(\App\Http\Middleware\PreserveGuestCart::class)->name('verifyotp');
+        Route::post('/verify-otp', [WebUserController::class, 'verifyotp'])->name('verifyotp');
         Route::get('/resend-otp', [WebUserController::class, 'resendotp']);
         //Route::get('/forgot-password', [WebUserController::class, 'forgotpassword'])->name('forgot-password');
         //Route::post('/send-pass', [WebUserController::class, 'sendpass'])->name('sendpass');
         Route::get('/login', [WebUserController::class, 'login'])->name('login');
-        Route::post('/checklogin', [WebUserController::class, 'checklogin'])->middleware(\App\Http\Middleware\PreserveGuestCart::class);
+        Route::post('/checklogin', [WebUserController::class, 'checklogin']);
     });
 
 

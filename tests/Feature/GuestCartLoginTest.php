@@ -130,6 +130,37 @@ class GuestCartLoginTest extends TestCase
         $this->assertSame(Session::getId(), $line->fresh()->session_id);
     }
 
+    /** @dataProvider loginRoutes */
+    public function test_login_preserves_cart_when_cached_route_has_no_cart_middleware(string $path, bool $otp): void
+    {
+        // Existing deployments can retain route definitions from before the cart fix.
+        $route = $this->app['router']->getRoutes()->match(\Illuminate\Http\Request::create($path, 'POST'));
+        $action = $route->getAction();
+        $action['middleware'] = array_values(array_filter($action['middleware'],
+            fn ($middleware) => $middleware !== \App\Http\Middleware\PreserveGuestCart::class));
+        $route->setAction($action);
+        $line = $this->line(['qty' => 2, 'extras_name' => 'Sajt', 'extras_total_price' => 230]);
+        if ($otp) {
+            DB::table('systemaddons')->insert(['unique_identifier' => 'otp', 'activated' => 1]);
+            DB::table('otp_configuration')->insert(['name' => 'local-test', 'status' => 1]);
+            $this->customer->forceFill(['otp' => '123456', 'is_verified' => 2])->save();
+            $this->withSession(['verification_email' => $this->customer->mobile]);
+            $this->post($path, ['otp' => '123456'])->assertRedirect('/');
+        } else {
+            $this->login()->assertRedirect(route('home'));
+        }
+        $this->assertAuthenticatedAs($this->customer);
+        $this->assertSame((int) $this->customer->id, (int) $line->fresh()->user_id);
+        $this->assertSame('', $line->fresh()->session_id);
+        $this->assertSame(2, $line->fresh()->qty);
+        $this->assertSame(230, $line->fresh()->extras_total_price);
+    }
+
+    public static function loginRoutes(): array
+    {
+        return ['password' => ['/checklogin', false], 'OTP' => ['/verify-otp', true]];
+    }
+
     public function test_a_blocked_account_does_not_take_the_cart_or_lose_it_after_session_rotation(): void
     {
         $this->customer->forceFill(['is_available' => 0])->save();

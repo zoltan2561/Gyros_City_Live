@@ -9,6 +9,8 @@
 
 ## Admin termékkezelő – 2026. október 21.
 
+A külön „Ma nem elérhető” gomb minden termék sorában megmaradt: egy kattintással letiltható mára, az „Újra elérhető” gombbal visszakapcsolható. A meglévő napi elérhetőségi végpontot használja, szerkesztőablak nélkül; a keresés és szűrők megmaradnak.
+
 A terméklistában kép, ár, kategória, szöveges elérhetőség és mai ajánlat látszik. A kereső kategória-, állapot- és ajánlatszűrővel kombinálható; név, ár, módosítás ideje és étlapsorrend szerint rendezhető. A lista 20 soronként lapoz, az Excel/PDF az összes szűrt találatot exportálja. Mobilon a sorok kártyaként jelennek meg. A keresés és szűrők az URL-ben, illetve az adott böngészőlapon megmaradnak frissítés és a részletes szerkesztőből visszatérés után is.
 
 A gyorsszerkesztőben név, kategória, eladási/eredeti ár, aktív/szüneteltetett/mára elfogyott állapot és mai ajánlat menthető. A meglévő kosársorokat, összeállításokat, képeket és leírásokat megőrzi; kategóriaváltáskor a régi alkategóriát kiüríti. A termék slugja nem változik. Az adatellenőrzés és az elavult szerkesztésre adott 409-es válasz megakadályozza a hibás ár és a közben módosított termék felülírását. A részletes szerkesztő megmaradt.

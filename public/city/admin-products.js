@@ -55,17 +55,18 @@
     });
     const table = $(tableElement).DataTable({
         dom: 't<"row"<"col-md-5"i><"col-md-7"p>>', pageLength: 20, order: [[0, 'asc']], autoWidth: false,
-        columnDefs: [{targets: [0, 7], visible: false}, {targets: [4, 5, 6], orderable: false}, {targets: [0, 6, 7], searchable: false}],
+        columnDefs: [{targets: [0, 8], visible: false}, {targets: [4, 5, 6, 7], orderable: false}, {targets: [0, 7, 8], searchable: false}],
         language: {emptyTable: 'Még nincs termék. Az Új termék gombbal veheted fel az elsőt.',
             zeroRecords: 'Nincs találat. Módosítsd vagy töröld a szűrőket.', info: '_START_–_END_ / _TOTAL_ termék',
             infoEmpty: 'Nincs megjeleníthető termék', infoFiltered: '(_MAX_ termékből)',
             paginate: {previous: 'Előző', next: 'Következő'}, aria: {sortAscending: ': növekvő rendezés', sortDescending: ': csökkenő rendezés'}},
     });
-    const exportOptions = {columns: [1, 2, 3, 4, 5], modifier: {search: 'applied', order: 'applied'},
+    const exportOptions = {columns: [1, 2, 3, 4, 5, 6], modifier: {search: 'applied', order: 'applied'},
         format: {body: (data, row, column, node) => {
             const product = JSON.parse(node.closest('tr').dataset.product);
             if (column === 1) return /^[=+\-@\t\r]/.test(product.item_name) ? "'" + product.item_name : product.item_name;
             if (column === 3) return Number(product.price);
+            if (column === 5) return product.availability === 'today' ? 'Igen' : 'Nem';
             return node.textContent.trim().replace(/\s+/g, ' ');
         }}};
     new $.fn.dataTable.Buttons(table, {buttons: [{extend: 'excelHtml5', text: 'Excel', title: 'Gyros City – termékek', exportOptions},
@@ -85,7 +86,7 @@
         document.getElementById('products-reorder-reason').hidden = !filtered;
     }
     function apply() {
-        const orders = {menu: [0, 'asc'], name: [1, 'asc'], 'price-asc': [3, 'asc'], 'price-desc': [3, 'desc'], updated: [7, 'desc']};
+        const orders = {menu: [0, 'asc'], name: [1, 'asc'], 'price-asc': [3, 'asc'], 'price-desc': [3, 'desc'], updated: [8, 'desc']};
         table.search(controls.q.value).order([orders[controls.sort.value] || orders.menu]).draw();
         updateCounters(); remember();
     }
@@ -107,7 +108,7 @@
     editor.addEventListener('hidden.bs.modal', () => { if (opener?.isConnected) opener.focus(); });
     root.addEventListener('click', event => {
         const trigger = event.target.closest('[data-quick-edit], [data-edit-state]');
-        if (trigger && !reordering) {
+        if (trigger && !reordering && !submitting) {
             const product = JSON.parse(trigger.closest('tr').dataset.product);
             opener = trigger; focusState = trigger.hasAttribute('data-edit-state');
             form.reset();
@@ -118,6 +119,8 @@
             document.getElementById('product-editor-error').hidden = true;
             bootstrap.Modal.getOrCreateInstance(editor).show();
         }
+        const todayToggle = event.target.closest('[data-today-toggle]');
+        if (todayToggle && !reordering && !submitting) toggleToday(todayToggle);
         const deletion = event.target.closest('[data-delete-url]');
         if (deletion && !reordering) {
             if (root.dataset.demo === '1') return notify('Bemutató módban nem törölhető.', true);
@@ -150,6 +153,17 @@
     function saved(message) {
         try { sessionStorage.setItem('gycity:product-message', message); } catch (_) { /* Optional feedback only. */ }
         location.reload();
+    }
+    async function toggleToday(button) {
+        if (root.dataset.demo === '1') return notify('Bemutató módban nem módosítható.', true);
+        const unavailable = button.closest('tr').dataset.state === 'today';
+        submitting = true; button.disabled = true;
+        try {
+            await post(button.dataset.todayUrl, {id: button.closest('tr').dataset.id});
+            saved(unavailable ? 'A termék újra elérhető.' : 'A terméket mára nem elérhetőnek jelöltük.');
+        } catch (failure) {
+            notify(failure.name === 'AbortError' ? 'Nem érkezett válasz. Frissítsd a listát, és ellenőrizd az elérhetőséget.' : failure.message, true);
+        } finally { submitting = false; button.disabled = false; }
     }
     form.addEventListener('submit', async event => {
         event.preventDefault();
@@ -186,7 +200,7 @@
         table.page.len(20).draw();
     }
     document.getElementById('products-reorder').addEventListener('click', () => {
-        if (reordering) return;
+        if (reordering || submitting) return;
         previousView = {sort: controls.sort.value, page: table.page()};
         controls.sort.value = 'menu';
         reordering = true; table.order([[0, 'asc']]).page.len(-1).draw();

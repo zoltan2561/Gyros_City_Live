@@ -275,6 +275,7 @@
     <!-- MODAL_USER_TYPE_SELECTION--END -->
 
     <!-- ADD_REVIEW_ODAL_START -->
+    @include('web.partials.review-login-modal')
     @if (helper::reviews_enabled('product_review') && Auth::user() && (int) Auth::user()->type === 2)
     <div class="modal" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
         <div class="modal-dialog">

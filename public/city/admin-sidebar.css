@@ -1,0 +1,14 @@
+.admin-sidebar-toggle { align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 8px 12px; border: 1px solid #d7dee8; border-radius: 8px; background: #fff; color: #263349; font: inherit; font-size: 14px; }
+.admin-sidebar-toggle:hover { background: #f1f4f8; }
+.admin-sidebar-collapsed .admin-sidebar-toggle i { transform: rotate(180deg); }
+.admin-sidebar-toggle:focus-visible { outline: 3px solid var(--bs-primary); outline-offset: 3px; }
+@media (min-width: 992px) {
+    .page-topbar .navbar-header { justify-content: space-between; }
+    .admin-sidebar-controls { margin-inline-start: calc(16.5rem + 12px); }
+    .admin-sidebar-collapsed .sidebar-lg { display: none !important; }
+    .admin-sidebar-collapsed .main-content { margin-left: 0 !important; }
+    .admin-sidebar-collapsed .main-content-rtl { margin-right: 0 !important; }
+    .admin-sidebar-collapsed .admin-sidebar-controls { margin-inline-start: 12px; }
+    .admin-sidebar-collapsed .wrapper footer { left: 0 !important; }
+    .admin-sidebar-collapsed .top-header { left: 0 !important; width: 100% !important; }
+}

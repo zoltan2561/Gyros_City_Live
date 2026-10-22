@@ -53,6 +53,14 @@ class AdminPermissionsTest extends \Tests\TestCase
         return User::findOrFail($id);
     }
 
+    public function test_counter_staff_start_with_orders_even_when_they_can_open_the_dashboard(): void
+    {
+        DB::table('manage_roles')->where('id',1)->update(['modules'=>'0,1,10']);
+        $this->assertSame('/admin/orders', \App\Support\AdminPermissions::landing($this->operator()));
+        DB::table('manage_roles')->where('id',1)->update(['modules'=>'10']);
+        $this->assertSame('/admin/item', \App\Support\AdminPermissions::landing($this->operator()));
+    }
+
     public function test_order_only_operator_cannot_open_settings_or_modify_products(): void
     {
         DB::table('manage_roles')->where('id', 1)->update(['modules' => '1']);

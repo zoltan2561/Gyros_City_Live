@@ -482,7 +482,7 @@
                                                     </div>
                                                 @endforeach
                                             @else
-                                                @include('web.nodata')
+                                                @include('web.nodata', ['emptyTitle' => trans('reviews.empty'), 'emptyDescription' => trans('reviews.empty_product_help')])
                                             @endif
                                         </div>
                                     </div>

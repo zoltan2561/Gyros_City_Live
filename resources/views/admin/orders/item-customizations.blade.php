@@ -5,7 +5,7 @@
         foreach (explode('|', (string) $orders->{$prefix.'_name'}) as $name) {
             $name = trim($name);
             if ($name === '') continue;
-            $removed = str_starts_with($name, '---');
+            $removed = str_starts_with($name, '--');
             $choices[] = ['kind' => $removed ? 'removed' : $kind, 'name' => $removed ? trim(ltrim($name, '-')) : $name];
         }
     }

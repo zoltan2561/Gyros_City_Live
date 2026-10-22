@@ -42,6 +42,12 @@
     let pending = [];
     let timer;
     let busy = false;
+    let worker;
+    let playing = false;
+    let playStarted = 0;
+    let playGeneration = 0;
+    let soundReady = false;
+    const originalTitle = document.title;
     let soundIssue = '';
     const soundKey = script.dataset.storageKey + ':sound';
     try { soundIssue = storage.getItem(soundKey) || ''; } catch (_) {}
@@ -59,31 +65,70 @@
             ? 'A böngésző letiltotta a rendelési hangot. A bekapcsoláshoz kattints a gombra.'
             : 'A rendelési hangot nem sikerült lejátszani. Ellenőrizd a hangerőt és a beállított hangfájlt.', true);
     }
-    async function play() {
-        if (!pending.length) return;
-        if (!audioUrl) {
-            warn('Nincs rendelési hang beállítva. Válassz hangot az általános beállításokban.', false);
-            return;
-        }
-        try {
-            if (!audio || audio.src !== audioUrl) {
-                audio = new host.Audio(audioUrl);
-                audio.preload = 'auto';
-                audio.volume = 1;
-            }
-            audio.currentTime = 0;
-            await audio.play();
-            saveSoundIssue('');
-            warning.hidden = true;
-        } catch (error) {
-            if (!pending.length) return;
-            saveSoundIssue(error.name === 'NotAllowedError' ? 'blocked' : 'failed');
-            showSoundIssue();
+    function prepareAudio() {
+        if (audioUrl && (!audio || audio.src !== audioUrl)) {
+            if (audio) audio.pause();
+            audio = new host.Audio(audioUrl);
+            audio.preload = 'auto';
+            audio.volume = 1;
+            audio.load();
         }
     }
-    enable.addEventListener('click', play);
+    function soundState() {
+        if (soundIssue) showSoundIssue();
+        else if (!soundReady) warn('Kapcsold be a rendelési hangot. A gomb rövid próbahangot játszik le.', true);
+        else warning.hidden = true;
+    }
+    async function play(ids = pending, preview = false) {
+        if (playing || (!ids.length && !preview)) return false;
+        if (!audioUrl) {
+            warn('Nincs rendelési hang beállítva. Válassz hangot az általános beállításokban.', false);
+            return false;
+        }
+        const generation = ++playGeneration;
+        const announced = [...ids];
+        playing = true;
+        playStarted = Date.now();
+        try {
+            prepareAudio();
+            audio.currentTime = 0;
+            await audio.play();
+            if (generation !== playGeneration) return false;
+            // A blocked or deferred play must never postpone the next alert.
+            tracker.mark(announced.filter(id => pending.includes(id)), Date.now());
+            soundReady = true;
+            saveSoundIssue('');
+            warning.hidden = true;
+            return true;
+        } catch (error) {
+            if (generation !== playGeneration) return false;
+            saveSoundIssue(error.name === 'NotAllowedError' ? 'blocked' : 'failed');
+            showSoundIssue();
+            return false;
+        } finally {
+            if (generation === playGeneration) playing = false;
+        }
+    }
+    enable.addEventListener('click', () => {
+        // Cancel an old deferred attempt; call play directly in this user gesture.
+        ++playGeneration;
+        playing = false;
+        if (audio) audio.pause();
+        void play(pending, true);
+    });
+    if (script.dataset.audioFile) {
+        audioUrl = new URL(script.dataset.audioBase + encodeURIComponent(script.dataset.audioFile), host.location.href).href;
+        prepareAudio();
+    }
+    soundState();
     async function poll() {
         if (busy) return;
+        if (playing && Date.now() - playStarted >= 15000) {
+            ++playGeneration;
+            playing = false;
+            audio?.pause();
+            saveSoundIssue('failed');
+        }
         busy = true;
         const controller = new host.AbortController();
         const timeout = host.setTimeout(() => controller.abort(), 15000);
@@ -96,30 +141,51 @@
             const data = await response.json();
             if (!Array.isArray(data.orders)) throw new Error('Invalid order response');
             pending = data.orders.map(String);
+            document.dispatchEvent(new host.CustomEvent('admin:orders-poll', {detail: {ids: [...pending]}}));
             const badge = document.getElementById('notificationcount');
             if (badge) badge.textContent = pending.length > 9 ? pending.length + '+' : String(pending.length);
             audioUrl = data.noti ? new URL(script.dataset.audioBase + encodeURIComponent(data.noti), host.location.href).href : '';
-            if (pending.length && soundIssue) showSoundIssue();
+            prepareAudio();
+            document.title = pending.length ? '(' + pending.length + ') Új rendelés · ' + originalTitle : originalTitle;
             const due = tracker.due(pending, Date.now());
             if (!pending.length) {
-                warning.hidden = true;
+                ++playGeneration;
+                playing = false;
                 if (audio) { audio.pause(); audio.currentTime = 0; }
                 host.bootstrap.Modal.getInstance(modal)?.hide();
+                soundState();
             } else if (due.length) {
-                tracker.mark(due, Date.now());
-                host.bootstrap.Modal.getOrCreateInstance(modal).show();
-                await play();
+                if (!document.getElementById('orders-live-results')) host.bootstrap.Modal.getOrCreateInstance(modal).show();
+                // Some browsers defer background play(). Do not hold up fresh polls.
+                void play(due);
             }
         } catch (_) {
             // Retry after transport errors too; stale order data must not trigger a sound.
         } finally {
             host.clearTimeout(timeout);
             busy = false;
-            timer = host.setTimeout(poll, 5000);
+            if (!worker) timer = host.setTimeout(poll, 5000);
         }
     }
+    function refresh() { host.clearTimeout(timer); void poll(); }
+    // Keep the poll clock separate from the hidden page's window timers.
+    // A frozen/discarded tab or sleeping device can still suspend its worker.
+    if (host.Worker && script.dataset.workerUrl) {
+        try {
+            worker = new host.Worker(script.dataset.workerUrl);
+            worker.onmessage = event => { if (event.data === 'poll') void poll(); };
+            worker.onerror = () => {
+                worker?.terminate();
+                worker = null;
+                refresh();
+            };
+        } catch (_) { worker = null; }
+    }
     document.addEventListener('visibilitychange', () => {
-        if (!document.hidden) { host.clearTimeout(timer); poll(); }
+        if (!document.hidden) refresh();
     });
+    host.addEventListener('focus', refresh);
+    host.addEventListener('online', refresh);
+    host.addEventListener('pageshow', refresh);
     poll();
 })(typeof window !== 'undefined' ? window : globalThis);

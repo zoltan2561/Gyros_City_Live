@@ -64,6 +64,18 @@ class AdminOrderListTest extends TestCase
         $this->assertSame(2, $data['totalcancelled']);
     }
 
+    public function test_live_refresh_uses_the_same_paginated_search_without_rendering_the_admin_layout(): void
+    {
+        $request = Request::create('http://localhost/admin/orders?q=Old%20Customer');
+        $request->headers->set('X-Orders-Refresh', '1');
+        $this->app->instance('request', $request);
+        DB::enableQueryLog();
+        $view = app(OrderController::class)->index($request);
+        $this->assertSame('admin.orders.live-results', $view->name());
+        $this->assertSame([1], $view->getData()['getorders']->pluck('id')->all());
+        $this->assertLessThanOrEqual(6, count(DB::getQueryLog()));
+    }
+
     public function test_older_orders_remain_available_on_following_pages(): void
     {
         $data = $this->listing('?page=3');

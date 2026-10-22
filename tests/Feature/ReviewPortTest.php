@@ -209,4 +209,33 @@ class ReviewPortTest extends TestCase
         DB::table('settings')->update(['google_review_url' => 'javascript:alert(1)']);
         $this->assertStringNotContainsString('<section', view('web.city.google-review')->render());
     }
+
+    public function test_guest_review_button_opens_a_login_prompt_only_when_reviews_are_enabled(): void
+    {
+        $this->app->setLocale('hu');
+        $getitemdata = Item::findOrFail(1);
+        $this->assertSame('', trim(view('web.partials.product-review-action', compact('getitemdata'))->render()));
+        $this->assertSame('', trim(view('web.partials.review-login-modal')->render()));
+        $this->enable();
+        $action = view('web.partials.product-review-action', compact('getitemdata'))->render();
+        $this->assertStringContainsString('data-bs-target="#review-login-modal"', $action);
+        $this->assertStringContainsString('Étel értékelése', $action);
+        $this->assertStringNotContainsString('name="ratting"', $action);
+        $modal = view('web.partials.review-login-modal')->render();
+        $this->assertStringContainsString('Az értékeléshez jelentkezz be', $modal);
+        $this->assertStringContainsString('href="http://localhost/login"', $modal);
+        $this->post('/add-review', ['item_id'=>1,'ratting'=>5])->assertRedirect('/login');
+        $this->assertSame(0, Ratting::count());
+    }
+
+    public function test_empty_states_show_contextual_text_instead_of_the_old_placeholder_image(): void
+    {
+        $this->app->setLocale('hu');
+        foreach (['empty_cart','empty'] as $key) {
+            $html = view('web.nodata', ['emptyTitle'=>trans('reviews.'.$key)])->render();
+            $this->assertStringContainsString(trans('reviews.'.$key), $html);
+            $this->assertStringNotContainsString('<img', $html);
+        }
+        $this->assertStringContainsString('Jelenleg nincs megjeleníthető tartalom.', view('web.nodata')->render());
+    }
 }

@@ -57,7 +57,8 @@ class OrderController extends Controller
         $orderPaymentNames = Payment::pluck('payment_name', 'payment_type')->all();
         $getdriver = User::where('type', '3')->where('is_available', 1)->orderByDesc('id')->get(['id', 'name']);
         $ordersPaginated = true;
-        return view('admin.orders.index', compact('getorders', 'getdriver', 'totalorders', 'totalprocessing', 'totalcompleted', 'totalcancelled', 'orderStatusNames', 'orderStatusOptions', 'orderPaymentNames', 'ordersPaginated'));
+        $viewData = compact('getorders', 'getdriver', 'totalorders', 'totalprocessing', 'totalcompleted', 'totalcancelled', 'orderStatusNames', 'orderStatusOptions', 'orderPaymentNames', 'ordersPaginated');
+        return view($request->header('X-Orders-Refresh') === '1' ? 'admin.orders.live-results' : 'admin.orders.index', $viewData);
     }
 
     public function update(Request $request)

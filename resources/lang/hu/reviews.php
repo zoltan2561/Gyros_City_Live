@@ -1,6 +1,12 @@
 <?php
 
 return [
+    'empty_content' => 'Jelenleg nincs megjeleníthető tartalom.',
+    'empty_cart' => 'A kosarad üres',
+    'empty_cart_help' => 'Válassz valami finomat az étlapról!',
+    'browse_menu' => 'Megnézem az étlapot',
+    'empty_product_help' => 'Próbáltad már? Oszd meg a véleményedet!',
+    'login_title' => 'Az értékeléshez jelentkezz be',
     'duplicate' => 'Már küldtél értékelést.',
     'title' => 'Értékelések',
     'intro' => 'Olvasd el a vásárlók közzétett véleményeit, és oszd meg a tapasztalatodat.',

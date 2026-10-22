@@ -39,7 +39,7 @@
                             </article>
                         </div>
                     @empty
-                        <p class="text-muted">{{ trans('reviews.empty') }}</p>
+                        @include('web.nodata', ['emptyTitle' => trans('reviews.empty')])
                     @endforelse
                 </div>
                 <div class="mb-4 d-flex justify-content-center">{{ $testimonials->links() }}</div>
@@ -82,9 +82,8 @@
                             </div>
                         </div>
                     @endif
-                @elseif (!Auth::check() && helper::checkaddons('customer_login') && (int) helper::appdata()->login_required === 1)
-                    <p class="text-muted">{{ trans('reviews.login_help') }}</p>
-                    <a class="btn btn-primary" href="{{ url('/login') }}">{{ trans('labels.login') }}</a>
+                @elseif (!Auth::check())
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#review-login-modal">{{ trans('reviews.write') }}</button>
                 @endif
             @endif
         </div>

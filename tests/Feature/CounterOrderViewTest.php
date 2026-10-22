@@ -8,6 +8,32 @@ use Tests\TestCase;
 
 class CounterOrderViewTest extends TestCase
 {
+    /** @dataProvider omissionPrefixes */
+    public function test_two_or_more_leading_dashes_always_put_an_ingredient_in_the_omitted_group(string $field, string $name): void
+    {
+        $orders = new OrderDetails();
+        $orders->forceFill([$field => $name]);
+        $html = view('admin.orders.item-customizations', compact('orders'))->render();
+        $dom = new \DOMDocument();
+        @$dom->loadHTML('<?xml encoding="UTF-8">'.$html);
+        $xpath = new \DOMXPath($dom);
+        $removed = $xpath->query('//li[contains(@class,"--removed")]');
+        $this->assertSame(1, $removed->length);
+        $this->assertSame('Onion', trim($removed->item(0)->textContent));
+        $this->assertSame(0, $xpath->query('//li[contains(@class,"--extra") or contains(@class,"--choice")]')->length);
+    }
+
+    public static function omissionPrefixes(): array
+    {
+        $cases = [];
+        foreach (['addons_name','extras_name'] as $field) {
+            foreach (['--Onion', '-- Onion', '--- Onion', '-----Onion', '  -- Onion  '] as $name) {
+                $cases[$field.':'.$name] = [$field, $name];
+            }
+        }
+        return $cases;
+    }
+
     public function test_saved_customizations_are_visible_with_removals_overriding_their_source(): void
     {
         $orders = new OrderDetails();

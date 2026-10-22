@@ -1,3 +1,7 @@
-<div class="d-flex no-data justify-content-center text-align-center my-3">
-    <img src="{{ helper::image_path(helper::appdata()->no_data_image) }}" alt="" class="mb-3">
+<div class="city-empty-state">
+    <p class="city-empty-title">{{ $emptyTitle ?? trans('reviews.empty_content') }}</p>
+    @if (!empty($emptyDescription))<p class="city-empty-description">{{ $emptyDescription }}</p>@endif
+    @if (!empty($emptyLink) && !empty($emptyLinkLabel))
+        <a class="btn btn-outline-dark" href="{{ $emptyLink }}">{{ $emptyLinkLabel }}</a>
+    @endif
 </div>

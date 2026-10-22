@@ -76,6 +76,7 @@ final class AdminPermissions
 
     public static function landing(User $user): string
     {
+        if ((int) $user->type === 4 && self::can($user, 1)) return '/admin/orders';
         foreach (self::registry() as $id => $entry) {
             if ($id !== 24 && self::can($user, $id)) return '/admin/' . $entry[1];
         }

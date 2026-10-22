@@ -152,7 +152,7 @@
                         </div>
                     </div>
                 @else
-                    @include('web.nodata')
+                    @include('web.nodata', ['emptyTitle' => trans('reviews.empty_cart'), 'emptyDescription' => trans('reviews.empty_cart_help'), 'emptyLink' => route('categories'), 'emptyLinkLabel' => trans('reviews.browse_menu')])
                 @endif
             </div>
         </div>

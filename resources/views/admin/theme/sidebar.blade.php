@@ -1,5 +1,5 @@
 <!-- For Large Devices -->
-<nav class="sidebar sidebar-lg">
+<nav class="sidebar sidebar-lg" id="admin-sidebar" aria-label="Adminisztrációs menü">
     <div class="d-flex justify-content-center align-items-center mb-3 border-bottom border-white">
         <div class="navbar-header-logo pb-2">
             <a href="{{ url(\App\Support\AdminPermissions::landing(Auth::user())) }}" class="text-white fs-4">
@@ -24,7 +24,7 @@
             @endif
         </a>
         <button class="btn text-white" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarcollapse"
-            aria-expanded="false" aria-controls="sidebarcollapse"><i class="fa-light fa-xmark"></i></button>
+            aria-expanded="false" aria-controls="sidebarcollapse" aria-label="Menü bezárása"><i class="fa-light fa-xmark" aria-hidden="true"></i></button>
     </div>
     @include('admin.theme.sidebarcontent')
 </nav>

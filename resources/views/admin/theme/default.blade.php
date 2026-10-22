@@ -37,6 +37,9 @@
             --bs-secondary: {{ @helper::appdata()->admin_secondary_color != null ? @helper::appdata()->admin_secondary_color : '#0a98af' }};
         }
     </style>
+    <link rel="stylesheet" href="{{ url('public/city/admin-sidebar.css') }}?v={{ filemtime(public_path('city/admin-sidebar.css')) }}">
+    <script src="{{ url('public/city/admin-sidebar.js') }}?v={{ filemtime(public_path('city/admin-sidebar.js')) }}"
+        data-storage-key="gycity:admin-sidebar:{{ url('/admin') }}"></script>
     @yield('styles')
 </head>
 
@@ -180,6 +183,8 @@
 @if (\App\Support\AdminPermissions::can(Auth::user(), 1))
 <script src="{{ url('public/city/admin-order-alerts.js') }}?v={{ filemtime(public_path('city/admin-order-alerts.js')) }}"
         data-poll-url="{{ url('admin/getorder') }}"
+        data-worker-url="{{ url('public/city/admin-order-alerts-worker.js') }}?v={{ filemtime(public_path('city/admin-order-alerts-worker.js')) }}"
+        data-audio-file="{{ helper::appdata()->notification_tune }}"
         data-audio-base="{{ url(env('ASSETSPATHURL') . 'admin-assets/notification') }}/"
         data-storage-key="gycity:order-alerts:{{ url('admin/getorder') }}:{{ Auth::id() }}"></script>
 @endif

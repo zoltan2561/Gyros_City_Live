@@ -518,7 +518,7 @@
 
         </section>
     @else
-        @include('web.nodata')
+        @include('web.nodata', ['emptyTitle' => trans('reviews.empty_cart'), 'emptyDescription' => trans('reviews.empty_cart_help'), 'emptyLink' => route('categories'), 'emptyLinkLabel' => trans('reviews.browse_menu')])
     @endif
     <input type="hidden" name="buynow_key" id="buynow_key" value="0">
     <div class="modal fade" id="modalbankdetails" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"

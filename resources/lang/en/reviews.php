@@ -1,6 +1,12 @@
 <?php
 
 return [
+    'empty_content' => 'There is nothing to show yet.',
+    'empty_cart' => 'Your cart is empty',
+    'empty_cart_help' => 'Choose something delicious from the menu!',
+    'browse_menu' => 'Browse the menu',
+    'empty_product_help' => 'Tried it? Share your experience!',
+    'login_title' => 'Sign in to write a review',
     'duplicate' => 'You have already submitted a review.',
     'title' => 'Reviews',
     'intro' => 'Read published customer reviews and share your experience.',

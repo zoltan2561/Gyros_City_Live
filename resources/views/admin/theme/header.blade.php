@@ -4,9 +4,13 @@
 
 
     <div class="navbar-header">
-        <div class="">
+        <div class="admin-sidebar-controls">
+            <button type="button" id="admin-sidebar-toggle" class="admin-sidebar-toggle d-none d-lg-inline-flex"
+                aria-controls="admin-sidebar" aria-expanded="true" aria-label="Oldalmenü elrejtése" title="Oldalmenü elrejtése">
+                <i class="fa-regular fa-chevron-left" aria-hidden="true"></i><span>Menü</span>
+            </button>
             <button class="navbar-toggler d-lg-none d-md-block px-md-4 px-3" type="button" data-bs-toggle="collapse"
-                data-bs-target="#sidebarcollapse" aria-expanded="false" aria-controls="sidebarcollapse">
+                data-bs-target="#sidebarcollapse" aria-expanded="false" aria-controls="sidebarcollapse" aria-label="Menü megnyitása">
                 <i class="fa-regular fa-bars fs-4"></i>
             </button>
         </div>

@@ -1,4 +1,11 @@
 .order-status-control { min-width: 170px; max-width: 260px; }
+.orders-arrival-feedback { padding: 10px 14px; margin-bottom: 12px; background: #eaf8ed; color: #195d2c; border: 1px solid #a9d9b4; border-radius: 8px; }
+.orders-arrival-feedback[hidden] { display: none; }
+.orders-arrival-feedback a { font-weight: 700; color: #195d2c; margin-left: 8px; }
+.orders-admin .order-row-new > td { animation: order-arrival-glow 1.5s ease-in-out 4; background-color: #e7f7e9; }
+.orders-admin .order-row-new > td:first-child { box-shadow: inset 4px 0 #23843d; }
+@keyframes order-arrival-glow { 0%, 100% { background-color: #e7f7e9; } 50% { background-color: #bcE9c5; } }
+@media (prefers-reduced-motion: reduce) { .orders-admin .order-row-new > td { animation: none; background-color: #e7f7e9; } }
 .order-status-select { min-height: 44px; font-size: 14px; font-weight: 650; border-color: #bbc4d2; color: #152236; }
 .order-status-feedback { display: block; max-width: 260px; white-space: normal; }
 .order-status-feedback:empty { display: none; }

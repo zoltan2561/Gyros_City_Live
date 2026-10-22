@@ -14,7 +14,6 @@
 @section('content')
     @include('admin.breadcrumb')
     <div class="container-fluid orders-admin">
-        @include('admin.orders.statistics')
         <div class="row">
             <div class="col-12">
                 <div class="card border-0">
@@ -31,18 +30,15 @@
                                 <a href="{{ url('admin/report') }}" class="btn btn-outline-secondary">Kimutatás / export</a>
                             </div>
                         </form>
-                        <div class="table-responsive" id="table-display">
-                            @include('admin.orders.orderstable')
+                        <div id="orders-arrival-feedback" class="orders-arrival-feedback" role="status" hidden>
+                            <span></span> <a href="{{ url('admin/orders') }}">Legfrissebb rendelések</a>
                         </div>
-                        @if ($getorders->isEmpty())<p role="status" class="text-muted my-3">Nincs a keresésnek megfelelő rendelés.</p>@endif
-                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-3">
-                            <p class="text-muted mb-0">{{ $getorders->firstItem() ?? 0 }}–{{ $getorders->lastItem() ?? 0 }} / {{ $getorders->total() }} rendelés</p>
-                            {{ $getorders->onEachSide(1)->links() }}
-                        </div>
+                        <div id="orders-live-results">@include('admin.orders.list-content')</div>
                     </div>
                 </div>
             </div>
         </div>
+        <div id="orders-statistics">@include('admin.orders.statistics')</div>
     </div>
     <!-- Modal -->
     <div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
@@ -85,6 +81,8 @@
     </div>
 @endsection
 @section('script')
+    <script src="{{ url('public/city/admin-orders-live.js') }}?v={{ filemtime(public_path('city/admin-orders-live.js')) }}"
+        data-refresh-url="{{ request()->fullUrl() }}"></script>
     <script src="{{ url('public/city/admin-orders.js') }}?v={{ filemtime(public_path('city/admin-orders.js')) }}"></script>
     <script>
         function codpayment(booking_number, grand_total) {

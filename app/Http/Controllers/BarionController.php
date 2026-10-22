@@ -28,6 +28,9 @@ class BarionController extends Controller
     public function start(Request $request)
     {
         try {
+            if (!app(\App\Services\OnlineOrderingHours::class)->accepting()) {
+                return response()->json(['ok' => false, 'msg' => trans('messages.restaurant_closed')]);
+            }
             $buynow = (int)($request->input('buynow') ?? 0);
 
             // kosár beolvasás

@@ -21,6 +21,8 @@ class CatalogPricingTest extends \Tests\TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        // These tests cover pricing, mail or gifts during an available ordering window.
+        $this->mock(\App\Services\OnlineOrderingHours::class, fn ($mock) => $mock->shouldReceive('accepting')->andReturn(true));
         config(['database.default' => 'gift_test', 'database.connections.gift_test' => [
             'driver' => 'sqlite', 'database' => ':memory:', 'prefix' => '',
         ], 'session.driver' => 'array']);

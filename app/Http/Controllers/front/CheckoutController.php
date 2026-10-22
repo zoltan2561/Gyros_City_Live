@@ -103,31 +103,9 @@ class CheckoutController extends Controller
     {
         $buynow = ($request->buynow == null || $request->buynow == 0) ? 0 : 1;
 
-        if (@helper::appdata()->timezone != "") {
-            date_default_timezone_set(helper::appdata()->timezone);
+        if (!app(\App\Services\OnlineOrderingHours::class)->accepting()) {
+            return response()->json(['status' => 0, 'message' => trans('messages.restaurant_closed')]);
         }
-
-        // a bolt user (ne User::first)
-        $admin = \App\Models\User::whereIn('type',[1,4])->first();
-        if (!$admin) {
-            return response()->json(['status' => 0, 'message' => trans('messages.restaurant_closed')], 200);
-        }
-
-        // 1) ON/OFF kapcsoló
-        if ((int)$admin->is_online !== 1) {
-            return response()->json(['status' => 0, 'message' => trans('messages.restaurant_closed')], 200);
-        }
-        //TODO: átirni 10-re a zarast
-        // 2) STATIKUS NYITVATARTÁS: 08:00–22:00 minden nap  ⬇⬇⬇
-        $now   = Carbon::now();
-        $open  = Carbon::create($now->year, $now->month, $now->day, 8, 0, 0, $now->timezone);
-        $close = Carbon::create($now->year, $now->month, $now->day, 21, 30, 0, $now->timezone);
-
-        // nyitva: 08:00-tól 22:00-ig (21:30-kor már zárva)
-        if (!($now->greaterThanOrEqualTo($open) && $now->lessThan($close))) {
-            return response()->json(['status' => 0, 'message' => trans('messages.restaurant_closed')], 200);
-        }
-        // 2) ⬆⬆⬆
 
         // --- a te meglévő ellenőrzéseid maradhatnak, változtatás nélkül ---
         // kosár, min/max stb...
@@ -181,6 +159,9 @@ class CheckoutController extends Controller
         if ((int) $request->transaction_type === 2 && !(Auth::check() && (int) Auth::user()->type === 2)) abort(403);
         $request->validate(['name' => 'required|string|max:200', 'email' => 'required|email|max:190',
             'mobile' => 'required|string|max:50', 'order_type' => 'required|in:1,2', 'terms' => 'accepted']);
+        if (!app(\App\Services\OnlineOrderingHours::class)->accepting()) {
+            return response()->json(['status' => 0, 'message' => trans('messages.restaurant_closed')]);
+        }
         try {
 
 

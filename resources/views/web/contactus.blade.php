@@ -101,6 +101,7 @@
                                                 {{ $timedata->break_start }}</p>
                                             <p>{{ $timedata->break_end }} <b>{{ trans('labels.to') }}</b>
                                                 {{ $timedata->close_time }}</p>
+                                            @include('web.partials.online-order-deadline', ['hours' => $timedata])
                                         @endif
                                     </div>
                                 </div>

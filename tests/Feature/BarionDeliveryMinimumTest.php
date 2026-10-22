@@ -20,6 +20,8 @@ class BarionDeliveryMinimumTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        // These tests cover pricing, mail or gifts during an available ordering window.
+        $this->mock(\App\Services\OnlineOrderingHours::class, fn ($mock) => $mock->shouldReceive('accepting')->andReturn(true));
 
         // A separate in-memory connection; never use the application's configured database.
         config([

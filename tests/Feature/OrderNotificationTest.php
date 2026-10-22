@@ -18,6 +18,8 @@ class OrderNotificationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        // These tests cover pricing, mail or gifts during an available ordering window.
+        $this->mock(\App\Services\OnlineOrderingHours::class, fn ($mock) => $mock->shouldReceive('accepting')->andReturn(true));
         config(['database.default' => 'order_mail_test', 'database.connections.order_mail_test' => [
             'driver' => 'sqlite', 'database' => ':memory:', 'prefix' => '',
         ], 'mail.default' => 'array']);

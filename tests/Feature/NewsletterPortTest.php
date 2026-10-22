@@ -32,6 +32,8 @@ class NewsletterPortTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        // These tests cover pricing, mail or gifts during an available ordering window.
+        $this->mock(\App\Services\OnlineOrderingHours::class, fn ($mock) => $mock->shouldReceive('accepting')->andReturn(true));
         config(['database.default' => 'newsletter_test', 'database.connections.newsletter_test' => [
             'driver' => 'sqlite', 'database' => ':memory:', 'prefix' => '', 'foreign_key_constraints' => true,
         ], 'session.driver' => 'array', 'mail.default' => 'array']);

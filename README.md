@@ -7,6 +7,16 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Online rendelési határidő – 2026. október 22.
+
+Az **Admin → Nyitvatartás → Online rendelés eddig** mező naponta külön állítható. A napi nyitás, szünet, zárt nap és a kézi BE/KI kapcsoló együtt érvényesül; a határidő pillanatától már nem fogad új online rendelést. A zárás későbbi lehet, mint a rendelési határidő. Az éjfél utáni időpont az előző nyitási naphoz tartozik. A vendégoldali nyitvatartási ablakban és a kapcsolatoldalon is megjelenik a határidő.
+
+A `2026_10_22_000002_add_online_order_until_to_time.php` migráció a `time` táblához ad egy `online_order_until` mezőt, a korábbi **21:30** alapértékkel. A meglévő napi időpontokat nem írja felül. Migráció előtt a rendelésellenőrzés megtartja a korábbi 08:00–21:30 időszakot, az új adminmező letiltva jelenik meg. Migráció után a tényleges napi nyitvatartás az irányadó, a határidőnek a nyitás után és legkésőbb záráskor kell lennie. A napi mezők és beállítások mentése egy tranzakcióban történik. A visszagörgetés csak az új mezőt törli, ezért a már beállított új határidőkről külön mentés kell visszaállítás előtt.
+
+Az ellenőrzés a kosár továbblépésénél, a készpénzes rendelés véglegesítésekor és Barion-fizetés indításakor is lefut. A már elindított bankkártyás fizetés sikeres visszahívása zárás után is létrehozhatja a kifizetett rendelést. Az alapérték fenntartja a korábbi határidőt; élesítéskor ellenőrizni kell, hogy a napi nyitási/zárási/szünet adatok megfelelnek-e a valós nyitvatartásnak. Nem változott a kiszállítás időpontjának jelentése: a határidő a rendelés leadására vonatkozik.
+
+Ellenőrzés: 250 PHP-teszt / 1057 ellenőrzés; külön esetek a napi határidőre, zárt napra, szünetre, éjfélre, helyi időzónára, kézi zárásra, adminmentésre és mindhárom rendelési belépési pontra. A migráció csak az elkülönített helyi QA-adatbázison futott, a meglévő időadatok változatlanságának ellenőrzésével. Az admin hét új időmezője és a vendégoldali kiírás böngészőben ellenőrizve. Ehhez nincs új csomag vagy npm-build. Szerveres migráció és push ebben a módosításban nem történt.
+
 ## Pultos rendelésnézet – 2026. október 22.
 
 A rendeléslista az elsődleges munkafelület: az összes/feldolgozás/befejezett/törölt kártyák alatta vannak. Rendelésjoggal rendelkező pultos belépéskor a rendeléslistára jut, a többi moduljoga nem változik. Az új `admin-orders-live.js` a meglévő öt másodperces figyelés friss függő rendelésazonosítóit használja: új érkezéskor ugyanazon jogosultságvédett listavégpont HTML-részletét tölti be, a keresés és az oldalszám megtartásával. A lista és a számlálók együtt frissülnek, az új sor rövid zöld kiemelést kap; csökkentett mozgás beállításnál nincs pulzálás. Ezen az oldalon az érkezési felugró ablak helyett a sor és a szöveges jelzés látszik, a hangjelzés megmarad. Aktív állapotválasztó vagy fizetési ablak alatt késlelteti a sorcserét; sikertelen frissítést a következő ellenőrzésnél újrapróbál. Szűrt vagy régebbi oldalon a „Legfrissebb rendelések” linkkel lehet visszatérni az új sorokhoz. A kiadáshoz a `public/city/admin-orders-live.js` fájl is szükséges; migráció nincs. Helyi QA-adatbázison igazolt az oldal újratöltése nélküli új sor és számlálófrissítés; 235 PHP-teszt / 1019 ellenőrzés és 57 JavaScript-teszt sikeres.

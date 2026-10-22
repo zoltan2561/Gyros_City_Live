@@ -1,6 +1,14 @@
 @extends('admin.theme.default')
 <link rel="stylesheet"
     href="{{ url(env('ASSETSPATHURL') . 'admin-assets/assets/css/timepicker/jquery.timepicker.min.css') }}">
+@section('styles')
+    <style>
+        @media (min-width: 992px) {
+            .hours-day-row, .hours-day-header { display: grid; grid-template-columns: 1.1fr repeat(5, minmax(0, 1fr)) .8fr; gap: 10px; margin-inline: 0; }
+            .hours-day-row > *, .hours-day-header > * { width: 100%; padding-inline: 0; min-width: 0; }
+        }
+    </style>
+@endsection
 @section('content')
     @include('admin.breadcrumb')
     <div class="container-fluid">
@@ -11,6 +19,12 @@
                         <div class="basic-form">
                             <form action="{{ URL::to('admin/time/store') }}" method="post">
                                 @csrf
+                                <div class="alert alert-info">
+                                    Az online rendeléseket a napi nyitástól az „Online rendelés eddig” időpontig fogadjuk.
+                                    A szünet és a zárt napok erre is érvényesek. A felső BE/KI kapcsolóval bármikor leállítható a rendelésfogadás.
+                                </div>
+                                @if (!$onlineHoursReady)<p class="alert alert-warning">Az online rendelési határidő beállításához adatbázis-frissítés szükséges.</p>@endif
+                                @if ($errors->any())<div class="alert alert-danger" role="alert"><ul class="mb-0">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
                                 <div class="row">
                                     <div class="col-md-4 mb-lg-0">
                                         <div class="form-group">
@@ -64,7 +78,7 @@
                                     </div>
 
                                 </div>
-                                <div class="row mt-2">
+                                <div class="row mt-2 hours-day-header">
                                     <label class="col-md-2 col-form-label"></label>
                                     <label
                                         class="col-md-2 text-center mb-0 d-none d-lg-block d-xl-block d-xxl-block">{{ trans('labels.opening_time') }}</label>
@@ -74,11 +88,12 @@
                                         class="col-md-2 text-center mb-0 d-none d-lg-block d-xl-block d-xxl-block">{{ trans('labels.break_end') }}</label>
                                     <label
                                         class="col-md-2 text-center mb-0 d-none d-lg-block d-xl-block d-xxl-block">{{ trans('labels.closing_time') }}</label>
+                                    <label class="col-md-2 text-center mb-0 d-none d-lg-block">Online rendelés eddig</label>
                                     <label
                                         class="col-md-2 text-center mb-0 d-none d-lg-block d-xl-block d-xxl-block">{{ trans('labels.is_closed') }}</label>
                                 </div>
                                 @foreach ($gettime as $key => $time)
-                                    <div class="row my-2">
+                                    <div class="row my-2 hours-day-row">
                                         <label class="col-md-2 col-form-label"> <strong class="fw-500">
                                                 {{ trans('labels.' . strtolower($time->day)) }} </strong> </label>
                                         <input type="hidden" name="day[]" value="{{ strtolower($time->day) }}">
@@ -149,6 +164,14 @@
                                                     value="closed" readonly="" required>
                                             </div>
                                         @endif
+                                        <div class="form-group col-md-2 d-grid align-items-end">
+                                            <label for="online-order-until-{{ $key }}" class="d-lg-none">Online rendelés eddig</label>
+                                            <input type="time" id="online-order-until-{{ $key }}" name="online_order_until[]"
+                                                class="form-control {{ $errors->has('online_order_until.'.$key) ? 'is-invalid' : '' }}"
+                                                aria-label="{{ trans('labels.'.strtolower($time->day)) }} – Online rendelés eddig"
+                                                value="{{ old('online_order_until.'.$key, $time->online_order_until ?? '21:30') }}"
+                                                @if ($onlineHoursReady) required @else disabled @endif>
+                                        </div>
                                         <div class="form-group col-md-2">
                                             <label
                                                 class="d-lg-none d-xl-none d-xxl-none">{{ trans('labels.is_closed') }}</label>

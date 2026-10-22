@@ -220,6 +220,7 @@
                                         <br>
                                         {{ $time->break_end }} <b>{{ trans('labels.to') }}</b>
                                         {{ $time->close_time }}
+                                        @include('web.partials.online-order-deadline', ['hours' => $time])
                                     </span>
                                 @endif
                             </li>

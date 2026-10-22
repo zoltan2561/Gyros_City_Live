@@ -47,7 +47,7 @@
     </style>
     @yield('styles')
     <link rel="stylesheet" href="{{ url('public/city/city.css') }}?v={{ filemtime(public_path('city/city.css')) }}">
-    <link rel="stylesheet" href="{{ url('public/city/builder.css') }}?v=20261020-2">
+    <link rel="stylesheet" href="{{ url('public/city/builder.css') }}?v={{ filemtime(public_path('city/builder.css')) }}">
 
 
     <!-- Barion Base Pixel -->
@@ -78,7 +78,7 @@
     </noscript>
 </head>
 
-<body class="city-site" data-gift-url="{{ route('cart.promotions') }}" data-city-cart="{{ request()->is('cart') ? 'true' : 'false' }}" data-city-checkout="{{ request()->is('checkout') ? 'true' : 'false' }}" data-buynow="{{ (int) request('buynow', 0) === 1 ? 1 : 0 }}">
+<body class="city-site{{ request()->is('item-*') ? ' city-has-builder' : '' }}" data-gift-url="{{ route('cart.promotions') }}" data-city-cart="{{ request()->is('cart') ? 'true' : 'false' }}" data-city-checkout="{{ request()->is('checkout') ? 'true' : 'false' }}" data-buynow="{{ (int) request('buynow', 0) === 1 ? 1 : 0 }}">
     <a class="city-skip-link" href="#main-content">Ugrás a tartalomhoz</a>
     <main id="main-content" class="">
         <div class="wrapper">

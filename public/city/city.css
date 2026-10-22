@@ -39,3 +39,9 @@
 :root .city-empty-title{margin:0;font-size:20px;font-weight:700;color:#28251f;line-height:1.4}
 :root .city-empty-description{margin:8px 0 0;font-size:15px;color:#706b61;line-height:1.6}
 :root .city-empty-state .btn{margin-top:20px;min-height:44px;white-space:normal}
+@media(max-width:991px){
+    .city-site #header1{padding:0}
+    .city-site header .navbar{min-height:56px}
+    .city-site header .navbar-brand .city-brand-logo{height:44px;width:64px}
+    .city-site .city-catalog-mobile .city-catalog-link{min-height:44px;padding:8px 6px}
+}

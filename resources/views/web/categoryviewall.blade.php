@@ -1,7 +1,7 @@
 @extends('web.layout.default')
 @section('page_title', '| Étlap')
 @section('styles')
-<link rel="stylesheet" href="{{ url('public/city/menu.css') }}?v=20261020-2">
+<link rel="stylesheet" href="{{ url('public/city/menu.css') }}?v={{ filemtime(public_path('city/menu.css')) }}">
 @endsection
 @section('content')
 <div class="city-menu-page">

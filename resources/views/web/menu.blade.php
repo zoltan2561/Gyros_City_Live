@@ -1,10 +1,7 @@
 @extends('web.layout.default')
 @section('page_title', '| Étlap · '.($categorydata->category_name ?? ''))
 @section('styles')
-<link rel="stylesheet" href="{{ url('public/city/menu.css') }}?v=20261020-2">
-@endsection
-@section('scripts')
-<script src="{{ url('public/city/menu.js') }}?v=20261020-2" defer></script>
+<link rel="stylesheet" href="{{ url('public/city/menu.css') }}?v={{ filemtime(public_path('city/menu.css')) }}">
 @endsection
 @section('content')
 @php $menuCategories = helper::get_categories(); @endphp
@@ -13,13 +10,11 @@
     <div class="container city-menu-layout">
         <aside class="city-menu-sidebar">
             <h2>Kategóriák</h2>
-            <nav class="city-menu-categories" aria-label="Étlap kategóriái">
-                @foreach ($menuCategories as $category)
-                <a href="{{ url('/menu?'.http_build_query(['category' => $category->slug])) }}" @class(['is-current' => $category->id === $categorydata->id]) @if ($category->id === $categorydata->id) aria-current="page" @endif>
-                    <img src="{{ helper::image_path($category->image) }}" width="38" height="38" alt="" loading="lazy"><span>{{ $category->category_name }}</span><span class="city-menu-count">{{ $category->item_info->count() }}</span>
-                </a>
-                @endforeach
-            </nav>
+            @include('web.city.menu-categories', ['categoryNavClass' => 'd-none d-lg-flex'])
+            <details class="city-menu-category-picker d-lg-none">
+                <summary><span><small>Kategóriák</small><strong>{{ $categorydata->category_name }}</strong></span><span class="city-menu-picker-arrow" aria-hidden="true">⌄</span></summary>
+                @include('web.city.menu-categories', ['categoryNavClass' => ''])
+            </details>
         </aside>
         <section class="city-menu-results" aria-labelledby="menu-results-title">
             <div class="city-menu-toolbar">

@@ -62,7 +62,7 @@
         </div>
     </section>
     <section class="counter-notes">
-        <p class="customer-note"><strong>Vásárló megjegyzése:</strong> {{ $orderdata->order_notes ?: 'Nincs megjegyzés.' }}</p>
+        <p class="customer-note {{ $orderdata->order_notes ? 'customer-note--present' : 'customer-note--empty' }}"><strong>Vásárló megjegyzése:</strong> {{ $orderdata->order_notes ?: 'Nincs megjegyzés.' }}</p>
         <form action="{{ url('admin/orders/order_note') }}" method="POST">
             @csrf
             <input type="hidden" name="order_id" value="{{ $orderdata->order_number }}">

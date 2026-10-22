@@ -11,12 +11,19 @@
     }
 @endphp
 @if (count($choices))
-    <ul class="order-customizations" aria-label="Testreszabás">
-        @foreach ($choices as $choice)
-            <li class="order-customization order-customization--{{ $choice['kind'] }}">
-                <span class="order-customization-label">{{ $choice['kind'] === 'removed' ? '− Nem kéri:' : ($choice['kind'] === 'extra' ? '+ Extra:' : 'Választás:') }}</span>
-                {{ $choice['name'] }}
-            </li>
+    <div class="order-customizations" aria-label="Testreszabás">
+        @foreach (['choice' => 'Választás:', 'removed' => '− Nem kéri:', 'extra' => '+ Extra:'] as $kind => $label)
+            @php $group = array_filter($choices, fn ($choice) => $choice['kind'] === $kind); @endphp
+            @if (count($group))
+                <div class="order-customization-group order-customization-group--{{ $kind }}">
+                    <span class="order-customization-label">{{ $label }}</span>
+                    <ul>
+                        @foreach ($group as $choice)
+                            <li class="order-customization order-customization--{{ $kind }}">{{ $choice['name'] }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
         @endforeach
-    </ul>
+    </div>
 @endif

@@ -11,7 +11,7 @@
                 <div class="card border-0 mt-3 counter-items-card">
                     <div class="card-header d-flex align-items-center bg-transparent text-dark py-3">
                         <i class="fa-solid fa-bag-shopping fs-5"></i>
-                        <h6 class="px-2 fw-500">{{ trans('labels.orders') }}</h6>
+                        <h6 class="px-2 fw-500">Rendelt tételek <span class="counter-item-count">{{ $ordersdetails->sum('qty') }} db</span></h6>
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
@@ -19,9 +19,9 @@
                                 <thead>
                                     <tr>
                                         <th>{{ trans('labels.image') }}</th>
+                                        <th>{{ trans('labels.qty') }}</th>
                                         <th>{{ trans('labels.item') }}</th>
                                         <th class="text-end">{{ trans('labels.unit_cost') }}</th>
-                                        <th class="text-end">{{ trans('labels.qty') }}</th>
                                         <th class="text-end">{{ trans('labels.total') }}</th>
                                     </tr>
                                 </thead>
@@ -43,6 +43,7 @@
                                         @endphp
                                         <tr>
                                             <td><img src="{{ helper::image_path($orders->item_image) }}" class="order-item-photo" alt=""></td>
+                                            <td class="order-item-qty"><span class="order-qty">{{ $orders->qty }}<small> db</small></span></td>
                                             <td class="order-product">
                                                 <div class="order-item-name">{{ $orders->item_name }}</div>
                                                 @include('admin.orders.item-customizations')
@@ -54,13 +55,18 @@
                                                         {{ helper::currency_format($addonstotal) }}</small>
                                                 @endif
                                             </td>
-                                            <td class="text-end order-item-qty"><span class="order-qty">{{ $orders->qty }}<small> db</small></span></td>
                                             <td class="text-end order-line-total">
                                                 {{ helper::currency_format($total_price) }}</td>
                                         </tr>
                                     @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="counter-totals">
+                            <table class="table counter-totals-table" aria-label="Összesítés">
+                                <tbody>
                                     <tr class="order-total-row">
-                                        <td class="text-end" colspan="4">
+                                        <td class="text-end">
                                             <p class="fw-400">{{ trans('labels.subtotal') }}</p>
                                         </td>
                                         <td class="text-end">
@@ -69,7 +75,7 @@
                                     </tr>
                                     @if ($orderdata->discount_amount > 0)
                                         <tr class="order-total-row">
-                                            <td class="text-end" colspan="4">
+                                            <td class="text-end">
                                                 <p class="fw-400">{{ trans('labels.discount') }}</p>
                                                 {{ $orderdata->offer_code != '' ? '(' . $orderdata->offer_code . ')' : '' }}
                                             </td>
@@ -86,7 +92,7 @@
                                     @if ($orderdata->tax_amount != null && $orderdata->tax_amount != '')
                                         @foreach ($tax as $key => $tax_value)
                                             <tr class="order-total-row">
-                                                <td class="text-end" colspan="4">
+                                                <td class="text-end">
                                                     <p class="fw-400">{{ $tax_name[$key] }}</p>
                                                 </td>
                                                 <td class="text-end">
@@ -97,7 +103,7 @@
                                     @endif
                                     @if ($orderdata->delivery_charge > 0)
                                         <tr class="order-total-row">
-                                            <td class="text-end" colspan="4">
+                                            <td class="text-end">
                                                 <p class="fw-400">{{ trans('labels.delivery_charge') }}</p>
                                             </td>
                                             <td class="text-end">
@@ -105,8 +111,8 @@
                                             </td>
                                         </tr>
                                     @endif
-                                    <tr class="order-total-row">
-                                        <td class="text-end" colspan="4">
+                                    <tr class="order-total-row order-grand-total">
+                                        <td class="text-end">
                                             <strong>{{ trans('labels.grand_total') }}</strong>
                                         </td>
                                         <td class="text-end">

@@ -9,6 +9,8 @@
 
 ## Pultos rendelésnézet – 2026. október 22.
 
+A vizuális finomítás a darabszámot a terméknév elé helyezi, a választásokat, elhagyásokat és extrákat külön sorokba rendezi, az összesítést pedig külön, legfeljebb 450 px széles táblában mutatja. Nagy képernyőn az oldal szélessége korlátozott; mobilon a mennyiség és a termék kerül előre. A rendelés számítása és mentése változatlan. Helyben 9 kapcsolódó PHP-teszt / 42 ellenőrzés és 360/390/820/1440/2272 px-es, többtételes böngészőpróba sikeres.
+
 A nyitott rendelés állapota a rendeléslista legördülőjéből is módosítható, a meglévő jogosultság- és CSRF-védett végponton. Törlés előtt megerősítést kér; mentés alatt letiltja az ismételt beküldést. Siker után ugyanazt a keresést, oldalszámot és állapotszűrőt tölti újra. Nem igazolható mentésnél ellenőrzésre figyelmeztet; a lezárt és törölt rendelések csak állapotfeliratot mutatnak. Az első oldalon továbbra is 10 rendelés van, az állapotválaszték egy közös lekérdezésből készül.
 
 A részletek kompakt átvétel/fizetés, vásárló és szállítási cím kártyákon látszanak. A megye, ország, tájékozódási pont és irányítószám rejtett, címszerkesztéskor a korábban mentett értékük megmarad. A termék mentett választásai kattintás nélkül jelennek meg: a `---` kezdetű elhagyások piros „Nem kéri”, az `extras_name` tételei zöld „Extra”, az `addons_name` választásai vastag fekete feliratot kapnak. Az elhagyás jelölése mindkét listában elsőbbséget élvez. A besorolás a mentett névlistákból készül, nem a jelenlegi katalógusból. A mennyiség kiemelt, mobilon a termékek külön sorblokkokban olvashatók.

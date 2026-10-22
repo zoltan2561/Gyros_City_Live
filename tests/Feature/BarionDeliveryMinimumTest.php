@@ -30,11 +30,16 @@ class BarionDeliveryMinimumTest extends TestCase
             'session.driver' => 'array',
         ]);
 
+        DB::connection()->getPdo()->sqliteCreateFunction('CONCAT', fn (...$parts) => implode('', $parts));
+        Schema::create('settings', function (Blueprint $t) { $t->id(); $t->string('timezone')->default('Europe/Budapest'); foreach (['app_bottom_image','booknow_bg_image','why_choose_image'] as $name) $t->string($name)->nullable(); });
+        DB::table('settings')->insert(['timezone' => 'Europe/Budapest']);
+        Schema::create('payment', function (Blueprint $t) { $t->id(); $t->integer('payment_type'); $t->integer('is_activate')->default(1); $t->integer('is_available')->default(1); });
+        DB::table('payment')->insert([['payment_type'=>1],['payment_type'=>16]]);
         Schema::create('categories', function (Blueprint $table) {
             $table->id(); $table->integer('is_available'); $table->integer('is_deleted');
         });
         Schema::create('item', function (Blueprint $table) {
-            $table->id(); $table->integer('cat_id'); $table->integer('item_status'); $table->boolean('today_unavailable');
+            $table->id(); $table->integer('cat_id'); $table->integer('item_status'); $table->boolean('today_unavailable'); $table->decimal('price')->default(1000); $table->string('item_name')->default('Test gyros');
         });
         DB::table('categories')->insert(['id' => 1, 'is_available' => 1, 'is_deleted' => 2]);
         DB::table('item')->insert(['id' => 1, 'cat_id' => 1, 'item_status' => 1, 'today_unavailable' => false]);
@@ -71,6 +76,7 @@ class BarionDeliveryMinimumTest extends TestCase
     {
         $this->seedCart($loggedIn, $buynow, $total - $charge);
         $gateway = Mockery::mock(BarionService::class);
+        $gateway->shouldReceive('environment')->andReturn('test');
         $gateway->shouldNotReceive('startPayment');
         $this->app->bind(BarionService::class, fn () => $gateway);
 
@@ -108,6 +114,7 @@ class BarionDeliveryMinimumTest extends TestCase
     {
         $this->seedCart(false, 0, $type === 1 ? $total - $charge : $total);
         $gateway = Mockery::mock(BarionService::class);
+        $gateway->shouldReceive('environment')->andReturn('test');
         $gateway->shouldReceive('startPayment')->once()->withArgs(function ($id, $email, $items, $amount) use ($total) {
             $this->assertSame((float) $total, $amount);
             BarionTransaction::create(['order_id' => $id]);
@@ -132,11 +139,42 @@ class BarionDeliveryMinimumTest extends TestCase
         $this->assertSame(1, Cart::count());
     }
 
+    public function test_gateway_items_include_server_tax_and_coupon_and_match_the_total(): void
+    {
+        $this->seedCart(false, 0, 1000);
+        Schema::table('item', function (Blueprint $t) { $t->string('tax')->nullable(); });
+        Schema::create('tax', function (Blueprint $t) { $t->id(); $t->string('name'); $t->integer('type'); $t->decimal('tax'); });
+        DB::table('tax')->insert(['id' => 1, 'name' => 'Test tax', 'type' => 2, 'tax' => 10]);
+        DB::table('item')->where('id', 1)->update(['tax' => '1']);
+        Schema::create('promocode', function (Blueprint $t) {
+            $t->id(); $t->string('offer_code'); $t->integer('is_available'); $t->string('start_date');
+            $t->string('expire_date'); $t->decimal('min_amount'); $t->integer('usage_type');
+            $t->integer('offer_type'); $t->decimal('offer_amount');
+        });
+        DB::table('promocode')->insert(['offer_code' => 'TEST', 'is_available' => 1,
+            'start_date' => now()->subDay()->toDateString(), 'expire_date' => now()->addDay()->toDateString(),
+            'min_amount' => 0, 'usage_type' => 2, 'offer_type' => 1, 'offer_amount' => 50]);
+        session()->put('discount_data', ['offer_code' => 'TEST', 'offer_amount' => 99999]);
+        $gateway = Mockery::mock(BarionService::class);
+        $gateway->shouldReceive('environment')->andReturn('test');
+        $gateway->shouldReceive('startPayment')->once()->withArgs(function ($id, $email, $items, $amount) {
+            $this->assertSame(1050.0, $amount);
+            $this->assertSame($amount, array_sum(array_map(fn ($line) => $line['qty'] * $line['price'], $items)));
+            $this->assertSame(100.0, collect($items)->firstWhere('sku', 'tax')['price']);
+            $this->assertSame(-50.0, collect($items)->firstWhere('sku', 'discount')['price']);
+            BarionTransaction::create(['order_id' => $id]);
+            return true;
+        })->andReturn(['paymentId' => 'tax-test', 'gatewayUrl' => 'https://example.test/pay']);
+        $this->app->bind(BarionService::class, fn () => $gateway);
+        $this->postJson('/barion/indit', ['order_type' => 2, 'grand_total' => 1])->assertOk()->assertJson(['ok' => true]);
+    }
+
     /** @dataProvider invalidAreas */
     public function test_missing_or_invalid_area_cannot_start_payment($area): void
     {
         $this->seedCart(false, 0, 1000);
         $gateway = Mockery::mock(BarionService::class);
+        $gateway->shouldReceive('environment')->andReturn('test');
         $gateway->shouldNotReceive('startPayment');
         $this->app->bind(BarionService::class, fn () => $gateway);
 
@@ -174,19 +212,9 @@ class BarionDeliveryMinimumTest extends TestCase
     public function test_cash_checkout_still_rejects_the_same_delivery_minimum(): void
     {
         $this->seedCart(false, 0, 5899);
-        Schema::create('settings', function (Blueprint $table) {
-            $table->id();
-            $table->string('timezone');
-            $table->string('app_bottom_image')->nullable();
-            $table->string('booknow_bg_image')->nullable();
-            $table->string('why_choose_image')->nullable();
-        });
-        DB::table('settings')->insert(['timezone' => 'Europe/Budapest']);
-        DB::connection()->getPdo()->sqliteCreateFunction('CONCAT', fn (...$parts) => implode('', $parts));
-
         $response = (new CheckoutController())->placeorder(new Request([
             'order_type' => 1,
-            'transaction_type' => 1,
+            'transaction_type' => 1, 'name' => 'Test Customer', 'email' => 'test@example.invalid', 'mobile' => '06200000000', 'terms' => 1, 'delivery_area' => 760,
             'address' => 'Test utca 10',
             'city' => 'Budapest',
             'delivery_charge' => 760,
@@ -201,6 +229,7 @@ class BarionDeliveryMinimumTest extends TestCase
 
     private function seedCart(bool $loggedIn, int $buynow, int $amount): void
     {
+        DB::table('item')->where('id', 1)->update(['price' => $amount]);
         Session::start();
         $this->withCredentials();
         $this->withCookie(config('session.cookie'), Session::getId());

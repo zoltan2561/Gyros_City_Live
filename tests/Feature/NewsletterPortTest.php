@@ -46,7 +46,7 @@ class NewsletterPortTest extends TestCase
         });
         Schema::create('users', function (Blueprint $table) {
             $table->id(); $table->string('name'); $table->string('email'); $table->string('password');
-            $table->integer('type'); $table->rememberToken(); $table->timestamps();
+            $table->integer('type'); $table->integer('is_available')->default(1); $table->integer('is_deleted')->default(2); $table->rememberToken(); $table->timestamps();
         });
         (require base_path('database/migrations/2023_08_10_043354_create_subscribe_table.php'))->up();
         (require base_path('database/migrations/2026_10_07_000001_create_newsletter_tables.php'))->up();

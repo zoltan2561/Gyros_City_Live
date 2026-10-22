@@ -50,6 +50,8 @@ class BarionService
      * @param float  $total      Bruttó végösszeg
      * @return array {paymentId, gatewayUrl, status}
      */
+    public function environment(): string { return $this->env; }
+
     public function startPayment(int $orderId, string $payerEmail, array $cart, float $total): array
     {
         // 1) helyi sor

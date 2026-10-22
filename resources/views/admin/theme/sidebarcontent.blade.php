@@ -1,11 +1,13 @@
-@php $modules = explode(',',helper::get_roles()); @endphp
+@php $modules = array_map('strval', \App\Support\AdminPermissions::modules(Auth::user())); @endphp
 <ul class="navbar-nav">
+    @if (\App\Support\AdminPermissions::can(Auth::user(), 0))
     <li class="nav-item mb-2 fs-7">
         <a class="nav-link rounded d-flex {{ request()->is('admin/home*') ? 'active' : '' }}"
             href="{{ URL::to('/admin/home') }}" aria-expanded="false">
             <i class="fa-solid fa-house-user"></i><span class="nav-text ">{{ trans('labels.dashboard') }}</span>
         </a>
     </li>
+    @endif
    
     @if (@helper::checkaddons('pos'))
         @if (Auth::user()->type != 1)

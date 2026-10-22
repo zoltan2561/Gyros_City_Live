@@ -177,10 +177,12 @@
     @endif
 
 </script>
+@if (\App\Support\AdminPermissions::can(Auth::user(), 1))
 <script src="{{ url('public/city/admin-order-alerts.js') }}?v={{ filemtime(public_path('city/admin-order-alerts.js')) }}"
         data-poll-url="{{ url('admin/getorder') }}"
         data-audio-base="{{ url(env('ASSETSPATHURL') . 'admin-assets/notification') }}/"
         data-storage-key="gycity:order-alerts:{{ url('admin/getorder') }}:{{ Auth::id() }}"></script>
+@endif
 
 
 
@@ -188,6 +190,7 @@
 
 <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
 <script src="{{ url(env('ASSETSPATHURL') . 'admin-assets/assets/js/common.js') }}"></script><!-- Common JS -->
+<script src="{{ url('public/city/admin-ordering-switch.js') }}"></script>
 @yield('script')
 </body>
 

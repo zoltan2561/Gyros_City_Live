@@ -64,12 +64,14 @@ class CartController extends Controller
 
     public function addtocart(Request $request)
     {
-        $request->validate(['slug' => 'required|string', 'qty' => 'required|integer|min:1|max:100', 'buynow' => 'nullable|integer|in:0,1']);
+        $request->validate(['slug' => 'required|string', 'qty' => 'required|integer|min:1|max:100', 'buynow' => 'nullable|integer|in:0,1',
+            'addons_id' => 'nullable|string|max:2000', 'extras_id' => 'nullable|string|max:2000']);
         $itemdata = Item::visibleOnMenu()->where('slug', $request->slug)->first();
         if (!$itemdata || !$itemdata->is_orderable) {
             return response()->json(['status' => 0, 'message' => 'Ez az étel jelenleg nem elérhető.', 'buynow' => (int) $request->buynow]);
         }
         try {
+            $catalog = app(\App\Services\CatalogPricing::class)->selection($itemdata, $request->addons_id, $request->extras_id);
             // buynow mindig legyen 0/1, ne NULL
             $buynow = (int)$request->input('buynow', 0);
 
@@ -101,21 +103,7 @@ class CartController extends Controller
             $cart->item_type          = $itemdata->item_type;
             $cart->item_image         = $itemdata->item_image?->image_name ?? 'item-placeholder.png';
             $cart->tax                = $itemdata->tax ?? '';
-            $price = (float) $itemdata->price;
-            if ($itemdata->is_top_deals == 1 && ($deal = helper::top_deals())) {
-                $price = (int) $deal->offer_type === 1
-                    ? ($price > $deal->offer_amount ? $price - $deal->offer_amount : $price)
-                    : $price * (1 - $deal->offer_amount / 100);
-            }
-            $cart->item_price         = helper::number_format($price);
-            $cart->addons_id          = $request->addons_id ?: null;
-            $cart->addons_name        = $request->addons_name ?: null;
-            $cart->addons_price       = $request->addons_price ?: null;
-            $cart->addons_total_price = helper::number_format($request->filled('addons_price') ? array_sum(explode('| ', $request->addons_price)) : 0);
-            $cart->extras_id          = $request->extras_id ?: null;
-            $cart->extras_name        = $request->extras_name ?: null;
-            $cart->extras_price       = $request->extras_price ?: null;
-            $cart->extras_total_price = helper::number_format($request->filled('extras_price') ? array_sum(explode('| ', $request->extras_price)) : 0);
+            $cart->forceFill($catalog);
             $cart->qty                = (int)$request->qty;
             $cart->buynow             = $buynow;
             $cart->save();
@@ -137,6 +125,8 @@ class CartController extends Controller
                 'buynow' => $buynow
             ], 200);
 
+        } catch (\Illuminate\Validation\ValidationException $exception) {
+            throw $exception;
         } catch (\Throwable $th) {
             report($th);
             return response()->json([

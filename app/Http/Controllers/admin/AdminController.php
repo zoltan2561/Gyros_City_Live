@@ -16,6 +16,7 @@ use App\Models\Order;
 use App\Models\Promocode;
 use App\Models\Settings;
 use App\Models\Time;
+use App\Support\AdminPermissions;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -123,44 +124,28 @@ class AdminController extends Controller
     {
         return view('login');
     }
+    public function profile()
+    {
+        return view('admin.auth.profile');
+    }
+
     public function check_admin(Request $request)
     {
-        session()->put('admin_login', '1');
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
-            'password' => 'required',
-        ],  [
-            'email.required' => trans('messages.email_required'),
-            'email.email' => trans('messages.valid_email'),
-            'password.required' => trans('messages.password_required')
-        ]);
-        if ($validator->fails()) {
-            return redirect()->back()->withErrors($validator)->withInput();
-        } else {
-            if (Auth::attempt($request->only('email', 'password'), true)) {
-                if (!Auth::user()) {
-                    return Redirect::to('/auth')->with('error', Session::get('from_message'));
-                }
-                if (Auth::user()->type == 1) {
-                    session()->forget('admin_login', '1');
-                    return redirect()->route('dashboard');
-                } else if (Auth::user()->type == 4) {
-                    if (Auth::user()->is_available == 1) {
-                        session()->forget('admin_login', '1');
-                        return redirect()->route('dashboard');
-                    } else {
-                        Auth::logout();
-                        return redirect()->back()->with('error', trans('messages.email_pass_invalid'));
-                    }
-                } else {
-                    Auth::logout();
-                    return redirect()->back()->with('error', trans('messages.email_pass_invalid'));
-                }
-            } else {
-                return redirect()->back()->with('error', trans('messages.email_pass_invalid'));
+        $request->validate(['email' => 'required|email', 'password' => 'required|string']);
+        if (Auth::attempt($request->only('email', 'password'), true)) {
+            $user = Auth::user();
+            if (AdminPermissions::isActive($user)) {
+                $request->session()->regenerate();
+                $request->session()->forget('admin_login');
+                return redirect(AdminPermissions::landing($user));
             }
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
         }
+        return redirect('admin')->with('error', trans('messages.email_pass_invalid'));
     }
+
     public function send_pass(Request $request)
     {
         $validator = Validator::make($request->all(), [

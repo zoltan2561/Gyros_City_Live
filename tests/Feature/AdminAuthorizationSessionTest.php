@@ -25,9 +25,11 @@ class AdminAuthorizationSessionTest extends TestCase
             ],
             'session.driver' => 'array',
         ]);
+        Schema::create('manage_roles', function (Blueprint $t) { $t->id(); $t->string('name'); $t->string('modules'); $t->integer('is_available')->default(1); });
+        DB::table('manage_roles')->insert(['id' => 1, 'name' => 'Test operator', 'modules' => '1,10']);
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->integer('type');
+            $table->integer('type'); $table->integer('is_available')->default(1); $table->integer('is_deleted')->default(2); $table->integer('role_id')->default(1);
             $table->rememberToken();
         });
         Schema::create('languages', function (Blueprint $table) {
@@ -41,7 +43,8 @@ class AdminAuthorizationSessionTest extends TestCase
             $table->integer('layout')->default(1);
         });
         DB::table('languages')->insert(['is_available' => 1, 'is_deleted' => 2]);
-        Route::middleware(['web', AdminAuth::class])->get('/_test/admin-session', fn () => response()->json(['admin' => true]));
+        $this->partialMock(\App\Http\Controllers\admin\OrderController::class, fn ($mock) => $mock->shouldReceive('index')->andReturn(response()->json(['admin' => true])));
+        Route::middleware(['web', AdminAuth::class])->get('/_test/admin-session', [\App\Http\Controllers\admin\OrderController::class, 'index']);
         Route::middleware(['web', 'auth'])->get('/_test/customer-session', fn () => response()->json(['user_id' => Auth::id()]));
     }
 

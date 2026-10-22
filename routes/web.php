@@ -65,9 +65,7 @@ Route::post('password/reset', [ResetPasswordController::class, 'reset'])->name('
 //noti email alert cucc
 Route::middleware(['auth']) //
 ->post('admin/order-unprocessed-alert', [NotificationController::class, 'unprocessedAlert'])
-    ->name('admin.unprocessed.order.alert')
-	->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class])
-	->withoutMiddleware(['auth']);
+    ->name('admin.unprocessed.order.alert');
 //Delivery hivasa
 
 Route::post('/admin/toggle-delivery', [SettingController::class, 'toggleDelivery'])
@@ -323,9 +321,10 @@ Route::group(['prefix' => 'admin', 'namespace' => 'admin'], function () {
 		// others
 		Route::get('home', [AdminController::class, 'home'])->name('dashboard');
 		Route::post('change-password', [AdminController::class, 'changepassword']);
+        Route::get('profile', [AdminController::class, 'profile']);
 		Route::post('edit-profile', [AdminController::class, 'editprofile']);
 		Route::get('getorder', [AdminController::class, 'getorder']);
-		Route::get('change-status', [AdminController::class, 'changestatus']);
+		Route::post('change-status', [AdminController::class, 'changestatus']);
 		// bookings
 		Route::get('bookings', [BookingsController::class, 'bookings']);
 		Route::post('bookings/status', [BookingsController::class, 'bookingstatus']);

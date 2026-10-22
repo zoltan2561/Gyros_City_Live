@@ -175,6 +175,12 @@ class CheckoutController extends Controller
     {
 
 
+        if (!in_array((int) $request->input('transaction_type'), [1, 2], true)) {
+            return response()->json(['status' => 0, 'message' => 'Ez a fizetési mód itt nem használható.'], 403);
+        }
+        if ((int) $request->transaction_type === 2 && !(Auth::check() && (int) Auth::user()->type === 2)) abort(403);
+        $request->validate(['name' => 'required|string|max:200', 'email' => 'required|email|max:190',
+            'mobile' => 'required|string|max:50', 'order_type' => 'required|in:1,2', 'terms' => 'accepted']);
         try {
 
 
@@ -288,6 +294,13 @@ class CheckoutController extends Controller
             $transaction_id = $transaction_id;
 
 
+            $pricing = app(\App\Services\CheckoutPricing::class);
+            $pricing->requirePayment((int) $transaction_type);
+            $quote = $pricing->quote($cartdata, (int) $order_type, $request->input('delivery_area'));
+            $grand_total = $quote['grand_total'];
+            $delivery_charge = $quote['delivery_charge'];
+            $tax = $quote['tax'];
+            $tax_name = $quote['tax_name'];
             $minimumError = DeliveryMinimum::violation($order_type, $grand_total, $delivery_charge);
             if ($minimumError !== null) {
                 return response()->json(array_merge(['status' => 0], $minimumError), 200);
@@ -429,12 +442,6 @@ class CheckoutController extends Controller
                         $checkuser->save();
                     }
                 }
-                if (Auth::user() && Auth::user()->type == 2) {
-                    $cartdata = Cart::where('user_id', $checkuser->id)->where('buynow', $buynow)->get();
-                } else {
-                    $cartdata = Cart::where('session_id', Session::getId())->where('buynow', $buynow)->get();
-                }
-
                 foreach ($cartdata->concat($giftLines) as $cart) {
                     $od = new OrderDetails();
                     $od->order_id = $order->id;
@@ -513,8 +520,10 @@ class CheckoutController extends Controller
 
 
 
+        } catch (\Illuminate\Validation\ValidationException $exception) {
+            return response()->json(['status' => 0, 'code' => 'cart_changed', 'message' => $exception->validator->errors()->first()]);
         } catch (\Throwable $th) {
-            dd($th);
+            \Log::error('Checkout order could not be placed.', ['exception' => $th->getMessage()]);
             return response()->json(['status' => 0, 'message' => trans('messages.wrong')], 200);
         }
     }

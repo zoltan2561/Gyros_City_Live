@@ -503,6 +503,7 @@
         </script>
         @endif
     @endif
+    <script src="{{ url('public/city/checkout-guard.js') }}"></script>
     @yield('scripts')
 
 </body>

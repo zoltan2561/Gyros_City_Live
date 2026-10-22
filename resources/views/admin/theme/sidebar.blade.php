@@ -2,7 +2,7 @@
 <nav class="sidebar sidebar-lg">
     <div class="d-flex justify-content-center align-items-center mb-3 border-bottom border-white">
         <div class="navbar-header-logo pb-2">
-            <a href="{{ URL::to('admin/home') }}" class="text-white fs-4">
+            <a href="{{ url(\App\Support\AdminPermissions::landing(Auth::user())) }}" class="text-white fs-4">
                 @if (Auth::user()->type == 1)
                     {{ trans('labels.admin_title') }}
                 @elseif(Auth::user()->type == 4)
@@ -16,7 +16,7 @@
 <!-- For Small Devices -->
 <nav class="collapse collapse-horizontal sidebar sidebar-md" id="sidebarcollapse">
     <div class="d-flex justify-content-between align-items-center mb-4 border-bottom border-white">
-        <a href="{{ URL::to('admin/home') }}" class="text-white fs-4">
+        <a href="{{ url(\App\Support\AdminPermissions::landing(Auth::user())) }}" class="text-white fs-4">
             @if (Auth::user()->type == 1)
                 {{ trans('labels.admin_title') }}
             @elseif(Auth::user()->type == 4)

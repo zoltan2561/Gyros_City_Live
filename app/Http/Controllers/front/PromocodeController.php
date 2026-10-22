@@ -13,63 +13,22 @@ class PromocodeController extends Controller
 {
     public function checkpromocode(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'offer_code' => 'required',
-        ], [
-            "offer_code.required" => trans('messages.offercode_required'),
-        ]);
-        if ($validator->fails()) {
-            return redirect()->back()->withErrors($validator)->withInput();
-        } else {
-            $checkoffercode = Promocode::where('promocode.offer_code', $request->offer_code)->where('is_available', 1)->first();
-            if (!empty($checkoffercode)) {
-                if ((date('Y-m-d') >= $checkoffercode->start_date) && (date('Y-m-d') <= $checkoffercode->expire_date)) {
-                    if ($request->order_amount >= $checkoffercode->min_amount) {
-                        $checkcount = Order::select('offer_code')->where('offer_code', $request->offer_code)->count();
-                        if ($checkoffercode->usage_type == 1) {
-                            if ($checkcount < $checkoffercode->usage_limit) {
-                                if ($checkoffercode->offer_type == 1) {
-                                    $offer_amount = $checkoffercode->offer_amount;
-                                } else {
-                                    $offer_amount = $request->order_amount * $checkoffercode->offer_amount / 100;
-                                }
-                                $arr = array(
-                                    "offer_code" => $checkoffercode->offer_code,
-                                    "offer_amount" => $offer_amount,
-                                );
-                                session()->put('discount_data', $arr);
-                                return redirect()->back()->with('success', trans('messages.success'));
-                            } else {
-                                return redirect()->back()->with('error', trans('messages.once_per_user'))->withInput();
-                            }
-                        } else {
-                            // if($checkcount < $checkoffercode->per_user){
-                            if ($checkoffercode->offer_type == 1) {
-                                $offer_amount = $checkoffercode->offer_amount;
-                            } else {
-                                $offer_amount = $request->order_amount * $checkoffercode->offer_amount / 100;
-                            }
-                            $arr = array(
-                                "offer_code" => $checkoffercode->offer_code,
-                                "offer_amount" => $offer_amount,
-                            );
-                            session()->put('discount_data', $arr);
-                            return redirect()->back()->with('success', trans('messages.success'));
-                            // }else{
-                            //     return redirect()->back()->with('error',trans('messages.usage_limit_exceeded'))->withInput();
-                            // }
-                        }
-                    } else {
-                        return redirect()->back()->with('error', trans('messages.order_amount_greater_then') . ' : ' . helper::currency_format($checkoffercode->min_amount))->withInput();
-                    }
-                } else {
-                    return redirect()->back()->with('error', trans('messages.offer_expired'))->withInput();
-                }
-            } else {
-                return redirect()->back()->with('error', trans('messages.invalid_promocode'))->withInput();
-            }
+        $request->validate(['offer_code' => 'required|string|max:100']);
+        $cart = \App\Models\Cart::where('buynow', (int) $request->input('buynow', 0));
+        if (auth()->check() && (int) auth()->user()->type === 2) $cart->where('user_id', auth()->id());
+        else $cart->where('session_id', session()->getId());
+        $rows = $cart->get();
+        $subtotal = $rows->sum(fn ($line) => ((float) $line->item_price + (float) $line->addons_total_price + (float) $line->extras_total_price) * (int) $line->qty);
+        if ($rows->isEmpty()) return back()->with('error', trans('messages.cart_is_empty1'));
+        session()->put('discount_data', ['offer_code' => $request->offer_code]);
+        try {
+            app(\App\Services\CouponDiscount::class)->amount((float) $subtotal);
+            return back()->with('success', trans('messages.success'));
+        } catch (\Illuminate\Validation\ValidationException $exception) {
+            return back()->with('error', $exception->validator->errors()->first());
         }
     }
+
     public function removepromocode()
     {
         session()->forget('discount_data');

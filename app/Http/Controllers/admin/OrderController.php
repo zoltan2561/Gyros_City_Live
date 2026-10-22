@@ -66,6 +66,7 @@ class OrderController extends Controller
         if ((int) $orderdata->status === (int) $defaultsatus->id && (int) $orderdata->status_type === (int) $defaultsatus->type) {
             return 1;
         }
+        abort_if((int) $orderdata->status_type === 4, 409, 'A cancelled order cannot change status.');
         $user_info = User::find($orderdata->user_id);
 
         $title = "";
@@ -95,7 +96,7 @@ class OrderController extends Controller
             $message_text = 'Rendelés' . $orderdata->order_number . 'törölve az admin által.';
 
             if ($user_info) {
-                if ($orderdata->transaction_type != 1) {
+                if ((int) $orderdata->transaction_type === 2) {
                     if ($orderdata->user_id != null) {
                         $user_info->wallet += $orderdata->grand_total;
                     }

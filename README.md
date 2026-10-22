@@ -7,6 +7,21 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## FoodPRO hibajavítások átemelése – 2026. október 22.
+
+A kosár feltéteit, extráit és árait a katalógusból ellenőrzi a szerver. Rendeléskor újraszámolja az árakat, adókat, kuponkedvezményt és kiszállítási díjat; ellenőrzi a mennyiségi és összeghatárokat, valamint az aktív fizetési módot. A készpénzes végponton nem lehet online fizetést késznek jelölni. A Barion a tranzakció indításakor mentett környezetet használja, és csak egyező fizetett összegből készít rendelést.
+
+Az admin hozzáférése a fiók és szerepkör aktuális állapotához, illetve moduljogokhoz kötött. A navigáció és a kezdőoldal ugyanezeket a jogokat követi. A rendeléskapcsoló POST + CSRF védelmet használ; a régi telepítő/frissítő webes végpontok mindig 404-et adnak. A korábbi rendeléslista-, hangjelzés-, kosár- és ajándékakció-funkciók megmaradtak. A hírlevélmodult nem írtuk újra.
+
+Ellenőrzés: 204 PHP-teszt / 884 ellenőrzés és 34 JavaScript-teszt sikeres, izolált tesztadatokkal. Böngészőben az admin rendeléskapcsolója kétszer POST + CSRF kéréssel váltott, majd visszaállt. Tesztparancsok a projekt gyökeréből:
+
+```powershell
+php -d auto_prepend_file=tests/offline-prepend.php -d allow_url_fopen=0 -d disable_functions=curl_exec,curl_multi_exec,mail,fsockopen,pfsockopen,stream_socket_client vendor/phpunit/phpunit/phpunit --do-not-cache-result
+node --test tests/frontend/*.test.cjs
+```
+
+A teszt-előtöltő kizárólag a régi MyFatoorah függőség automatikus hálózati frissítését kerüli meg. Az alkalmazás és a vendor változatlan betöltési módot használ élesben. Ehhez az átemeléshez nincs új migráció vagy npm-build. A két új `public/city/admin-ordering-switch.js` és `checkout-guard.js` fájlt is ki kell adni. Telepítéskor a korábbi route/config cache frissítése és a dolgozók moduljogainak ellenőrzése szükséges. Éles telepítés, valódi Barion-fizetés és SMTP-kézbesítési próba nem történt; `.env` és üzemi adatbázis nem változott.
+
 ## Megjegyzett bejelentkezés – 2026. október 21.
 
 A vásárlói és az admin/pultos jelszavas belépés automatikusan megjegyzett bejelentkezést kér. A közös `web` guard `remember` ideje 43 200 perc (30 × 24 óra), az OTP-s belépésre is érvényes. A rövidebb szerveres munkamenet lejárata után a titkosított, HttpOnly bejelentkezési süti visszaállítja a hitelesítést. A normál munkamenet saját lejárati beállítása változatlan.

@@ -26,10 +26,12 @@ class PersistentLoginTest extends TestCase
         ], 'session.driver' => 'array']);
         $this->withoutMiddleware([MaintenanceMiddleware::class, AdminAuth::class, UserMiddleware::class]);
         Mail::fake();
+        Schema::create('manage_roles', function (Blueprint $t) { $t->id(); $t->string('name'); $t->string('modules'); $t->integer('is_available')->default(1); });
+        DB::table('manage_roles')->insert(['id' => 1, 'name' => 'Test operator', 'modules' => '1,10']);
         Schema::create('users', function (Blueprint $t) {
             $t->id(); $t->string('name'); $t->string('email'); $t->string('password'); $t->integer('type');
             $t->integer('is_available')->default(1); $t->integer('is_verified')->default(1); $t->integer('is_deleted')->default(2);
-            $t->integer('user_id')->default(0); $t->string('mobile')->default('06200000000'); $t->string('otp')->nullable();
+            $t->integer('role_id')->default(1); $t->integer('user_id')->default(0); $t->string('mobile')->default('06200000000'); $t->string('otp')->nullable();
             $t->rememberToken(); $t->timestamps();
         });
         Schema::create('cart', function (Blueprint $t) {

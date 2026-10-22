@@ -248,7 +248,7 @@ class OrderNotificationTest extends TestCase
         $response = (new \App\Http\Controllers\front\CheckoutController())->placeorder(new Request([
             'name' => 'Teszt Vendég', 'email' => 'guest@example.invalid', 'mobile' => '0612345678',
             'order_type' => 2, 'transaction_type' => 1, 'grand_total' => 5000,
-            'delivery_charge' => 0, 'buynow' => 0,
+            'delivery_charge' => 0, 'buynow' => 0, 'terms' => 1,
         ]));
         $this->assertSame(1, $response->getData()->status);
         $this->assertSame(1, Order::count());
@@ -270,12 +270,13 @@ class OrderNotificationTest extends TestCase
     public function test_barion_sends_confirmation_only_for_successfully_created_order_and_never_on_callback_replay(string $state, int $expected): void
     {
         $this->purchaseSchema();
-        DB::table('barion_transactions')->insert(['payment_id' => 'test-payment', 'status' => 'Prepared',
+        DB::table('barion_transactions')->insert(['payment_id' => 'test-payment', 'status' => 'Prepared', 'amount' => 5000,
             'draft_json' => json_encode(['order_type' => 2, 'name' => 'Teszt Vendég',
                 'email' => 'guest@example.invalid', 'grand_total' => 5000,
                 'items' => [['item_id' => 1, 'item_name' => 'Teszt pizza', 'qty' => 2, 'item_price' => 2500]]])]);
-        $this->mock(\App\Services\BarionService::class, fn ($mock) =>
-            $mock->shouldReceive('fetchState')->twice()->with('test-payment')->andReturn((object) ['Status' => $state]));
+        $gateway = \Mockery::mock(\App\Services\BarionService::class);
+        $gateway->shouldReceive('fetchState')->twice()->with('test-payment')->andReturn((object) ['Status' => $state, 'Total' => 5000]);
+        $this->app->bind(\App\Services\BarionService::class, fn () => $gateway);
         for ($i = 0; $i < 2; $i++) {
             $response = (new \App\Http\Controllers\BarionController())->callback(new Request(['PaymentId' => 'test-payment']));
             $this->assertSame(200, $response->getStatusCode());
@@ -289,6 +290,37 @@ class OrderNotificationTest extends TestCase
     public static function paymentStates(): array
     {
         return [['Succeeded', 1], ['Failed', 0], ['Cancelled', 0]];
+    }
+
+    public function test_barion_callback_does_not_accept_a_different_paid_amount(): void
+    {
+        $this->purchaseSchema();
+        DB::table('barion_transactions')->insert(['payment_id' => 'wrong-total', 'status' => 'Prepared', 'amount' => 5000,
+            'draft_json' => json_encode(['barion_env' => 'test'])]);
+        $gateway = \Mockery::mock(\App\Services\BarionService::class);
+        $gateway->shouldReceive('fetchState')->once()->andReturn((object) ['Status' => 'Succeeded', 'Total' => 4999]);
+        $this->app->bind(\App\Services\BarionService::class, fn () => $gateway);
+        (new \App\Http\Controllers\BarionController())->callback(new Request(['PaymentId' => 'wrong-total']));
+        $this->assertSame(0, Order::count());
+        $this->assertSame(1, DB::table('payment_logs')->where('event', 'AMOUNT_MISMATCH')->count());
+        Mail::assertNothingSent();
+    }
+
+    public function test_barion_callback_uses_the_saved_environment_even_if_the_app_environment_changed(): void
+    {
+        $this->purchaseSchema();
+        $this->app->instance('env', 'production');
+        DB::table('barion_transactions')->insert(['payment_id' => 'saved-env', 'status' => 'Prepared', 'amount' => 5000,
+            'draft_json' => json_encode(['barion_env' => 'test'])]);
+        $seen = [];
+        $gateway = \Mockery::mock(\App\Services\BarionService::class);
+        $gateway->shouldReceive('fetchState')->once()->andReturn((object) ['Status' => 'Failed']);
+        $this->app->bind(\App\Services\BarionService::class, function ($app, $parameters) use ($gateway, &$seen) {
+            $seen[] = $parameters['env']; return $gateway;
+        });
+        (new \App\Http\Controllers\BarionController())->callback(new Request(['PaymentId' => 'saved-env']));
+        $this->assertSame(['test'], $seen);
+        $this->assertSame(0, Order::count());
     }
 
     private function purchaseSchema(): void
@@ -308,6 +340,11 @@ class OrderNotificationTest extends TestCase
             $t->string('timezone')->default('Europe/Budapest');
             $t->integer('order_number_start')->default(1); $t->string('order_prefix')->default('GY-');
         });
+        Schema::create('categories', function (Blueprint $t) { $t->id(); $t->integer('is_available')->default(1); $t->integer('is_deleted')->default(2); });
+        Schema::create('item', function (Blueprint $t) { $t->id(); $t->integer('cat_id')->default(1); $t->string('item_name')->default('Teszt pizza'); $t->integer('item_status')->default(1); $t->boolean('today_unavailable')->default(false); $t->decimal('price')->default(2500); });
+        DB::table('categories')->insert(['id' => 1]); DB::table('item')->insert(['id' => 1]);
+        Schema::create('payment', function (Blueprint $t) { $t->id(); $t->integer('payment_type'); $t->integer('is_activate')->default(1); $t->integer('is_available')->default(1); });
+        DB::table('payment')->insert(['payment_type'=>1]);
         Schema::create('cart', function (Blueprint $t) {
             $t->id(); $t->string('session_id')->nullable(); $t->integer('user_id')->nullable(); $t->integer('buynow')->default(0);
             foreach (['item_id', 'item_name', 'item_type', 'item_image', 'tax', 'qty', 'item_price',
@@ -315,7 +352,7 @@ class OrderNotificationTest extends TestCase
                 'extras_price', 'extras_total_price'] as $name) $t->string($name)->nullable();
         });
         Schema::create('barion_transactions', function (Blueprint $t) {
-            $t->id(); $t->string('payment_id'); $t->string('status'); $t->text('draft_json')->nullable();
+            $t->id(); $t->string('payment_id'); $t->string('status'); $t->decimal('amount')->default(5000); $t->text('draft_json')->nullable();
             $t->text('raw_response')->nullable(); $t->timestamp('last_callback_at')->nullable(); $t->timestamps();
         });
         Schema::create('payment_logs', function (Blueprint $t) {

@@ -39,6 +39,10 @@ class GiftPromotionsTest extends TestCase
             $t->integer('item_status')->default(1); $t->boolean('today_unavailable')->default(false);
             $t->integer('item_type')->default(2); $t->integer('price')->default(1000); $t->timestamps();
         });
+        Schema::table('item', function (Blueprint $t) { $t->string('addons_id')->nullable(); });
+        Schema::create('addons_group', function (Blueprint $t) { $t->id(); $t->string('name')->default('Test'); $t->integer('selection_type')->default(2); $t->integer('selection_count')->default(2); $t->integer('min_count')->default(0); $t->integer('max_count')->default(5); $t->integer('is_available')->default(1); $t->integer('is_deleted')->default(2); });
+        Schema::create('addons', function (Blueprint $t) { $t->id(); $t->integer('addongroup_id'); $t->string('name'); $t->decimal('price'); $t->integer('is_available')->default(1); $t->integer('is_deleted')->default(2); });
+        Schema::create('extras', function (Blueprint $t) { $t->id(); $t->integer('item_id'); $t->string('name'); $t->decimal('price'); });
         Schema::create('item_images', function (Blueprint $t) {
             $t->id(); $t->integer('item_id'); $t->string('image');
         });
@@ -54,6 +58,8 @@ class GiftPromotionsTest extends TestCase
         Schema::create('barion_transactions', function (Blueprint $t) {
             $t->id(); $t->integer('order_id'); $t->string('payment_id')->nullable(); $t->text('draft_json')->nullable(); $t->timestamps();
         });
+        Schema::create('payment', function (Blueprint $t) { $t->id(); $t->integer('payment_type'); $t->integer('is_activate')->default(1); $t->integer('is_available')->default(1); });
+        DB::table('payment')->insert([['payment_type'=>1],['payment_type'=>16]]);
         Schema::create('settings', function (Blueprint $t) {
             $t->id(); $t->string('timezone');
             foreach (['app_bottom_image','booknow_bg_image','why_choose_image'] as $name) $t->string($name)->nullable();
@@ -176,6 +182,13 @@ class GiftPromotionsTest extends TestCase
     /** @dataProvider optionalSupplementPrices */
     public function test_cart_accepts_optional_supplements_and_preserves_their_totals(array $prices, int $addonsTotal, int $extrasTotal): void
     {
+        DB::table('addons_group')->insert(['id' => 1]);
+        DB::table('item')->where('id', 1)->update(['addons_id' => '1']);
+        foreach (['addons' => 'addons_price', 'extras' => 'extras_price'] as $table => $field) {
+            $parts = trim((string) ($prices[$field] ?? '')) !== '' ? explode('|', $prices[$field]) : [];
+            foreach ($parts as $i => $price) DB::table($table)->insert(array_merge(['id' => $i+1, 'name' => 'Choice '.$i, 'price' => (float) trim($price)], $table === 'addons' ? ['addongroup_id' => 1] : ['item_id' => 1]));
+            $prices[$table.'_id'] = implode('| ', array_keys(array_fill(1, count($parts), true)));
+        }
         $this->postJson('/addtocart', array_merge([
             'slug' => 'item-1', 'qty' => 2, 'buynow' => 0,
         ], $prices))->assertOk()->assertJson(['status' => 1]);
@@ -251,12 +264,12 @@ class GiftPromotionsTest extends TestCase
     public function test_cash_and_card_checkout_both_block_missing_gift_choice_and_unavailable_items(): void
     {
         $this->promotion(); $this->line(1, 2);
-        $gateway = Mockery::mock(BarionService::class); $gateway->shouldNotReceive('startPayment');
+        $gateway = Mockery::mock(BarionService::class); $gateway->shouldReceive('environment')->andReturn('test'); $gateway->shouldNotReceive('startPayment');
         $this->app->bind(BarionService::class, fn () => $gateway);
         $this->postJson('/barion/indit', ['order_type' => 2, 'grand_total' => 2000, 'buynow' => 0])
             ->assertOk()->assertJson(['ok' => false, 'code' => 'cart_changed']);
         $response = (new CheckoutController())->placeorder(new Request([
-            'order_type' => 2, 'transaction_type' => 1, 'grand_total' => 2000, 'buynow' => 0,
+            'order_type' => 2, 'transaction_type' => 1, 'grand_total' => 2000, 'buynow' => 0, 'name'=>'Test', 'email'=>'test@example.invalid', 'mobile'=>'06200000000', 'terms'=>1,
         ]));
         $this->assertSame('cart_changed', $response->getData(true)['code']);
         Item::find(1)->update(['item_status' => 0]);
@@ -269,7 +282,7 @@ class GiftPromotionsTest extends TestCase
     {
         $promotion = $this->promotion(); $this->line(1, 2);
         app(GiftPromotions::class)->choose($promotion->id, [3]);
-        $gateway = Mockery::mock(BarionService::class);
+        $gateway = Mockery::mock(BarionService::class); $gateway->shouldReceive('environment')->andReturn('test');
         $gateway->shouldReceive('startPayment')->once()->withArgs(function ($id, $email, $items, $total) {
             $this->assertCount(1, $items); $this->assertSame(2000.0, $total);
             BarionTransaction::create(['order_id' => $id]); return true;

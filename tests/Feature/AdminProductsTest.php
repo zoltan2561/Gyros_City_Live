@@ -20,7 +20,9 @@ class AdminProductsTest extends TestCase
             'driver' => 'sqlite', 'database' => ':memory:', 'prefix' => '',
         ], 'session.driver' => 'array']);
         DB::connection()->getPdo()->sqliteCreateFunction('CONCAT', fn (...$parts) => implode('', $parts));
-        Schema::create('users', function (Blueprint $t) { $t->id(); $t->string('name'); $t->integer('type'); });
+        Schema::create('manage_roles', function (Blueprint $t) { $t->id(); $t->string('name'); $t->string('modules'); $t->integer('is_available')->default(1); });
+        DB::table('manage_roles')->insert(['id' => 1, 'name' => 'Test operator', 'modules' => '1,10']);
+        Schema::create('users', function (Blueprint $t) { $t->id(); $t->string('name'); $t->integer('type'); $t->integer('is_available')->default(1); $t->integer('is_deleted')->default(2); $t->integer('role_id')->default(1); });
         Schema::create('languages', function (Blueprint $t) {
             $t->id(); $t->string('code'); $t->string('name'); $t->string('image')->default('');
             $t->integer('layout')->default(1); $t->integer('is_default')->default(1); $t->integer('is_available')->default(1);
@@ -131,7 +133,7 @@ class AdminProductsTest extends TestCase
         DB::table('users')->insert(['id' => 2, 'name' => 'Vásárló', 'type' => 2]);
         $this->actingAs(User::find(2));
         $item = $this->item();
-        $this->postJson('/admin/item/quick-update', $this->payload($item))->assertRedirect('/admin');
+        $this->postJson('/admin/item/quick-update', $this->payload($item))->assertForbidden();
         $this->assertSame('Teszt pizza', $item->fresh()->item_name);
         $this->assertAuthenticatedAs(User::find(2));
     }

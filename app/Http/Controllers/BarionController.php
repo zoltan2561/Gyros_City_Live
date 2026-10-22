@@ -62,12 +62,12 @@ class BarionController extends Controller
                 $deliveryCharge = $area->delivery_charge;
             }
 
-            // Reject before creating a payment or a draft, using the same rule as placeorder.
-            $minimumError = DeliveryMinimum::violation(
-                $orderType,
-                $request->input('grand_total', '0'),
-                $deliveryCharge
-            );
+            $pricing = app(\App\Services\CheckoutPricing::class);
+            $pricing->requirePayment(16);
+            $quote = $pricing->quote($cartdata, $orderType, $request->input('delivery_area'));
+            $deliveryCharge = $quote['delivery_charge'];
+            $request->merge(['grand_total' => $quote['grand_total'], 'tax' => $quote['tax'], 'tax_name' => $quote['tax_name']]);
+            $minimumError = DeliveryMinimum::violation($orderType, $quote['grand_total'], $deliveryCharge);
             if ($minimumError !== null) {
                 return response()->json([
                     'ok' => false,
@@ -136,6 +136,7 @@ class BarionController extends Controller
             // Barion service meghívása – domainen fog működni, nincs localhost hardcode
             /** @var BarionService $barion */
             $barion = app(BarionService::class);
+            $draft['barion_env'] = $barion->environment();
 
             // ideiglenes azonosító a Barion kéréshez (NEM a végső order ID)
             $tmpOrderId  = time();
@@ -145,19 +146,28 @@ class BarionController extends Controller
             $svcCart = [];
             foreach ($draft['items'] as $it) {
                 // Zero-price gifts remain in the immutable order draft; no charge is sent for them.
-                if ((float) $it['item_price'] === 0.0) {
+                if ((float) $it['item_price'] + (float) ($it['addons_total_price'] ?? 0) + (float) ($it['extras_total_price'] ?? 0) === 0.0) {
                     continue;
                 }
                 $svcCart[] = [
                     'name'  => $it['item_name'],
                     'qty'   => (int)$it['qty'],
-                    'price' => (float)$it['item_price'],
+                    'price' => (float) $it['item_price'] + (float) ($it['addons_total_price'] ?? 0) + (float) ($it['extras_total_price'] ?? 0),
                     'sku'   => (string)$it['item_id'],
                 ];
             }
             $ship = (float)($draft['delivery_charge'] ?? 0);
             if ($ship > 0) {
                 $svcCart[] = ['name'=>'Szállítás','qty'=>1,'price'=>$ship,'sku'=>'shipping'];
+            }
+
+            $taxTotal = array_sum(array_map('floatval', explode('|', $quote['tax'])));
+            $discountAmount = (float) (session('discount_data')['offer_amount'] ?? 0);
+            if ($taxTotal > 0) {
+                $svcCart[] = ['name' => 'Adó', 'qty' => 1, 'price' => $taxTotal, 'sku' => 'tax'];
+            }
+            if ($discountAmount > 0) {
+                $svcCart[] = ['name' => 'Kedvezmény', 'qty' => 1, 'price' => -$discountAmount, 'sku' => 'discount'];
             }
 
             // végösszeg (HUF)
@@ -183,6 +193,8 @@ class BarionController extends Controller
                 'redirect'   => $res['gatewayUrl'], // frontend ide navigál
             ], 200);
 
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['ok' => false, 'code' => 'cart_changed', 'msg' => $e->validator->errors()->first()]);
         } catch (\Throwable $e) {
             \Log::error('Barion start error: '.$e->getMessage());
             return response()->json(['ok'=>false,'msg'=>'Barion indítás sikertelen'],200);
@@ -212,7 +224,7 @@ class BarionController extends Controller
 
         // Biztonsági rásegítés: állapot lekérés + callback lefuttatása idempotensen
         /** @var BarionService $barion */
-        $barion = app(BarionService::class);
+        $barion = app(BarionService::class, ['env' => $this->environmentForTransaction($paymentId)]);
         $state  = $barion->fetchState($paymentId);
         $succ   = (string)($state->Status?->value ?? $state->Status ?? '') === 'Succeeded';
 
@@ -274,7 +286,7 @@ class BarionController extends Controller
         // 3) állapot lekérdezése a Bariontól
         try {
             /** @var \App\Services\BarionService $barion */
-            $barion = app(\App\Services\BarionService::class);
+            $barion = app(\App\Services\BarionService::class, ['env' => $this->environmentForTransaction($paymentId)]);
             $state  = $barion->fetchState($paymentId);
         } catch (\Throwable $e) {
             \Log::error("Barion PaymentState error for {$paymentId}: ".$e->getMessage());
@@ -311,6 +323,12 @@ class BarionController extends Controller
                         'event'      => 'CALLBACK',
                         'message'    => 'Unknown paymentId'
                     ]);
+                    return;
+                }
+
+                if ($isOk && (!isset($state->Total) || abs((float) $state->Total - (float) $txRow->amount) > 0.01)) {
+                    \App\Models\PaymentLog::create(['payment_id' => $paymentId, 'event' => 'AMOUNT_MISMATCH',
+                        'message' => 'The paid amount does not match the prepared transaction.']);
                     return;
                 }
 
@@ -518,6 +536,14 @@ class BarionController extends Controller
         }
 
         return response('OK', 200);
+    }
+
+    private function environmentForTransaction(string $paymentId): string
+    {
+        $draft = BarionTransaction::where('payment_id', $paymentId)->first()?->draft_json;
+        if (is_string($draft)) $draft = json_decode($draft, true);
+        return is_array($draft) && in_array($draft['barion_env'] ?? null, ['test', 'prod'], true)
+            ? $draft['barion_env'] : (app()->environment('production', 'prod') ? 'prod' : 'test');
     }
 
 }

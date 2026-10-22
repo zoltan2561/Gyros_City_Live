@@ -12,7 +12,7 @@
         </div>
         <div class="px-md-3 px-0 d-flex align-items-center">
 
-            @if (Auth::user()->type == 1 || Auth::user()->type == 4)
+            @if (\App\Support\AdminPermissions::can(Auth::user(), 1))
                 {{-- Étterem online/offline kapcsoló --}}
                 @if (helper::check_restaurant_closed() == 1 )
                     @php $tooltiptitle = trans('messages.online_note'); @endphp

@@ -262,12 +262,12 @@
             <i class="fa-solid fa-list-timeline"></i><span class="nav-text ">{{ trans('labels.items') }}</span>
         </a>
     </li>
-    @if (@helper::checkaddons('product_review'))
+    @if (\App\Support\AdminPermissions::can(Auth::user(), 29))
         <li class="nav-item mb-2 fs-7 {{ Auth::user()->type != 1 ? (in_array('29', $modules) == true ? '' : 'd-none') : '' }}"
             id="29">
             <a class="nav-link rounded d-flex {{ request()->is('admin/reviews*') ? 'active' : '' }}"
                 href="{{ URL::to('/admin/reviews') }}" aria-expanded="false">
-                <i class="fa-solid fa-star"></i><span class="nav-text ">{{ trans('labels.product_reviews') }}</span>
+                <i class="fa-solid fa-star"></i><span class="nav-text ">{{ trans('reviews.title') }}</span>
             </a>
         </li>
     @endif

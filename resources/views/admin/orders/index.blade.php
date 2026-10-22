@@ -1,5 +1,6 @@
 @extends('admin.theme.default')
 @section('styles')
+    <link rel="stylesheet" href="{{ url('public/city/admin-orders.css') }}?v={{ filemtime(public_path('city/admin-orders.css')) }}">
     <style>
         .orders-admin .card, .orders-admin .card-body { min-width: 0; }
         .orders-admin #orders-search { font-size: 16px; }
@@ -84,6 +85,7 @@
     </div>
 @endsection
 @section('script')
+    <script src="{{ url('public/city/admin-orders.js') }}?v={{ filemtime(public_path('city/admin-orders.js')) }}"></script>
     <script>
         function codpayment(booking_number, grand_total) {
             $('#modal_total_amount').val(grand_total);

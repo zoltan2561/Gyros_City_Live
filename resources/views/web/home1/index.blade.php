@@ -480,7 +480,7 @@
     <!-- Promotional bannersection3 End Here -->
 
     <!-- Store Reviews Section Start Here -->
-    @if (@helper::checkaddons('store_review'))
+    @if (helper::reviews_enabled('store_review'))
         @if (count($storereviews) >= 0)
             <section class="testimonial position-relative bg-section-gray sec-padding">
                 <div class="container">

@@ -2,20 +2,28 @@
 @section('styles')
     <link rel="stylesheet"
         href="{{ url(env('ASSETSPATHURL') . 'admin-assets/assets/css/bootstrap/bootstrap-select.v1.14.0-beta2.min.css') }}">
+    <link rel="stylesheet" href="{{ url('public/city/admin-item-form.css') }}?v={{ filemtime(public_path('city/admin-item-form.css')) }}">
 @endsection
 @section('content')
-    @include('admin.breadcrumb')
-    <div class="container-fluid">
+    <div class="container-fluid item-editor">
         <div class="row">
             <div class="col-12 mb-3">
                 <div class="card border-0">
                     <div class="card-body">
+                        <div class="item-editor-heading">
+                            <div>
+                                <a class="item-editor-back" href="{{ url('admin/item') }}">← Vissza a termékekhez</a>
+                                <h1>{{ $getitem->item_name }}</h1>
+                                <p>Termék szerkesztése · Az alapadatok és árak a Mentés gombbal frissülnek.</p>
+                            </div>
+                        </div>
                         <div id="privacy-policy-three" class="privacy-policy">
                             <form method="post" action="{{ URL::to('admin/item/update') }}" name="about" id="about"
                                 enctype="multipart/form-data">
                                 @csrf
                                 <input type="hidden" class="form-control" id="id" name="id"
                                     value="{{ $getitem->id }}">
+                                <h2 class="item-editor-section">Alapadatok</h2>
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="form-group">
@@ -76,6 +84,7 @@
                                                 class="col-form-label">{{ trans('labels.addons_group') }}</label>
                                             <?php $selected = explode(',', $getitem->addons_id); ?>
                                             <select name="addongroup_id[]" class="form-control selectpicker" multiple
+                                                data-none-selected-text="Válassz kiegészítőcsoportot" data-none-results-text="Nincs találat: {0}"
                                                 data-live-search="true" id="getaddons_id">
                                                 @foreach ($getaddongroup as $addongroup)
                                                     @php
@@ -95,30 +104,10 @@
                                         </div>
                                     </div>
                                     <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="item_type" class="col-form-label">{{ trans('labels.item_type') }}
-                                                <span class="text-danger">*</span> </label>
-                                            <div class="col-md-12">
-                                                <div class="form-check-inline w-100 mb-1">
-                                                    <input class="form-check-input me-0" type="radio" name="item_type"
-                                                        id="veg" value="1" required
-                                                        @if ($getitem->item_type == 1) checked @endif>
-                                                    <label class="form-check-label" for="veg">
-                                                        <img src="{{ helper::image_path('veg.svg') }}" alt=""
-                                                            srcset=""> {{ trans('labels.veg') }}</label>
-                                                </div>
-                                                <div class="form-check-inline w-100">
-                                                    <input class="form-check-input me-0" type="radio" name="item_type"
-                                                        id="nonveg" value="2" required
-                                                        @if ($getitem->item_type == 2) checked @endif>
-                                                    <label class="form-check-label" for="nonveg">
-                                                        <img src="{{ helper::image_path('nonveg.svg') }}" alt=""
-                                                            srcset=""> {{ trans('labels.nonveg') }}</label>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        @include('admin.item.type-options')
                                     </div>
                                 </div>
+                                <h2 class="item-editor-section">Extrák</h2>
                                 <div class="row">
                                     <div class="col-md-12 d-flex flex-wrap justify-content-between align-items-center">
                                         <div class="form-group">
@@ -197,6 +186,7 @@
                                         <div id="more_editextras_fields"></div>
                                     </div>
                                 </div>
+                                <h2 class="item-editor-section">Árak és elkészítés</h2>
                                 <div class="row">
                                     <div class="col-sm-6 col-md-6">
                                         <div class="form-group">
@@ -237,6 +227,7 @@
                                                         class="col-form-label">{{ trans('labels.tax') }}</label>
                                                     <?php $selected = explode(',', $getitem->tax); ?>
                                                     <select name="tax[]" class="form-control selectpicker" multiple
+                                                        data-none-selected-text="Nincs kiválasztva" data-none-results-text="Nincs találat: {0}"
                                                         data-live-search="true" id="tax">
                                                         @foreach ($gettax as $tax)
                                                             <option value="{{ $tax->id }}"
@@ -250,6 +241,7 @@
                                         </div>
                                     </div>
                                     <div class="col-md-12">
+                                        <h2 class="item-editor-section">Leírás és allergének</h2>
                                         <div class="form-group">
                                             <label for="description"
                                                 class="col-form-label">{{ trans('labels.description') }}</label>
@@ -266,11 +258,14 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="form-group {{ session()->get('direction') == '2' ? 'text-start' : 'text-end' }}">
+                                <div class="item-editor-actions">
+                                    <p>A képek külön menthetők az űrlap alatt.</p>
+                                    <div class="item-editor-action-buttons">
                                     <a href="{{ URL::to('admin/item') }}"
-                                        class="btn btn-danger">{{ trans('labels.cancel') }}</a>
+                                        class="btn btn-outline-secondary">{{ trans('labels.cancel') }}</a>
                                     <button class="btn btn-primary"
                                         @if (env('Environment') == 'sendbox') type="button" onclick="myFunction()" @else type="submit" @endif>{{ trans('labels.save') }}</button>
+                                    </div>
                                 </div>
                             </form>
                         </div>
@@ -278,21 +273,25 @@
                 </div>
             </div>
             <div class="col-12">
-                <button type="button" class="btn btn-primary mb-3 {{ session()->get('direction') == '2' ? 'float-start' : 'float-end' }}" data-bs-toggle="modal"
+                <div class="item-editor-gallery-heading">
+                    <div><h2>Termékképek</h2><p>A képeket a megnyíló ablakban mentheted, az alapadatoktól külön.</p></div>
+                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal"
                     data-bs-target="#AddProduct" data-whatever="@addProduct">{{ trans('labels.add_image') }}</button>
+                </div>
             </div>
             <div class="col-12">
                 <div class="row">
                     @foreach ($getitemimages as $itemimage)
-                        <div class="col-lg-2 col-md-4 col-sm-6 my-card dataid{{ $itemimage->id }}" id="table-image">
+                        <div class="col-lg-2 col-md-4 col-sm-6 my-card item-image-card dataid{{ $itemimage->id }}">
                             <img class="img-fluid rounded edit-item-image"
+                                alt="{{ $getitem->item_name }} termékképe" loading="lazy" width="180" height="150"
                                 src='{{ helper::image_path($itemimage->image) }}'>
                             <div class="actioncenter justify-content-center">
-                                <a href="javascript:void(0)" class="btn btn-sm btn-info square mx-1"
+                                <a href="javascript:void(0)" class="btn btn-sm btn-outline-primary square mx-1" aria-label="Kép cseréje" title="Kép cseréje"
                                     onclick="updateItemImage('{{ $itemimage->id }}','{{ URL::to('admin/item/showimage') }}')"><i
                                         class="fa-solid fa-pen-to-square" aria-hidden="true"></i> </a>
                                 @if (count($getitemimages) > 1)
-                                    <a href="javascript:void(0)" class="btn btn-sm btn-danger square mx-1"
+                                    <a href="javascript:void(0)" class="btn btn-sm btn-outline-danger square mx-1" aria-label="Kép törlése" title="Kép törlése"
                                         @if (env('Environment') == 'sendbox') type="button" onclick="myFunction()" @else onclick="deleteItemImage('{{ $itemimage->id }}','{{ $itemimage->item_id }}','{{ URL::to('admin/item/destroyimage') }}')" @endif><i
                                             class="fa fa-trash" aria-hidden="true"></i> </a>
                                 @endif
@@ -305,7 +304,7 @@
     </div>
 
     <!-- Edit Images -->
-    <div class="modal fade" id="EditImages" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabeledit"
+    <div class="modal fade item-image-modal" id="EditImages" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabeledit"
         aria-hidden="true">
         <div class="modal-dialog" role="document">
             <form method="post" name="editimg" class="editimg" id="editimg" enctype="multipart/form-data">
@@ -339,7 +338,7 @@
         </div>
     </div>
     <!-- Add Item Image -->
-    <div class="modal fade" id="AddProduct" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+    <div class="modal fade item-image-modal" id="AddProduct" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
         aria-hidden="true">
         <div class="modal-dialog" role="document">
             <form method="post" name="addproduct" class="addproduct" id="addproduct" enctype="multipart/form-data">

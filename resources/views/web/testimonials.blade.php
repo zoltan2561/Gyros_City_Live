@@ -2,133 +2,92 @@
 @section('content')
     <div class="breadcrumb-sec">
         <div class="container">
-            <div class="breadcrumb-sec-content">
-                <nav class="text-dark breadcrumb-divider" aria-label="breadcrumb">
-                    <ol class="breadcrumb">
-                        <li
-                            class="breadcrumb-item {{ session()->get('direction') == '2' ? 'breadcrumb-item-rtl ps-0' : '' }}">
-                            <a class="text-dark fw-600" href="{{ URL::to('/') }}">{{ trans('labels.home') }}</a>
-                        </li>
-                        <li
-                            class="breadcrumb-item {{ session()->get('direction') == '2' ? 'breadcrumb-item-rtl ps-0' : '' }}">
-                            <a class="text-muted" href="javascript:void(0)">{{ trans('labels.testimonials') }}</a>
-                        </li>
-                    </ol>
-                </nav>
-            </div>
+            <nav class="text-dark breadcrumb-divider" aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a class="text-dark fw-600" href="{{ url('/') }}">{{ trans('labels.home') }}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ trans('reviews.restaurant') }}</li>
+                </ol>
+            </nav>
         </div>
     </div>
-    <section>
-        <div class="testimonials-wrapper-1">
-            <div class="container">
-                @if (count($testimonials) > 0)
-                    <div class="row mt-5 mb-3">
-                        @foreach ($testimonials as $testimonialdata)
-                            <div class="col-lg-4 col-md-6 col-sm-12 d-flex mb-3">
-                                <div class="review">                                    
-                                    <div class="d-flex taxt-start col-12 p-2">
-                                        <img src="{{ $testimonialdata['user_info']->profile_image }}"
-                                            class="img-circle img-responsive"/>
-                                        <div class="mx-2">
-                                            <h4>{{ $testimonialdata['user_info']->name }}</h4>
-                                            <div class="review-star">
-                                                @if ($testimonialdata->ratting == 1)
-                                                    <i class="fa-solid fa-star fs-8"></i>
-                                                @elseif($testimonialdata->ratting == 2)
-                                                    <i class="fa-solid fa-star"></i>
-                                                    <i class="fa-solid fa-star"></i>
-                                                @elseif($testimonialdata->ratting == 3)
-                                                    <i class="fa-solid fa-star"></i>
-                                                    <i class="fa-solid fa-star"></i>
-                                                    <i class="fa-solid fa-star"></i>
-                                                @elseif($testimonialdata->ratting == 4)
-                                                    <i class="fa-solid fa-star"></i>
-                                                    <i class="fa-solid fa-star"></i>
-                                                    <i class="fa-solid fa-star"></i>
-                                                    <i class="fa-solid fa-star"></i>
-                                                @elseif($testimonialdata->ratting == 5)
-                                                    <i class="fa-solid fa-star"></i>
-                                                    <i class="fa-solid fa-star"></i>
-                                                    <i class="fa-solid fa-star"></i>
-                                                    <i class="fa-solid fa-star"></i>
-                                                    <i class="fa-solid fa-star"></i>
-                                                @endif
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <p class="gray"><span class="text-primary">"</span>{{ Str::limit($testimonialdata->comment, 150) }}<span
-                                                class="text-primary">"</span></p>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                    <div class="mb-5 d-flex justify-content-center">
-                        {{ $testimonials->links() }}
-                    </div>
-                @else
-                    @include('web.nodata')
-                @endif
-                @if (Auth::user() && Auth::user()->type == 2)
-                    @if (!helper::check_review_exist(Auth::user()->id))
-                    <div class="col-12 d-flex justify-content-center">
-                        <a class="btn btn-primary my-5 px-3 py-2" data-bs-toggle="modal" data-bs-target="#addreviewmodal">{{ trans('labels.add_review') }}<i class="fa-solid fa-plus px-1"></i> </a>
-                    </div>
-                    @endif
-                @else
-                <div class="col-12 d-flex justify-content-center">
-                    <a class="btn btn-primary my-5 px-3 py-2" href="{{ URL::to('/login') }}">{{ trans('labels.add_review') }}</a>
-                </div>
-                @endif
-            </div>
-            <!-- ADD_REVIEW_ODAL_START -->
-            <div class="modal fade" id="addreviewmodal" tabindex="-1" aria-labelledby="addreviewmodalLabel"
-                aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h4 class="modal-title fw-bold" id="addreviewmodalLabel">{{ trans('labels.add_review') }}</h4>
-                            <button type="button" class="btn-close {{ session()->get('direction') == 2 ? 'close' : '' }}" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <form action="{{ URL::to('/add-review') }}" method="POST" class="mb-0">
-                            @csrf
-                            <div class="modal-body">
-                                <div class="form-body">
-                                    <div class="form-group col-lg-12 text-center">
-                                        <div class="review border-0 py-2">
-                                            <img src="{{ helper::image_path(@Auth::user()->profile_image) }}"
-                                                class="img-circle img-responsive mb-0" />
-                                            <h4 class="mb-0 mt-3">{{ @Auth::user()->name }}</h4>
-                                        </div>
-                                        <div class="star-rating">
-                                            @for ($i = 5; $i > 0; $i=$i-1)
-                                                <input type="radio" id="{{$i}}" name="rating" onclick="$('#ratting').val('{{$i}}')" {{$i == 1 ? 'checked' : ''}}>
-                                                <label for="{{$i}}"><i class="fa-solid fa-star" aria-hidden="true"></i></label>
+    <section class="testimonials-wrapper-1 py-5">
+        <div class="container">
+            <h1 class="mb-3">{{ trans('reviews.restaurant') }}</h1>
+            @if (!helper::reviews_enabled('store_review'))
+                <p class="alert alert-info" role="status">{{ trans('reviews.disabled') }}</p>
+            @else
+                <p class="text-muted">{{ trans('reviews.intro') }}</p>
+                <div class="row mt-4 mb-3">
+                    @forelse ($testimonials as $review)
+                        <div class="col-lg-4 col-md-6 col-sm-12 d-flex mb-3">
+                            <article class="review w-100">
+                                <div class="d-flex text-start p-2">
+                                    @if ($review->user_info?->profile_image)
+                                        <img src="{{ $review->user_info->profile_image }}" class="img-circle img-responsive" alt="">
+                                    @endif
+                                    <div class="mx-2">
+                                        <h2 class="h5">{{ $review->user_info?->name ?? trans('reviews.unknown_author') }}</h2>
+                                        <div class="review-star" aria-label="{{ trans('reviews.stars', ['count' => $review->ratting]) }}">
+                                            @for ($star = 1; $star <= 5; $star++)
+                                                <i class="{{ $star <= $review->ratting ? 'fa-solid' : 'fa-regular' }} fa-star" aria-hidden="true"></i>
                                             @endfor
-                                            @error('ratting')
-                                                <span class="text-danger"> <br> {{ $message }} </span>
-                                            @enderror
                                         </div>
-                                        <input type="hidden" name="ratting" id="ratting" value="1">
-                                    </div>
-                                    <div class="form-group col-lg-12">
-                                        <textarea name="message" rows="4" class="form-control" placeholder="Message" required></textarea>
-                                        @error('message')
-                                            <span class="text-danger"> {{ $message }} </span>
-                                        @enderror
+                                        <p class="text-muted small mb-0">{{ helper::date_format($review->created_at) }}</p>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="modal-footer justify-content-center border-0">
-                                <button type="button" class="btn btn-outline-danger px-4 py-2 fs-7" data-bs-dismiss="modal">{{ trans('labels.close') }}</button>
-                                <button type="submit" class="btn btn-primary px-4 py-2 fs-7">{{ trans('labels.save') }}</button>
-                            </div>
-                        </form>
-                    </div>
+                                <p class="gray">{{ $review->comment }}</p>
+                            </article>
+                        </div>
+                    @empty
+                        <p class="text-muted">{{ trans('reviews.empty') }}</p>
+                    @endforelse
                 </div>
-            </div>
-            <!-- ADD_REVIEW_ODAL_END -->
+                <div class="mb-4 d-flex justify-content-center">{{ $testimonials->links() }}</div>
+                @if (Auth::user() && (int) Auth::user()->type === 2)
+                    @if (helper::check_review_exist(Auth::id(), null))
+                        <p class="alert alert-info">{{ trans('reviews.already_reviewed') }}</p>
+                    @else
+                        <button type="button" class="btn btn-primary px-3 py-2" data-bs-toggle="modal" data-bs-target="#addreviewmodal">{{ trans('reviews.write') }}</button>
+                        <div class="modal fade" id="addreviewmodal" tabindex="-1" aria-labelledby="addreviewmodalLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h2 class="modal-title h4" id="addreviewmodalLabel">{{ trans('reviews.write') }}</h2>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ trans('labels.close') }}"></button>
+                                    </div>
+                                    <form action="{{ url('/add-review') }}" method="POST" class="mb-0">
+                                        @csrf
+                                        <div class="modal-body">
+                                            <fieldset class="mb-3 text-center">
+                                                <legend class="fs-6">{{ trans('reviews.ratings') }}</legend>
+                                                <div class="star-rating">
+                                                    @for ($star = 5; $star >= 1; $star--)
+                                                        <input type="radio" id="restaurant-review-star-{{ $star }}" name="ratting" value="{{ $star }}" required {{ (int) old('ratting') === $star ? 'checked' : '' }}>
+                                                        <label for="restaurant-review-star-{{ $star }}" aria-label="{{ trans('reviews.stars', ['count' => $star]) }}"><i class="fa-solid fa-star" aria-hidden="true"></i></label>
+                                                    @endfor
+                                                </div>
+                                                @error('ratting')<p class="text-danger">{{ $message }}</p>@enderror
+                                            </fieldset>
+                                            <label for="restaurant-review-comment" class="form-label">{{ trans('reviews.comment') }}</label>
+                                            <textarea id="restaurant-review-comment" name="comment" rows="4" class="form-control" maxlength="255" aria-describedby="restaurant-review-help">{{ old('comment') }}</textarea>
+                                            <p id="restaurant-review-help" class="text-muted small mt-1">{{ trans('reviews.comment_help') }}</p>
+                                            @error('comment')<p class="text-danger">{{ $message }}</p>@enderror
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">{{ trans('labels.close') }}</button>
+                                            <button type="submit" class="btn btn-primary">{{ trans('reviews.submit') }}</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                @elseif (!Auth::check() && helper::checkaddons('customer_login') && (int) helper::appdata()->login_required === 1)
+                    <p class="text-muted">{{ trans('reviews.login_help') }}</p>
+                    <a class="btn btn-primary" href="{{ url('/login') }}">{{ trans('labels.login') }}</a>
+                @endif
+            @endif
         </div>
     </section>
-
     @include('web.subscribeform')
 @endsection

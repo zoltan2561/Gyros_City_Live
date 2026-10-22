@@ -81,7 +81,9 @@ class HomeController extends Controller
                 );
             }
         }
-        $storereviews = Ratting::where('user_id', '1')->orderBy('reorder_id')->get();
+        $storereviews = Ratting::featuredTestimonials()->where('status', 1)
+            ->when(!helper::reviews_enabled('store_review'), fn ($query) => $query->whereRaw('1 = 0'))
+            ->orderBy('reorder_id')->get();
         $getteams = Team::select("id", "name", "designation", "fb", "youtube", "insta", "twitter", "description", "image")->orderBy('reorder_id')->take('6')->get();
         $getfaqs = Faq::select("id", "title", "description")->orderBy('reorder_id')->get();
         $getblogs = Blogs::orderBy('reorder_id')->take('3')->get();

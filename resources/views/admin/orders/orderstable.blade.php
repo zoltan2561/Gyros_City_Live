@@ -67,19 +67,7 @@
                             ? ($orderStatusNames[$orderdata->status . ':' . $orderdata->status_type . ':' . $orderdata->order_type] ?? '—')
                             : (helper::gettype($orderdata->status, $orderdata->status_type, $orderdata->order_type)->name ?? '—');
                     @endphp
-                    @if ($orderdata->status_type == 1)
-                        <small
-                            class="text-order-placed">{{ $orderStatusName }}</small>
-                    @elseif ($orderdata->status_type == 2)
-                        <small
-                            class="text-order-waitingpickup">{{ $orderStatusName }}</small>
-                    @elseif ($orderdata->status_type == 3)
-                        <small
-                            class="text-order-completed">{{ $orderStatusName }}</small>
-                    @elseif ($orderdata->status_type == 4)
-                        <small
-                            class="text-order-cancelled">{{ $orderStatusName }}</small>
-                    @endif
+                    @include('admin.orders.status-control', ['statusOptions' => isset($orderStatusOptions) ? $orderStatusOptions->get($orderdata->order_type, collect()) : collect()])
                 </td>
                 <td>
                     <div class="d-flex flex-wrap gap-1">

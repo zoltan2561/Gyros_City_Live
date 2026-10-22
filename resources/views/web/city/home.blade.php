@@ -7,8 +7,8 @@
         <div class="container city-hero-inner">
             <div class="city-hero-copy">
                 <p class="city-eyebrow"><span></span> Vásárosnamény · Gyros City</p>
-                <h1 id="city-hero-title">Nagy éhség.<br><em>Nagy kedvencek.</em></h1>
-                <p class="city-hero-description">Egy szaftos burger? A kedvenc gyrosod?<br>Válaszd ki, mihez van ma kedved.</p>
+                <h1 id="city-hero-title">Ha éhes vagy,<br><em>jó helyen jársz.</em></h1>
+                <p class="city-hero-description">Gyros, burger, pizza, frissensült vagy valami igazán kiadós?<br>Válaszd ki a kedvenced, mi elkészítjük.</p>
                 <div class="city-hero-actions"><a href="{{ route('categories') }}" class="city-button">Mutasd az étlapot <span aria-hidden="true">↗</span></a><a class="city-hero-phone" href="tel:+36205976297"><small>Inkább telefonon?</small>06 20 597 6297</a></div>
             </div>
             <span class="city-hero-caption">A kedvenceid egy helyen.</span>
@@ -36,5 +36,6 @@
         </div>
     </section>
     <section class="city-visit"><div class="container city-visit-inner"><div><p class="city-eyebrow">Itt találsz minket</p><h2>Ugorj be.<br>Vagy rendelj haza.</h2><p>Vásárosnamény, Ifjúság út 51/b.</p><div class="d-flex flex-wrap gap-3"><a class="city-button" href="{{ route('contact-us') }}">Elérhetőség és útvonal ↗</a><a class="city-text-link" href="tel:+36205976297">06 20 597 6297</a></div></div><div class="city-visit-note"><span class="city-wordmark">Gyros<span>City</span></span><p>Burgerek, gyrosok és még sok kedvenc.<br>Találkozunk a Cityben!</p><a href="https://www.facebook.com/gyroscity" target="_blank" rel="noopener noreferrer" class="city-text-link">A Facebookon is megtalálsz ↗</a></div></div></section>
+    @include('web.city.google-review')
 </div>
 @endsection

@@ -46,7 +46,7 @@
         }
     </style>
     @yield('styles')
-    <link rel="stylesheet" href="{{ url('public/city/city.css') }}?v=20261020-2">
+    <link rel="stylesheet" href="{{ url('public/city/city.css') }}?v={{ filemtime(public_path('city/city.css')) }}">
     <link rel="stylesheet" href="{{ url('public/city/builder.css') }}?v=20261020-2">
 
 
@@ -275,12 +275,13 @@
     <!-- MODAL_USER_TYPE_SELECTION--END -->
 
     <!-- ADD_REVIEW_ODAL_START -->
+    @if (helper::reviews_enabled('product_review') && Auth::user() && (int) Auth::user()->type === 2)
     <div class="modal" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content rounded-4">
                 <div class="modal-header">
-                    <h4 class="modal-title fw-bold" id="reviewmodalLabel">
-                        {{ trans('labels.add_review') }}</h4>
+                    <h4 class="modal-title fw-bold" id="reviewModalLabel">
+                        {{ trans('reviews.write') }}</h4>
                     <button type="button" class="btn-close {{ session()->get('direction') == 2 ? 'close' : '' }}"
                         data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -291,25 +292,28 @@
                             <div class="form-group col-lg-12">
                                 <div class="d-flex align-items-center gap-3">
                                     <div class="review-modal-img">
-                                        <img src="" class="h-100 w-100 object-fit-cover rounded-4 border" />
+                                        <img src="{{ helper::image_path(helper::appdata()->no_data_image) }}" class="h-100 w-100 object-fit-cover rounded-4 border" alt="" />
                                     </div>
                                     <p class="fw-600 mb-0" id="data-item-name"></p>
                                 </div>
+                                <fieldset class="mt-3">
+                                <legend class="fs-6">{{ trans('reviews.ratings') }}</legend>
                                 <div class="star-rating">
                                     @for ($i = 5; $i > 0; $i = $i - 1)
-                                        <input type="radio" id="{{ $i }}" name="rating"
-                                            onclick="$('#ratting').val('{{ $i }}')"
-                                            {{ $i == 1 ? 'checked' : '' }}>
-                                        <label for="{{ $i }}"><i class="fa-solid fa-star fs-4"
+                                        <input type="radio" id="product-review-star-{{ $i }}" name="ratting" value="{{ $i }}" required
+                                            {{ (int) old('ratting') === $i ? 'checked' : '' }}>
+                                        <label for="product-review-star-{{ $i }}" aria-label="{{ trans('reviews.stars', ['count' => $i]) }}"><i class="fa-solid fa-star fs-4"
                                                 aria-hidden="true"></i></label>
                                     @endfor
                                 </div>
-                                <input type="hidden" name="ratting" id="ratting" value="1">
+                                @error('ratting')<p class="text-danger">{{ $message }}</p>@enderror
+                                </fieldset>
                             </div>
                             <div class="mt-3">
-                                <label for="form-label"><span class="fs-7">{{ trans('labels.write_review') }}
-                                        ({{ trans('labels.optional') }})</span></label>
-                                <textarea name="comment" rows="2" class="form-control mt-1" placeholder="Message"></textarea>
+                                <label for="product-review-comment" class="fs-7">{{ trans('reviews.comment') }}</label>
+                                <textarea id="product-review-comment" name="comment" rows="2" class="form-control mt-1" maxlength="255" aria-describedby="product-review-help">{{ old('comment') }}</textarea>
+                                <p id="product-review-help" class="text-muted small mt-1">{{ trans('reviews.comment_help') }}</p>
+                                @error('comment')<p class="text-danger">{{ $message }}</p>@enderror
                             </div>
                             <input type="hidden" name="item_id" id="data-item-id" value="">
                         </div>
@@ -322,7 +326,7 @@
                             </div>
                             <div class="col-sm-6">
                                 <button type="submit"
-                                    class="btn btn-primary px-4 fs-7 w-100">{{ trans('labels.save') }}</button>
+                                    class="btn btn-primary px-4 fs-7 w-100">{{ trans('reviews.submit') }}</button>
                             </div>
                         </div>
                     </div>
@@ -330,6 +334,7 @@
             </div>
         </div>
     </div>
+    @endif
     <!-- ADD_REVIEW_ODAL_END -->
 
 

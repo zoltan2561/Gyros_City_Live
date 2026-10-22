@@ -367,11 +367,41 @@ class helper
 
     public static function check_review_exist($user_id, $item_id)
     {
-        $data = Ratting::where('user_id', $user_id)->where('item_id', $item_id)->first();
+        $data = Ratting::customerReviews()->where('user_id', $user_id)->where('item_id', $item_id)->first();
         if (!empty($data)) {
             return 1;
         }
         return 0;
+    }
+
+    public static function reviews_enabled($kind = null): bool
+    {
+        $settings = Settings::first();
+        if (!$settings || (int) ($settings->reviews_enabled ?? 2) !== 1) {
+            return false;
+        }
+        return $kind === null
+            ? (bool) (self::checkaddons('product_review') || self::checkaddons('store_review'))
+            : (bool) self::checkaddons($kind);
+    }
+
+    public static function item_review_average($itemId): float
+    {
+        if (!self::reviews_enabled('product_review')) return 0;
+        // Product lists share one aggregate query rather than querying each card.
+        $request = request();
+        if (!$request->attributes->has('gycity_review_averages')) {
+            $averages = Ratting::customerReviews()->where('status', 1)->whereNotNull('item_id')
+                ->groupBy('item_id')->selectRaw('item_id, AVG(ratting) AS approved_average')
+                ->pluck('approved_average', 'item_id')->all();
+            $request->attributes->set('gycity_review_averages', $averages);
+        }
+        return (float) ($request->attributes->get('gycity_review_averages')[$itemId] ?? 0);
+    }
+
+    public static function forget_review_averages(): void
+    {
+        request()->attributes->remove('gycity_review_averages');
     }
     public static function get_theme()
     {

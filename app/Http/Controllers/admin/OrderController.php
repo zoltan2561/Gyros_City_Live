@@ -50,12 +50,14 @@ class OrderController extends Controller
         $totalprocessing = (int) $totals->processing;
         $totalcompleted = (int) $totals->completed;
         $totalcancelled = (int) $totals->cancelled;
-        $orderStatusNames = CustomStatus::all(['id', 'type', 'order_type', 'name'])
+        $statuses = CustomStatus::all();
+        $orderStatusOptions = $statuses->where('is_available', 1)->where('is_deleted', 2)->sortBy('reorder_id')->groupBy('order_type');
+        $orderStatusNames = $statuses
             ->mapWithKeys(fn ($status) => [$status->id.':'.$status->type.':'.$status->order_type => $status->name])->all();
         $orderPaymentNames = Payment::pluck('payment_name', 'payment_type')->all();
         $getdriver = User::where('type', '3')->where('is_available', 1)->orderByDesc('id')->get(['id', 'name']);
         $ordersPaginated = true;
-        return view('admin.orders.index', compact('getorders', 'getdriver', 'totalorders', 'totalprocessing', 'totalcompleted', 'totalcancelled', 'orderStatusNames', 'orderPaymentNames', 'ordersPaginated'));
+        return view('admin.orders.index', compact('getorders', 'getdriver', 'totalorders', 'totalprocessing', 'totalcompleted', 'totalcancelled', 'orderStatusNames', 'orderStatusOptions', 'orderPaymentNames', 'ordersPaginated'));
     }
 
     public function update(Request $request)
@@ -191,11 +193,11 @@ class OrderController extends Controller
     }
     public function invoice(Request $request)
     {
-        $od = Order::where('id', $request->id)->first();
-        $orderdata = Order::with('user_info', 'driver_info')->where('order.id', $request->id)->first();
+        $orderdata = Order::with('user_info', 'driver_info')->where('order.id', $request->id)->firstOrFail();
         $ordersdetails = OrderDetails::where('order_details.order_id', $request->id)->get();
         $getdriver = User::where('type', '3')->where('is_available', 1)->orderByDesc('id')->get();
-        return view('admin.orders.invoice', compact('orderdata', 'ordersdetails', 'getdriver'));
+        $orderPaymentName = Payment::where('payment_type', $orderdata->transaction_type)->value('payment_name') ?? '—';
+        return view('admin.orders.invoice', compact('orderdata', 'ordersdetails', 'getdriver', 'orderPaymentName'));
     }
     public function print(Request $request)
     {

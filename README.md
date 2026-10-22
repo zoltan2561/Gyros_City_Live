@@ -7,6 +7,24 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Pultos rendelésnézet – 2026. október 22.
+
+A nyitott rendelés állapota a rendeléslista legördülőjéből is módosítható, a meglévő jogosultság- és CSRF-védett végponton. Törlés előtt megerősítést kér; mentés alatt letiltja az ismételt beküldést. Siker után ugyanazt a keresést, oldalszámot és állapotszűrőt tölti újra. Nem igazolható mentésnél ellenőrzésre figyelmeztet; a lezárt és törölt rendelések csak állapotfeliratot mutatnak. Az első oldalon továbbra is 10 rendelés van, az állapotválaszték egy közös lekérdezésből készül.
+
+A részletek kompakt átvétel/fizetés, vásárló és szállítási cím kártyákon látszanak. A megye, ország, tájékozódási pont és irányítószám rejtett, címszerkesztéskor a korábban mentett értékük megmarad. A termék mentett választásai kattintás nélkül jelennek meg: a `---` kezdetű elhagyások piros „Nem kéri”, az `extras_name` tételei zöld „Extra”, az `addons_name` választásai vastag fekete feliratot kapnak. Az elhagyás jelölése mindkét listában elsőbbséget élvez. A besorolás a mentett névlistákból készül, nem a jelenlegi katalógusból. A mennyiség kiemelt, mobilon a termékek külön sorblokkokban olvashatók.
+
+A kiadáshoz a `public/city/admin-orders.css` és `admin-orders.js` fájlok is szükségesek; ehhez a változtatáshoz nem kell migráció vagy npm-build. Ellenőrzés: 221 PHP-teszt / 968 ellenőrzés, 40 JavaScript-teszt; helyi QA-rendelésen listából mentés, hiba-visszajelzés és címszerkesztés, illetve 360/390/820/1440 px-es nézetek ellenőrizve. Élesítés és push nem történt.
+
+## Értékelések és Google-visszajelzés – 2026. október 22.
+
+A FoodPRO vásárlói értékelésmodulja átkerült: az **Admin → Értékelések** oldalon étterem- és termékértékelések szűrhetők, jóváhagyhatók, elrejthetők és törölhetők. A tulajdonos kapcsolhatja a modult és az automatikus jóváhagyást; a 29-es moduljoggal rendelkező munkatárs moderálhat. Egy vásárló az éttermet és minden ételt külön, egyszer értékelhet. A csillagszám kötelező, a legfeljebb 255 karakteres szöveg opcionális. Csak közzétett vásárlói termékértékelések számítanak bele az átlagba; a kézzel felvett kiemelt idézetek külön kezelhetők.
+
+**Alapból kikapcsolva.** A `2026_10_22_000001_add_reviews_enabled_to_settings.php` migráció egy `reviews_enabled` mezőt ad a `settings` táblához, 2-es (kikapcsolt) alapértékkel. Nem kapcsol be addont, nem töröl vagy importál véleményt. Migráció előtti hiányzó mezőnél is kikapcsolt marad a vendégoldal. Így a csillagok, értékelési fülek, gombok és űrlapok nem jelennek meg; a közvetlen beküldés 403-at ad. A korábbi vélemények az adminban megmaradnak. Ez egy további kiadási migráció a korábbi ajándékakció- és hírlevélmigráció mellett: az élesítés felmérését ennek megfelelően kell kiegészíteni, általános migrálás vagy helyi adatbázisimport helyett.
+
+A főoldal alján külön Google-felhívás van, a meglévő `google_review_url` beállítással. Ez a belső modultól független, nem ágyaz be Google-szkriptet vagy kitalált csillagátlagot; hiányzó vagy nem HTTPS-link esetén nem jelenik meg. Az új `public/city/admin-reviews.css` a kiadás része, a `city.css` gyorsítótára fájlidővel frissül. Npm-build nem szükséges.
+
+Ellenőrzés: 217 PHP-teszt / 946 ellenőrzés és 34 JavaScript-teszt sikeres; az új `ReviewPortTest` 13 esetet tartalmaz. Elkülönített helyi QA-adatbázison böngészőben igazolva a beküldés → jóváhagyás → megjelenés → kikapcsolás folyamata, a letiltott közvetlen beküldés, a nulla vendégoldali csillag/értékelőfelület és a független Google-gomb. Főoldal, étlap, termékoldal, véleményoldal és admin 360/390/820/1440 px-en túllógás nélkül ellenőrizve. A migráció csak a helyi QA-adatbázison futott, a modul kikapcsolva maradt; éles írás, commit vagy push nem történt.
+
 ## FoodPRO hibajavítások átemelése – 2026. október 22.
 
 A kosár feltéteit, extráit és árait a katalógusból ellenőrzi a szerver. Rendeléskor újraszámolja az árakat, adókat, kuponkedvezményt és kiszállítási díjat; ellenőrzi a mennyiségi és összeghatárokat, valamint az aktív fizetési módot. A készpénzes végponton nem lehet online fizetést késznek jelölni. A Barion a tranzakció indításakor mentett környezetet használja, és csak egyező fizetett összegből készít rendelést.
@@ -31,6 +49,8 @@ Kijelentkezéskor a megjegyzett süti és a szerveres munkamenet megszűnik; a r
 Ellenőrzés: 185 PHP-teszt / 835 ellenőrzés sikeres; PHP 8.4 alatt 25 kapcsolódó teszt sikeres. Az új izolált tesztek vásárló, tulajdonos és pultos esetén ellenőrzik a süti 30 napos lejáratát, a megjegyzett belépés visszaállítását és kijelentkezés utáni visszavonását; az OTP és elutasított fiókok is lefedettek. Helyi QA-adatbázison valódi böngésző-újraindítás után, kizárólag a megjegyzett sütit visszaadva a profil és a fiók kosara elérhető maradt; kijelentkezés után a régi süti visszautasítva. Tárhelyi telepítés és ottani próba még szükséges.
 
 ## Admin termékkezelő – 2026. október 21.
+
+Október 22-i felületi finomítás: az új és a szerkesztő űrlap terméktípus-választója képfájl helyett feliratos, billentyűzettel is kezelhető rádiógombokat használ. A hiányzó ikonok így nem cserélődnek óriási helyőrző képre. Az űrlap tagolt szakaszokat, jól elérhető mentési sávot és korlátozott méretű képgalériát kapott; a képkezelés külön mentése egyértelműen jelölve van. Az új `public/city/admin-item-form.css` a kiadás része, npm-build és migráció nélkül. Helyi QA-böngészőben mindkét űrlap 360/390/820/1440 px-en túllógás nélkül ellenőrizve; a választó kattintással és billentyűzettel is a megfelelő mezőértéket adja. Az `AdminProductsTest` 13 tesztje / 62 ellenőrzése sikeres. Tárhelyi telepítés ebben a körben nem történt.
 
 A külön „Ma nem elérhető” gomb minden termék sorában megmaradt: egy kattintással letiltható mára, az „Újra elérhető” gombbal visszakapcsolható. A meglévő napi elérhetőségi végpontot használja, szerkesztőablak nélkül; a keresés és szűrők megmaradnak.
 

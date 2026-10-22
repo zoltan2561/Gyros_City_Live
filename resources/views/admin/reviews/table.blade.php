@@ -1,51 +1,36 @@
-<table class="table table-striped table-bordered zero-configuration">
-    <thead>
-        <tr>
-            <th>#</th>
-            <th>{{ trans('labels.item_name') }}</th>
-            <th>{{ trans('labels.rating') }}</th>
-            <th>{{ trans('labels.review') }}</th>
-            <th>{{ trans('labels.status') }}</th>
-            <th>{{ trans('labels.created_date') }}</th>
-            <th>{{ trans('labels.updated_date') }}</th>
-            <th>{{ trans('labels.action') }}</th>
-        </tr>
-    </thead>
+<table class="table table-striped align-middle">
+    <thead><tr>
+        <th>#</th><th>{{ trans('reviews.author') }}</th><th>{{ trans('labels.item_name') }}</th>
+        <th>{{ trans('reviews.ratings') }}</th><th>{{ trans('labels.review') }}</th>
+        <th>{{ trans('labels.status') }}</th><th>{{ trans('labels.created_date') }}</th><th>{{ trans('labels.action') }}</th>
+    </tr></thead>
     <tbody>
-        @php $i = 1; @endphp
-        @foreach ($getreview as $reviews)
+        @forelse ($getreview as $review)
             <tr>
-                <td>@php echo $i++; @endphp</td>
-                <td>{{ @$reviews->item_info->item_name }}</td>
-                <td><i class="fa fa-star text-warning"></i> {{ number_format($reviews->ratting, 1) }} </td>
-                <td><small>{{ $reviews->comment }}</small></td>
-                <td>
-                    @if ($reviews->status == 1)
-                        <a class="btn btn-sm btn-success square" tooltip="Avtive"
-                            @if (env('Environment') == 'sendbox') onclick="myFunction()"
-                    @else onclick="StatusUpdate('{{ $reviews->id }}','2','{{ URL::to('admin/reviews/status') }}')" @endif>
-                            <i class="fa-sharp fa-solid fa-check"></i></a>
-                    @else
-                        <a class="btn btn-sm btn-danger square" tooltip="Deavtive"
-                            @if (env('Environment') == 'sendbox') onclick="myFunction()"
-                    @else onclick="StatusUpdate('{{ $reviews->id }}','1','{{ URL::to('admin/reviews/status') }}')" @endif>
-                            <i class="fa-sharp fa-solid fa-xmark"></i></a>
-                    @endif
-                </td>
-                <td>
-                    {{ helper::date_format($reviews->created_at) }} <br>
-                    {{ helper::time_format($reviews->created_at) }}
-                </td>
-                <td>
-                    {{ helper::date_format($reviews->updated_at) }} <br>
-                    {{ helper::time_format($reviews->updated_at) }}
-                </td>
-                <td>
-                    <a class="btn btn-sm btn-danger square" tooltip="Delete"
-                        @if (env('Environment') == 'sendbox') onclick="myFunction()" @else onclick="DeleteData('{{ $reviews->id }}','{{ URL::to('admin/reviews/destroy') }}')" @endif><i
-                            class="fa fa-trash"></i></a>
-                </td>
+                <td>{{ $getreview->firstItem() + $loop->index }}</td>
+                <td>{{ $review->user_info->name ?? trans('reviews.unknown_author') }}</td>
+                <td>{{ $review->item_id ? ($review->item_info->item_name ?? trans('reviews.product')) : trans('reviews.restaurant') }}</td>
+                <td class="text-nowrap"><i class="fa fa-star text-warning" aria-hidden="true"></i> {{ $review->ratting }}/5</td>
+                <td style="min-width:180px;max-width:360px;white-space:normal;overflow-wrap:anywhere">{{ $review->comment }}</td>
+                <td><span class="badge {{ (int)$review->status === 1 ? 'bg-success' : 'bg-warning text-dark' }}">{{ trans((int)$review->status === 1 ? 'reviews.published' : 'reviews.pending') }}</span></td>
+                <td class="text-nowrap">{{ helper::date_format($review->created_at) }}</td>
+                <td><div class="d-flex gap-2 flex-wrap">
+                    <form method="post" action="{{ url('admin/reviews/status') }}">
+                        @csrf
+                        <input type="hidden" name="id" value="{{ $review->id }}">
+                        <input type="hidden" name="status" value="{{ (int)$review->status === 1 ? 2 : 1 }}">
+                        <button class="btn btn-sm btn-outline-primary" type="submit">{{ trans((int)$review->status === 1 ? 'reviews.hide' : 'reviews.approve') }}</button>
+                    </form>
+                    <form method="post" action="{{ url('admin/reviews/destroy') }}" onsubmit="return confirm(@js(trans('reviews.delete_confirm')))">
+                        @csrf
+                        <input type="hidden" name="id" value="{{ $review->id }}">
+                        <button class="btn btn-sm btn-outline-danger" type="submit">{{ trans('reviews.delete') }}</button>
+                    </form>
+                </div></td>
             </tr>
-        @endforeach
+        @empty
+            <tr><td colspan="8" class="text-center py-4 text-muted">{{ trans('reviews.admin_empty') }}</td></tr>
+        @endforelse
     </tbody>
 </table>
+{{ $getreview->withQueryString()->links() }}

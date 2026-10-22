@@ -27,3 +27,11 @@
 .city-catalog-mobile .city-catalog-link{display:flex;align-items:center;justify-content:center;min-height:48px;padding:10px 6px;font-size:13px;font-weight:700;color:#eee7db;border-bottom:3px solid transparent}
 .city-catalog-mobile .city-catalog-link:hover,.city-catalog-mobile .city-catalog-link.active{color:var(--city-yellow);border-bottom-color:var(--city-yellow)}
 @media(max-width:991px){.city-site .city-cart-feedback{top:calc(160px + env(safe-area-inset-top,0px))}}
+.city-google-review{padding:42px 0;background:#f8f5ee;border-top:1px solid #e6dfd2}
+.city-google-review-inner{display:flex;align-items:center;justify-content:space-between;gap:28px}
+.city-google-review h2{font-size:clamp(25px,3vw,36px);letter-spacing:-.035em;line-height:1.2;margin:8px 0 12px;color:#29231e}
+.city-google-review p:not(.city-eyebrow){color:#6d6258;max-width:580px;font-size:14px;line-height:1.7;margin:0}
+.city-google-review .city-eyebrow{color:#796653;margin:0}
+.city-google-review .city-button{flex-shrink:0;background:#2d2925;border-color:#2d2925;color:#fff;white-space:normal;text-align:center}
+.city-google-review .city-button:hover{background:#4a4037}
+@media(max-width:767px){.city-google-review{padding:32px 0}.city-google-review-inner{flex-direction:column;align-items:flex-start;gap:22px}.city-google-review .city-button{width:100%;justify-content:center;min-height:48px}.city-google-review h2{font-size:27px}}

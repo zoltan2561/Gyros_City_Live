@@ -28,6 +28,11 @@ class Item extends Model
     protected $table = 'item';
     protected $fillable = ['cat_id', 'subcat_id', 'item_name', 'slug', 'image', 'item_type', 'has_variation', 'attribute', 'price', 'original_price', 'addons_id', 'item_description', 'preparation_time', 'tax', 'avg_ratting', 'discount_percentage', 'item_status', 'is_featured', 'is_deleted', 'delivery_time'];
 
+    public function getAvgRattingAttribute($value): float
+    {
+        return \App\Helpers\helper::item_review_average($this->id);
+    }
+
     public function subcategory_info()
     {
         return $this->hasOne('App\Models\Subcategory', 'id', 'subcat_id')->select('subcategories.id', 'subcategories.subcategory_name', 'subcategories.slug');

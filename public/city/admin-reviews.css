@@ -1,0 +1,12 @@
+.admin-reviews-page{max-width:1280px;margin-inline:auto;padding-bottom:28px}
+.admin-reviews-page .card{border:1px solid #e1e6ee!important;border-radius:12px}
+.admin-reviews-page .card-body{padding:24px}
+.admin-reviews-page .form-check{display:flex;align-items:center;gap:10px;padding-left:0;min-height:42px}
+.admin-reviews-page .form-check-input{float:none;flex:none;margin:0;width:18px;height:18px}
+.admin-reviews-page .form-switch .form-check-input{width:36px}
+.admin-reviews-page .form-check-label{cursor:pointer;line-height:1.5}
+.admin-reviews-page .btn{min-height:42px}
+.admin-reviews-page .table-responsive{max-width:100%}
+.admin-reviews-page .pagination{flex-wrap:wrap;gap:3px}
+@media(max-width:767px){.admin-reviews-page{padding-inline:12px}.admin-reviews-page .card-body{padding:18px 15px}.admin-reviews-page .form-select{font-size:16px}.admin-reviews-page .h3{font-size:24px}.admin-reviews-page .form-check-label{font-size:14px}}
+@media(max-width:575px){body:has(.admin-reviews-page) .page-topbar .navbar-header .header-item{width:44px;padding-left:6px;padding-right:6px}}

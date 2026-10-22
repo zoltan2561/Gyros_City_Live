@@ -23,6 +23,8 @@ class AdminOrderListTest extends TestCase
         });
         Schema::create('custom_status', function (Blueprint $t) {
             $t->id(); $t->integer('type'); $t->integer('order_type'); $t->string('name');
+            $t->integer('is_available')->default(1); $t->integer('is_deleted')->default(2);
+            $t->integer('reorder_id')->default(0);
         });
         Schema::create('payment', function (Blueprint $t) {
             $t->id(); $t->integer('payment_type'); $t->string('payment_name');
@@ -89,5 +91,19 @@ class AdminOrderListTest extends TestCase
     {
         $this->assertSame([1], $this->listing('?q=QA-1&status=processing')['getorders']->pluck('id')->all());
         $this->assertSame([2], $this->listing('?q=06200000002')['getorders']->pluck('id')->all());
+    }
+
+    public function test_status_choices_are_active_ordered_and_separated_by_delivery_type(): void
+    {
+        foreach ([[10,1,2,1,2],[11,1,1,1,2],[12,2,1,1,2],[13,1,3,2,2],[14,1,4,1,1]] as [$id,$orderType,$position,$active,$deleted]) {
+            DB::table('custom_status')->insert(['id'=>$id,'type'=>2,'order_type'=>$orderType,'name'=>'Status '.$id,
+                'reorder_id'=>$position,'is_available'=>$active,'is_deleted'=>$deleted]);
+        }
+        DB::enableQueryLog();
+        $data = $this->listing();
+        $this->assertSame([11,10], $data['orderStatusOptions']->get(1)->pluck('id')->all());
+        $this->assertSame([12], $data['orderStatusOptions']->get(2)->pluck('id')->all());
+        $this->assertSame('Status 13', $data['orderStatusNames']['13:2:1']);
+        $this->assertLessThanOrEqual(6, count(DB::getQueryLog()));
     }
 }

@@ -67,7 +67,7 @@ class OtherPagesController extends Controller
     // testimonials
     public function testimonials(Request $request)
     {
-        $testimonials = Ratting::with('user_info')->orderByDesc('ratting.id')->paginate(9);
+        $testimonials = Ratting::publicReviews('store_review')->with('user_info')->orderByDesc('ratting.id')->paginate(9);
         return view('web.testimonials', compact('testimonials'));
     }
     // refund-policy

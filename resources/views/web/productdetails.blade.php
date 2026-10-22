@@ -97,7 +97,8 @@
                                                 {{ helper::currency_format($original_price) }}</del>
                                         @endif
                                     </div>
-                                    <a href="#review-tab">
+                                    @if (helper::reviews_enabled('product_review'))
+                                    <a href="#review-tab" data-open-reviews>
                                         <div class="d-flex align-items-center">
                                             <p class="fs-8 mb-0"><i
                                                     class="text-warning fa-solid fa-star {{ session()->get('direction') == '2' ? 'ps-1' : 'pe-1' }}"></i><span
@@ -108,6 +109,7 @@
                                                 {{ trans('labels.reviews') }})</span>
                                         </div>
                                     </a>
+                                    @endif
                                 </div>
 
                             </div>
@@ -141,6 +143,9 @@
                                 <div class="product-detail-countdown d-flex border-bottom gap-2 my-3 pb-3" id="countdown">
                                 </div>
                             @endif
+                            @if (helper::reviews_enabled('product_review'))
+                                <div class="my-3">@include('web.partials.product-review-action')</div>
+                            @endif
                             @include('web.city.builder', ['builderItem' => $getitemdata, 'builderModal' => false, 'builderAvailable' => $getitemdata->is_orderable])
                             <div class="d-flex flex-wrap justify-content-between mt-3 align-items-center">
                                 <div class="col-sm-6">
@@ -162,13 +167,7 @@
                                 </div>
                                 <div class="col-sm-6">
                                     <div class="d-flex align-items-center justify-content-end gap-2">
-                                        @if (helper::appdata()->google_review_url != '')
-                                            <a href="{{ helper::appdata()->google_review_url }}"
-                                                class="icon-box" target="_blank"
-                                                tooltip="{{ trans('labels.review') }}">
-                                                <i class="fa-solid fa-star fs-8"></i>
-                                            </a>
-                                        @endif
+
                                         @if (helper::appdata()->mobile != '')
                                             <a href="callto:{{ helper::appdata()->mobile }}"
                                                 tooltip="{{ trans('labels.call') }}" class="icon-box">
@@ -200,67 +199,19 @@
                 <div class="product-view" id="review-tab">
                     <ul class="nav nav-pills py-3 mb-4 border-bottom border-top" id="pills-tab" role="tablist">
                         <li class="nav-item" role="presentation">
-                            <a class="nav-link {{ session()->get('direction') == 2 ? 'ms-2 ms-md-3' : 'me-2 me-md-3' }} active"
-                               aria-current="page" data-bs-toggle="pill" data-bs-target="#pills-description"
-                               href="javascript:void(0)" aria-selected="true" role="tab">
-                                {{ trans('labels.description') }}
-                            </a>
+                            <button type="button" class="nav-link active" id="pills-description-tab" data-bs-toggle="pill"
+                                data-bs-target="#pills-description" aria-selected="true" role="tab" aria-controls="pills-description">{{ trans('labels.description') }}</button>
                         </li>
-                        {{-- ide jöhetnek további tabok (vélemények stb.) --}}
-                    </ul>
-
-                    <div class="tab-content" id="pills-tabContent">
-                        <div class="tab-pane fade show active" id="pills-description" role="tabpanel">
-                            @php
-                                // Allergének: HTML eltávolítása és normalizálás
-                                $raw = strip_tags((string)($getitemdata->item_allergens ?? ''));
-                                $raw = str_replace([';', ' '], [',', ''], $raw);
-                                $parts = array_filter(array_map('trim', explode(',', $raw)), fn($x) => $x !== '');
-                                $displayAllergens = implode(',', $parts);
-                            @endphp
-
-                            {{-- csak akkor jelenjen meg, ha van allergén --}}
-                            @if ($displayAllergens !== '')
-                                <div class="d-flex align-items-center flex-wrap gap-2 mt-2">
-                                    <a href="javascript:void(0)"
-                                       class="d-inline-flex align-items-center gap-2 text-decoration-none"
-                                       onclick="itemsallergens('{{ $getitemdata->id }}','{{ route('get_item_allergens') }}')"
-                                       aria-label="Allergének megnyitása">
-                        <span class="btn btn-sm btn-outline-info p-1 lh-1">
-                            <i class="fa-solid fa-info"></i>
-                        </span>
-                                        <span class="fw-600">{{ trans('labels.allergens') }}:</span>
-                                    </a>
-                                    <span class="text-muted">{{ $displayAllergens }}</span>
-                                    <a href="{{ url('alergens.html') }}" class="ms-2 text-decoration-underline small">
-                                        {{ __('allergén táblázat') }}
-                                    </a>
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-
-
-
-
-            @if (@helper::checkaddons('product_review'))
-                            @if (@helper::checkaddons('customer_login'))
-                                @if (helper::appdata()->login_required == 1)
-                                    <li class="nav-item" role="presentation">
-                                        <a class="nav-link" href="javascript:void(0)" data-bs-toggle="pill"
-                                            data-bs-target="#pills-review" aria-selected="false" role="tab"
-                                            tabindex="-1">{{ trans('labels.reviews') }}</a>
-                                    </li>
-                                @endif
-                            @endif
+                        @if (helper::reviews_enabled('product_review'))
+                            <li class="nav-item" role="presentation">
+                                <button type="button" class="nav-link" id="pills-review-tab" data-bs-toggle="pill"
+                                    data-bs-target="#pills-review" aria-selected="false" role="tab" aria-controls="pills-review" tabindex="-1">{{ trans('labels.reviews') }}</button>
+                            </li>
                         @endif
                     </ul>
-                </div>
-
-                <div class="tab-content" id="pills-tabContent">
-                    <div class="tab-pane fade active show" id="pills-description" role="tabpanel"
-                        aria-labelledby="pills-description-tab">
+                    <div class="tab-content" id="pills-tabContent">
+                        <div class="tab-pane fade active show" id="pills-description" role="tabpanel" aria-labelledby="pills-description-tab">
+                            @include('web.partials.item-allergens')
                         <div class="row mt-2">
                             <div class="col-auto">
                                 <h4 class="heading mb-3 fw-600 text-dark text-truncate">
@@ -288,9 +239,7 @@
                             </div>
                         </div>
                     </div>
-                    @if (@helper::checkaddons('product_review'))
-                        @if (@helper::checkaddons('customer_login'))
-                            @if (helper::appdata()->login_required == 1)
+                    @if (helper::reviews_enabled('product_review'))
                                 <div class="tab-pane fade" id="pills-review" role="tabpanel"
                                     aria-labelledby="pills-review-tab">
                                     <div class="row gx-4 gx-xxl-5 gy-md-0 gy-4">
@@ -477,15 +426,7 @@
                                             </div>
                                             <!-- Customer rating -->
                                             <div class="d-grid justify-items-center mt-4 mb-3">
-                                                @if (Auth::user() && Auth::user()->type == 2)
-                                                    <button class="btn btn-primary fs-7 write-review"
-                                                        data-item-id="{{ $getitemdata->id }}"
-                                                        data-item-name="{{ $getitemdata->item_name }}"
-                                                        data-item-image="{{ helper::image_path($getitemdata->item_image?->image_name ?? 'item-placeholder.png') }}">{{ trans('labels.write_review') }}</button>
-                                                @else
-                                                    <button class="btn btn-primary fs-7"
-                                                        onclick="showlogin()">{{ trans('labels.write_review') }}</button>
-                                                @endif
+                                                @include('web.partials.product-review-action')
                                             </div>
                                         </div>
 
@@ -504,7 +445,7 @@
                                                                     <div
                                                                         class="avatar avatar-lg mb-md-0 mb-2 flex-shrink-0 {{ session()->get('direction') == 2 ? ' ms-sm-3' : 'me-sm-3' }}">
                                                                         <img class="avatar-img rounded-circle w-100 h-100 object-fit-cover"
-                                                                            src="{{ $reviewdata->user_info->profile_image }}"
+                                                                            src="{{ $reviewdata->user_info?->profile_image ?? helper::image_path(helper::appdata()->no_data_image) }}"
                                                                             alt="avatar">
                                                                     </div>
                                                                     <!-- review avatar -->
@@ -515,7 +456,7 @@
                                                                             class="d-flex flex-wrap gap-2 justify-content-between mt-1 mt-md-0 mb-2">
                                                                             <div>
                                                                                 <h6 class="mb-0 fw-600">
-                                                                                    {{ $reviewdata->user_info->name }}
+                                                                                    {{ $reviewdata->user_info?->name ?? trans('reviews.unknown_author') }}
                                                                                 </h6>
                                                                                 <!-- Info -->
                                                                                 <p
@@ -546,8 +487,6 @@
                                         </div>
                                     </div>
                                 </div>
-                            @endif
-                        @endif
                     @endif
                 </div>
             </div>
@@ -620,7 +559,13 @@
             $("#data-item-name").text($(this).attr('data-item-name'));
             $("#data-item-id").val($(this).attr('data-item-id'));
             $("#reviewModal img").attr('src', $(this).attr('data-item-image'));
-            $('#reviewModal').modal('show');
+        });
+
+        document.querySelectorAll('[data-open-reviews]').forEach(link => {
+            link.addEventListener('click', () => {
+                const tab = document.getElementById('pills-review-tab');
+                if (tab) bootstrap.Tab.getOrCreateInstance(tab).show();
+            });
         });
 
         (() => {

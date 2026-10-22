@@ -129,12 +129,12 @@ class ItemController extends Controller
                 ->visibleOnMenu()
                 ->take(3)->get();
         }
-        $itemreviewdata = Ratting::with('user_info')->select('id', 'ratting', 'comment', 'item_id', 'user_id', 'created_at')->where('item_id', $getitemdata->id)->where('status', 1)->get();
-        $fivestaraverage = Ratting::where('item_id', $getitemdata->id)->where('status', 1)->where('ratting', 5)->count();
-        $fourstaraverage = Ratting::where('item_id', $getitemdata->id)->where('status', 1)->where('ratting', 4)->count();
-        $threestaraverage = Ratting::where('item_id', $getitemdata->id)->where('status', 1)->where('ratting', 3)->count();
-        $twostaraverage = Ratting::where('item_id', $getitemdata->id)->where('status', 1)->where('ratting', 2)->count();
-        $onestaraverage = Ratting::where('item_id', $getitemdata->id)->where('status', 1)->where('ratting', 1)->count();
+        $itemreviewdata = Ratting::publicReviews('product_review')->with('user_info')->select('id', 'ratting', 'comment', 'item_id', 'user_id', 'created_at')->where('item_id', $getitemdata->id)->where('status', 1)->get();
+        $fivestaraverage = Ratting::publicReviews('product_review')->where('item_id', $getitemdata->id)->where('status', 1)->where('ratting', 5)->count();
+        $fourstaraverage = Ratting::publicReviews('product_review')->where('item_id', $getitemdata->id)->where('status', 1)->where('ratting', 4)->count();
+        $threestaraverage = Ratting::publicReviews('product_review')->where('item_id', $getitemdata->id)->where('status', 1)->where('ratting', 3)->count();
+        $twostaraverage = Ratting::publicReviews('product_review')->where('item_id', $getitemdata->id)->where('status', 1)->where('ratting', 2)->count();
+        $onestaraverage = Ratting::publicReviews('product_review')->where('item_id', $getitemdata->id)->where('status', 1)->where('ratting', 1)->count();
         $data['fivestaraverage'] = $fivestaraverage;
         $data['fourstaraverage'] = $fourstaraverage;
         $data['threestaraverage'] = $threestaraverage;

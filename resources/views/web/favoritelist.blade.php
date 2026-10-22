@@ -45,6 +45,7 @@
                                                     <div class="cat-name py-1 px-2 col-auto text-center">
                                                         <span>{{ $itemdata['category_info']->category_name }}</span>
                                                     </div>
+                                                    @if (helper::reviews_enabled('product_review'))
                                                     <div class="">
                                                         <div class="d-flex fs-8 align-items-center">
                                                             <i class="fa-solid fa-star text-warning"></i>
@@ -53,6 +54,7 @@
                                                                 {{ number_format($itemdata->avg_ratting, 1) }}</p>
                                                         </div>
                                                     </div>
+                                                    @endif
                                                 </div>
                                                 <h5 class="item-card-title pb-3 fs-6 d-flex">
                                                     @if ($itemdata->item_type == 1)

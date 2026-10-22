@@ -40,6 +40,7 @@
     <link rel="stylesheet" href="{{ url('public/city/admin-sidebar.css') }}?v={{ filemtime(public_path('city/admin-sidebar.css')) }}">
     <script src="{{ url('public/city/admin-sidebar.js') }}?v={{ filemtime(public_path('city/admin-sidebar.js')) }}"
         data-storage-key="gycity:admin-sidebar:{{ url('/admin') }}"></script>
+    <style>#order-audio-warning[hidden], #order-audio-enable[hidden] { display: none !important; }</style>
     @yield('styles')
 </head>
 

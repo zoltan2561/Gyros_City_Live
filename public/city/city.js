@@ -38,6 +38,10 @@
             if (panel) panel.textContent = 'Az akciókat most nem sikerült betölteni. Frissítsd az oldalt.';
         }
     }
+    document.addEventListener('change', event => {
+        const choice = event.target.closest('[data-gift-choice]');
+        if (choice) choice.closest('label').querySelector('[data-gift-extra]').value = choice.selectedOptions[0]?.dataset.extraId || '0';
+    });
     document.addEventListener('submit', async event => {
         const form = event.target.closest('[data-gift-form]');
         if (!form) return;

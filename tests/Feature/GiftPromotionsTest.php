@@ -283,7 +283,8 @@ class GiftPromotionsTest extends TestCase
     public function test_card_draft_includes_the_gift_but_does_not_charge_it(): void
     {
         $promotion = $this->promotion(); $this->line(1, 2);
-        app(GiftPromotions::class)->choose($promotion->id, [3]);
+        DB::table('extras')->insert(['id'=>91,'item_id'=>3,'name'=>'Vaníliás','price'=>250]);
+        app(GiftPromotions::class)->choose($promotion->id, [3], 0, [91]);
         $gateway = Mockery::mock(BarionService::class); $gateway->shouldReceive('environment')->andReturn('test');
         $gateway->shouldReceive('startPayment')->once()->withArgs(function ($id, $email, $items, $total) {
             $this->assertCount(1, $items); $this->assertSame(2000.0, $total);
@@ -295,5 +296,47 @@ class GiftPromotionsTest extends TestCase
         $this->assertCount(2, $items);
         $this->assertSame('Ajándék: Kakaós palacsinta', $items[1]['item_name']);
         $this->assertSame(0, $items[1]['item_price']);
+        $this->assertSame('Vaníliás', $items[1]['extras_name']);
+        $this->assertSame(0, $items[1]['extras_total_price']);
+    }
+
+    public function test_gift_flavour_is_required_validated_and_saved_for_free(): void
+    {
+        $promotion = $this->promotion(['gift_item_ids' => [3]]); $this->line(1, 2);
+        DB::table('extras')->insert([
+            ['id'=>71,'item_id'=>3,'name'=>'Kakaós','price'=>250],
+            ['id'=>72,'item_id'=>3,'name'=>'Lekváros','price'=>300],
+            ['id'=>73,'item_id'=>5,'name'=>'Idegen extra','price'=>500],
+        ]);
+        $service = app(GiftPromotions::class);
+        $this->assertFalse($service->choose($promotion->id, [3]));
+        $this->assertFalse($service->choose($promotion->id, [3], 0, [73]));
+        $this->assertTrue($service->offers(Cart::all())->first()['pending']);
+        $response = $this->postJson('/cart/promotions', ['promotion_id'=>$promotion->id,'choices'=>[3],'extra_choices'=>[72],'buynow'=>0])
+            ->assertOk()->assertJson(['pending'=>false]);
+        $this->assertStringContainsString('Lekváros', $response->json('html'));
+        $gift = $service->giftLines(Cart::all())->first();
+        $this->assertSame('72', $gift->extras_id);
+        $this->assertSame('Lekváros', $gift->extras_name);
+        $this->assertSame('0', $gift->extras_price);
+        $this->assertSame(0, $gift->extras_total_price);
+        $this->assertSame(0, $gift->item_price);
+        DB::table('extras')->where('id',72)->delete();
+        $this->assertTrue($service->offers(Cart::all())->first()['pending']);
+        $this->assertNotNull($service->error(Cart::all()));
+        $this->assertCount(0, $service->giftLines(Cart::all()));
+    }
+
+    public function test_old_saved_gift_without_flavour_is_asked_again_and_choices_transfer_on_login(): void
+    {
+        $promotion = $this->promotion(['gift_item_ids'=>[3]]); $this->line(1,2);
+        session()->put('gift_choices.guest.0', [$promotion->id=>[3]]);
+        DB::table('extras')->insert(['id'=>81,'item_id'=>3,'name'=>'Vaníliás','price'=>200]);
+        $service = app(GiftPromotions::class);
+        $this->assertTrue($service->offers(Cart::all())->first()['pending']);
+        $this->assertTrue($service->choose($promotion->id,[3],0,[81]));
+        $service->transferGuestChoices(100,[0],false);
+        $this->assertSame([['item_id'=>3,'extra_id'=>81]],session('gift_choices.100.0.'.$promotion->id));
+        $this->assertNull(session('gift_choices.guest.0'));
     }
 }

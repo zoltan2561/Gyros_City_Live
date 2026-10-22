@@ -9,12 +9,17 @@
     const editor = document.getElementById('product-editor');
     const controls = {q: document.getElementById('product-search'), category: document.getElementById('product-category'),
         state: document.getElementById('product-state'), featured: document.getElementById('product-featured'), sort: document.getElementById('product-sort')};
+    const showUnavailable = document.getElementById('products-show-unavailable');
+    const visibilityKey = root.dataset.visibilityKey;
     const feedback = document.getElementById('products-feedback');
     let params = new URL(location.href).searchParams;
     const stateKey = 'gycity:product-list:' + location.pathname;
     try {
         if (![...params].length) params = new URLSearchParams(sessionStorage.getItem(stateKey) || '');
     } catch (_) { /* URL-based filters work without session storage. */ }
+    let visibility = params.get('show_unavailable');
+    try { visibility ??= localStorage.getItem(visibilityKey); } catch (_) {}
+    showUnavailable.checked = visibility !== '0';
     let reordering = false;
     let reorderSnapshot = [];
     let submitting = false;
@@ -36,6 +41,9 @@
     } catch (_) { /* Storage may be blocked; editing still works. */ }
     function remember() {
         const url = new URL(location.href);
+        if (showUnavailable.checked) url.searchParams.delete('show_unavailable');
+        else url.searchParams.set('show_unavailable', '0');
+        try { localStorage.setItem(visibilityKey, showUnavailable.checked ? '1' : '0'); } catch (_) {}
         ['dtsearch', 'search', 'option'].forEach(key => url.searchParams.delete(key));
         Object.entries(controls).forEach(([name, control]) => {
             if (control.value && !(name === 'sort' && control.value === 'menu')) url.searchParams.set(name, control.value);
@@ -49,7 +57,8 @@
     $.fn.dataTable.ext.search.push((settings, data, index) => {
         if (settings.nTable !== tableElement) return true;
         const row = settings.aoData[index].nTr;
-        return (!controls.category.value || row.dataset.category === controls.category.value)
+        return (showUnavailable.checked || row.dataset.orderable === '1')
+            && (!controls.category.value || row.dataset.category === controls.category.value)
             && (!controls.state.value || row.dataset.state === controls.state.value)
             && (!controls.featured.value || row.dataset.featured === controls.featured.value);
     });
@@ -79,7 +88,7 @@
             button.classList.toggle('is-selected', selected);
             button.setAttribute('aria-pressed', String(selected));
         });
-        const filtered = controls.q.value.trim() || controls.category.value || controls.state.value || controls.featured.value;
+        const filtered = controls.q.value.trim() || controls.category.value || controls.state.value || controls.featured.value || !showUnavailable.checked;
         const reorderButton = document.getElementById('products-reorder');
         reorderButton.disabled = Boolean(filtered) || !info.recordsTotal;
         reorderButton.title = filtered ? 'Sorrendezéshez előbb töröld a szűrőket.' : 'A teljes étlap sorrendjének módosítása';
@@ -90,15 +99,22 @@
         table.search(controls.q.value).order([orders[controls.sort.value] || orders.menu]).draw();
         updateCounters(); remember();
     }
-    Object.entries(controls).forEach(([name, control]) => control.addEventListener(name === 'q' ? 'input' : 'change', apply));
+    Object.entries(controls).forEach(([name, control]) => control.addEventListener(name === 'q' ? 'input' : 'change', () => {
+        if (control === controls.state && ['today', 'paused'].includes(control.value)) showUnavailable.checked = true;
+        apply();
+    }));
+    showUnavailable.addEventListener('change', apply);
     document.getElementById('products-filters').addEventListener('submit', event => { event.preventDefault(); apply(); });
     document.getElementById('products-filters').addEventListener('reset', () => {
+        showUnavailable.checked = true;
         Object.values(controls).forEach(control => { control.value = control === controls.sort ? 'menu' : ''; });
         apply();
     });
     root.querySelectorAll('[data-filter-state]').forEach(button => button.addEventListener('click', () => {
         if (reordering) return;
-        controls.state.value = button.dataset.filterState; apply();
+        controls.state.value = button.dataset.filterState;
+        if (['today', 'paused'].includes(controls.state.value)) showUnavailable.checked = true;
+        apply();
     }));
     table.on('draw', () => { updateCounters(); if (!reordering) remember(); });
     apply();
@@ -193,6 +209,7 @@
     }, true);
     function finishReorder() {
         if ($(body).hasClass('ui-sortable')) $(body).sortable('destroy');
+        showUnavailable.disabled = false;
         reordering = false; root.classList.remove('is-reordering');
         document.getElementById('products-reorder-help').hidden = true;
         Object.values(controls).forEach(control => { control.disabled = false; });
@@ -201,6 +218,7 @@
     }
     document.getElementById('products-reorder').addEventListener('click', () => {
         if (reordering || submitting) return;
+        showUnavailable.disabled = true;
         previousView = {sort: controls.sort.value, page: table.page()};
         controls.sort.value = 'menu';
         reordering = true; table.order([[0, 'asc']]).page.len(-1).draw();

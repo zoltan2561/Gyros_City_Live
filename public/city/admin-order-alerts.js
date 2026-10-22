@@ -49,8 +49,9 @@
     let soundReady = false;
     const originalTitle = document.title;
     let soundIssue = '';
+    let soundEnabled = false;
     const soundKey = script.dataset.storageKey + ':sound';
-    try { soundIssue = storage.getItem(soundKey) || ''; } catch (_) {}
+    try { soundIssue = storage.getItem(soundKey) || ''; soundEnabled = storage.getItem(soundKey + ':enabled') === '1'; } catch (_) {}
     function saveSoundIssue(value) {
         soundIssue = value;
         try { storage.setItem(soundKey, value); } catch (_) {}
@@ -76,10 +77,10 @@
     }
     function soundState() {
         if (soundIssue) showSoundIssue();
-        else if (!soundReady) warn('Kapcsold be a rendelési hangot. A gomb rövid próbahangot játszik le.', true);
+        else if (!soundReady && !soundEnabled) warn('Kapcsold be a rendelési hangot. A gomb rövid próbahangot játszik le.', true);
         else warning.hidden = true;
     }
-    async function play(ids = pending, preview = false) {
+    async function play(ids = pending, preview = false, quiet = false) {
         if (playing || (!ids.length && !preview)) return false;
         if (!audioUrl) {
             warn('Nincs rendelési hang beállítva. Válassz hangot az általános beállításokban.', false);
@@ -92,16 +93,22 @@
         try {
             prepareAudio();
             audio.currentTime = 0;
+            audio.volume = quiet ? 0 : 1;
             await audio.play();
+            if (generation !== playGeneration) return false;
+            if (quiet) { audio.pause(); audio.currentTime = 0; audio.volume = 1; }
             if (generation !== playGeneration) return false;
             // A blocked or deferred play must never postpone the next alert.
             tracker.mark(announced.filter(id => pending.includes(id)), Date.now());
             soundReady = true;
+            soundEnabled = true;
+            try { storage.setItem(soundKey + ':enabled', '1'); } catch (_) {}
             saveSoundIssue('');
             warning.hidden = true;
             return true;
         } catch (error) {
             if (generation !== playGeneration) return false;
+            if (audio) audio.volume = 1;
             saveSoundIssue(error.name === 'NotAllowedError' ? 'blocked' : 'failed');
             showSoundIssue();
             return false;
@@ -116,6 +123,13 @@
         if (audio) audio.pause();
         void play(pending, true);
     });
+    // A saved preference hides the repeated setup prompt, but actual playback errors
+    // still show it. A fresh document primes its own audio element on user interaction.
+    function primeSound() {
+        if (soundEnabled && !soundReady && !playing && audioUrl) void play([], true, true);
+    }
+    document.addEventListener('pointerdown', primeSound);
+    document.addEventListener('keydown', primeSound);
     if (script.dataset.audioFile) {
         audioUrl = new URL(script.dataset.audioBase + encodeURIComponent(script.dataset.audioFile), host.location.href).href;
         prepareAudio();

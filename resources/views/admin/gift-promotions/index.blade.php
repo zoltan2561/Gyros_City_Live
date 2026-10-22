@@ -44,7 +44,7 @@
                 </div>
                 <fieldset class="mb-3">
                     <legend class="fs-6">Miből választhat ajándékot?</legend>
-                    <p class="small text-muted">Minden választható íz külön étel legyen az étlapon. Az ajándék ára 0 Ft, fizetős extrák nélkül. A nem elérhető ajándékot nem ajánljuk fel.</p>
+                    <p class="small text-muted">Válaszd ki az ajándék terméket. Ha az ízei az extrák között szerepelnek, a vendég azok közül választ egyet. A kiválasztott íz is ingyen jár, és látszik a rendelésben. A nem elérhető ajándékot nem ajánljuk fel.</p>
                     <input type="search" class="form-control mb-2" placeholder="Ajándék keresése…" aria-label="Ajándék ételek keresése" data-filter-list="gift-items">
                     <div id="gift-items" class="border rounded p-3 city-admin-options">
                         @foreach ($items as $item)<label class="d-block mb-2"><input type="checkbox" name="gift_item_ids[]" value="{{ $item->id }}" @checked(in_array($item->id, old('gift_item_ids', $editing->gift_item_ids ?? [])))> {{ $item->item_name }} @if (!$item->is_orderable)<span class="text-muted">(jelenleg nem elérhető)</span>@endif</label>@endforeach

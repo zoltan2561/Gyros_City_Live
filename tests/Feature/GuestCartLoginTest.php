@@ -199,14 +199,20 @@ class GuestCartLoginTest extends TestCase
 
     public function test_the_selected_gift_stays_selected_after_login(): void
     {
+        Schema::create('extras', function (Blueprint $table) {
+            $table->id(); $table->integer('item_id'); $table->string('name'); $table->integer('price');
+        });
+        DB::table('extras')->insert(['id'=>81, 'item_id'=>3, 'name'=>'Vaníliás', 'price'=>250]);
         $promotion = GiftPromotion::create(['name' => 'Két pizza mellé ajándék', 'trigger_item_ids' => [1, 2],
             'required_qty' => 2, 'gift_item_ids' => [3], 'gift_qty' => 1, 'repeat' => true, 'active' => true]);
         $this->line(['qty' => 2]);
-        $this->postJson('/cart/promotions', ['promotion_id' => $promotion->id, 'choices' => [3], 'buynow' => 0])->assertOk();
+        $this->postJson('/cart/promotions', ['promotion_id' => $promotion->id, 'choices' => [3], 'extra_choices'=>[81], 'buynow' => 0])->assertOk();
         $this->login()->assertRedirect();
         $this->getJson('/cart/promotions')->assertOk()->assertJson(['pending' => false]);
         $gifts = app(GiftPromotions::class);
         $this->assertSame(3, $gifts->giftLines($gifts->cart())->first()?->item_id);
+        $this->assertSame('Vaníliás', $gifts->giftLines($gifts->cart())->first()?->extras_name);
+        $this->assertSame(0, $gifts->giftLines($gifts->cart())->first()?->extras_total_price);
     }
 
     public function test_current_quick_order_survives_and_an_older_quick_order_is_kept_in_the_regular_cart(): void

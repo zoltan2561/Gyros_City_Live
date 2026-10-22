@@ -4,8 +4,8 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const flush = () => new Promise(resolve => setImmediate(resolve));
 
-function setup({orders = [7], play = () => Promise.resolve(), useWorker = true, inline = false} = {}) {
-    const values = new Map(), events = {}, windowEvents = {}, timers = new Map(), audios = [], workers = [];
+function setup({orders = [7], play = () => Promise.resolve(), useWorker = true, inline = false, saved = []} = {}) {
+    const values = new Map(saved), events = {}, windowEvents = {}, timers = new Map(), audios = [], workers = [];
     let nextTimer = 0, now = 1000, fetches = 0, shows = 0;
     const buttons = {};
     const emitted = [];
@@ -23,7 +23,7 @@ function setup({orders = [7], play = () => Promise.resolve(), useWorker = true, 
             constructor(src) {this.src = src; this.pauses = 0; this.plays = 0; audios.push(this);}
             load() {this.loaded = true;}
             pause() {this.pauses++;}
-            play() {this.plays++; return state.play();}
+            play() {this.plays++; (this.playVolumes ||= []).push(this.volume); return state.play();}
         },
         AbortController,
         CustomEvent: class { constructor(type, options) { this.type=type; this.detail=options.detail; } },
@@ -130,4 +130,32 @@ test('unsupported workers still poll and focus or reconnect checks immediately',
     assert.equal(ui.audios[0].plays, 1);
     ui.windowEvents.focus(); await flush();
     assert.equal(ui.fetches(), 4);
+});
+
+test('enabled sound preference survives navigation but real playback failures show the retry button', async () => {
+    const first = setup({orders: []}); await flush(); await first.enable();
+    const next = setup({orders: [], saved: [...first.values]}); await flush();
+    assert.equal(next.nodes['order-audio-warning'].hidden, true);
+    assert.equal(next.audios[0].plays, 0);
+    next.state.orders = [19];
+    next.state.play = () => Promise.reject(Object.assign(new Error('blocked'), {name: 'NotAllowedError'}));
+    await next.tick();
+    assert.equal(next.nodes['order-audio-warning'].hidden, false);
+    await next.enable();
+    next.state.play = () => Promise.resolve(); await next.enable();
+    assert.equal(next.nodes['order-audio-warning'].hidden, true);
+});
+
+test('a new page primes sound silently on interaction without acknowledging pending orders', async () => {
+    const ui = setup({orders: [], saved: [['qa:sound:enabled','1']]}); await flush();
+    ui.events.pointerdown(); await flush();
+    assert.equal(ui.audios[0].plays, 1);
+    assert.equal(ui.audios[0].volume, 1);
+    assert.equal(ui.audios[0].playVolumes[0], 0);
+    assert.equal(ui.nodes['order-audio-warning'].hidden, true);
+    assert.deepEqual(JSON.parse(ui.values.get('qa')), {});
+    ui.state.orders = [21]; await ui.tick();
+    assert.equal(ui.audios[0].plays, 2);
+    assert.deepEqual(JSON.parse(ui.values.get('qa')), {'21':1000});
+    assert.equal(ui.audios[0].playVolumes[1], 1);
 });

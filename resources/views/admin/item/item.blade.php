@@ -5,6 +5,7 @@
 @section('content')
 <div class="container-fluid products-admin" id="products-admin"
      data-save-url="{{ url('admin/item/quick-update') }}" data-reorder-url="{{ url('admin/item/reorder_item') }}"
+     data-visibility-key="gycity:product-visibility:{{ url('admin/item') }}:{{ Auth::id() }}"
      data-demo="{{ env('Environment') === 'sendbox' ? '1' : '0' }}">
     <div class="products-heading">
         <div><p class="products-eyebrow">ÉTLAP KEZELÉSE</p><h1>Termékek <span>{{ $getitem->count() }}</span></h1>
@@ -35,6 +36,7 @@
         <div class="products-list-tools">
             <div><p id="products-result-count" aria-live="polite"></p><small id="products-reorder-reason" hidden>Sorrendezéshez előbb töröld a szűrőket.</small></div>
             <div class="products-tools">
+                <label class="products-visibility" for="products-show-unavailable"><input id="products-show-unavailable" type="checkbox" checked> Nem elérhető termékek is</label>
                 <label for="product-sort" class="visually-hidden">Rendezés</label><select id="product-sort"><option value="menu">Étlap sorrendje</option><option value="name">Név: A–Z</option><option value="price-asc">Ár: növekvő</option><option value="price-desc">Ár: csökkenő</option><option value="updated">Legutóbb módosított</option></select>
                 <div id="products-export" aria-label="Szűrt lista exportálása"></div>
                 <button type="button" class="btn btn-outline-secondary" id="products-reorder">Sorrend módosítása</button>

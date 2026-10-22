@@ -55,7 +55,7 @@ class GiftPromotions
             return collect();
         }
         $ids = $cart->pluck('item_id')->merge($promotions->pluck('gift_item_ids')->flatten())->unique();
-        $items = Item::visibleOnMenu()->with('item_image')->whereIn('id', $ids)->get()->keyBy('id');
+        $items = Item::visibleOnMenu()->with(['item_image', 'extras'])->whereIn('id', $ids)->get()->keyBy('id');
         $saved = session($this->sessionKey($buynow), []);
 
         $offers = $promotions->map(function ($promotion) use ($cart, $items, $saved) {
@@ -73,36 +73,42 @@ class GiftPromotions
             $earned = ($promotion->repeat ? $batches : min(1, $batches)) * $promotion->gift_qty;
             $gifts = collect($promotion->gift_item_ids)->map(fn ($id) => $items->get($id))
                 ->filter(fn ($item) => $item && $item->is_orderable)->values();
-            $allowed = $gifts->pluck('id')->map(fn ($id) => (int) $id)->all();
-            $choices = [];
+            $choices = []; $extraChoices = []; $savedChoices = []; $pending = false;
             for ($slot = 0; $slot < $earned; $slot++) {
-                $id = (int) ($saved[$promotion->id][$slot] ?? 0);
-                $choices[] = in_array($id, $allowed, true) ? $id : null;
+                $savedChoice = $saved[$promotion->id][$slot] ?? 0;
+                $id = (int) (is_array($savedChoice) ? ($savedChoice['item_id'] ?? 0) : $savedChoice);
+                $item = $gifts->firstWhere('id', $id);
+                $extraId = (int) (is_array($savedChoice) ? ($savedChoice['extra_id'] ?? 0) : 0);
+                $extra = $item?->extras->firstWhere('id', $extraId);
+                $choices[] = $item ? $id : null;
+                $extraChoices[] = $extra ? (int) $extra->id : null;
+                $complete = $item && ($item->extras->isEmpty() || $extra);
+                $pending = $pending || !$complete;
+                $savedChoices[] = $item ? ['item_id' => $id, 'extra_id' => $extra?->id] : null;
             }
-            return compact('promotion', 'qty', 'earned', 'gifts', 'choices');
+            return compact('promotion', 'qty', 'earned', 'gifts', 'choices', 'extraChoices', 'savedChoices', 'pending');
         });
         // Drop choices for lost entitlement so a later qualifying order asks again.
         session()->put($this->sessionKey($buynow), $offers->mapWithKeys(
-            fn ($offer) => [$offer['promotion']->id => $offer['choices']]
+            fn ($offer) => [$offer['promotion']->id => $offer['savedChoices']]
         )->all());
         return $offers;
     }
 
-    public function choose(int $promotionId, array $choices, int $buynow = 0): bool
+    public function choose(int $promotionId, array $choices, int $buynow = 0, array $extraChoices = []): bool
     {
-        $offer = $this->offers($this->cart($buynow), $buynow)->first(
-            fn ($offer) => $offer['promotion']->id === $promotionId
-        );
-        if (!$offer || $offer['earned'] < 1 || count($choices) !== $offer['earned']) {
-            return false;
+        $offer = $this->offers($this->cart($buynow), $buynow)->first(fn ($offer) => $offer['promotion']->id === $promotionId);
+        if (!$offer || $offer['earned'] < 1 || count($choices) !== $offer['earned']) return false;
+        $saved = [];
+        foreach (array_values($choices) as $slot => $choice) {
+            $item = $offer['gifts']->firstWhere('id', (int) $choice);
+            if (!$item) return false;
+            $extraId = (int) ($extraChoices[$slot] ?? 0);
+            $extra = $item->extras->firstWhere('id', $extraId);
+            if (($item->extras->isNotEmpty() && !$extra) || ($extraId && !$extra)) return false;
+            $saved[] = ['item_id' => (int) $item->id, 'extra_id' => $extra?->id];
         }
-        $allowed = $offer['gifts']->pluck('id')->all();
-        foreach ($choices as $choice) {
-            if (!in_array((int) $choice, $allowed, true)) {
-                return false;
-            }
-        }
-        session()->put($this->sessionKey($buynow).'.'.$promotionId, array_map('intval', array_values($choices)));
+        session()->put($this->sessionKey($buynow).'.'.$promotionId, $saved);
         return true;
     }
 
@@ -115,7 +121,7 @@ class GiftPromotions
             }
         }
         foreach ($this->offers($cart, $buynow) as $offer) {
-            if ($offer['gifts']->isNotEmpty() && in_array(null, $offer['choices'], true)) {
+            if ($offer['gifts']->isNotEmpty() && $offer['pending']) {
                 return 'Válaszd ki az ajándékot a kosárban: '.$offer['promotion']->name;
             }
         }
@@ -126,16 +132,20 @@ class GiftPromotions
     {
         $lines = collect();
         foreach ($this->offers($cart, $buynow) as $offer) {
-            foreach ($offer['choices'] as $id) {
+            foreach ($offer['choices'] as $slot => $id) {
                 $item = $offer['gifts']->firstWhere('id', $id);
                 if (!$item) {
                     continue;
                 }
+                $extra = $item->extras->firstWhere('id', $offer['extraChoices'][$slot]);
+                if ($item->extras->isNotEmpty() && !$extra) continue;
                 $lines->push(new Cart([
                     'item_id' => $item->id, 'item_name' => 'Ajándék: '.$item->item_name,
                     'item_type' => $item->item_type, 'item_image' => $item->item_image?->image_name ?? '',
                     'qty' => 1, 'item_price' => 0, 'tax' => '',
                     'addons_total_price' => 0, 'extras_total_price' => 0,
+                    'extras_id' => $extra?->id ? (string) $extra->id : null,
+                    'extras_name' => $extra?->name, 'extras_price' => $extra ? '0' : null,
                 ]));
             }
         }

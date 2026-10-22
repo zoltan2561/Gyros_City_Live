@@ -436,7 +436,7 @@
     <script src="{{ url(env('ASSETSPATHURL') . 'web-assets/js/custom/top_deals.js') }}"></script>
     <script src="{{ url(env('ASSETSPATHURL') . 'web-assets/js/common.js') }}"></script><!-- web-common-js -->
     @include('web.city.gift-modal')
-    <script src="{{ url('public/city/city.js') }}?v=20261020" defer></script>
+    <script src="{{ url('public/city/city.js') }}?v={{ filemtime(public_path('city/city.js')) }}" defer></script>
     <script src="{{ url('public/city/builder.js') }}?v=20261020-2" defer></script>
 
     @if (@helper::checkaddons('sales_notification'))

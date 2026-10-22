@@ -10,7 +10,7 @@
                 'is_featured' => (int) $item->is_featured === 1, 'version' => $item->edit_token,
                 'edit_url' => url('admin/item-'.$item->id)];
         @endphp
-        <tr data-id="{{ $item->id }}" data-category="{{ $item->cat_id }}" data-state="{{ $state }}" data-featured="{{ (int) $item->is_featured === 1 ? '1' : '2' }}" data-product="{{ json_encode($product) }}">
+        <tr data-id="{{ $item->id }}" data-category="{{ $item->cat_id }}" data-state="{{ $state }}" data-orderable="{{ $item->is_orderable && (int) $category?->is_available === 1 ? '1' : '0' }}" data-featured="{{ (int) $item->is_featured === 1 ? '1' : '2' }}" data-product="{{ json_encode($product) }}">
             <td>{{ $loop->index }}</td>
             <td data-label="Termék"><div class="products-identity">
                 <span class="products-drag" aria-hidden="true">⠿</span>

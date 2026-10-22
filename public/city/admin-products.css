@@ -9,3 +9,5 @@
 @media(max-width:575px){.products-admin-page .page-topbar .navbar-header .header-item{width:44px;padding-left:6px;padding-right:6px}}
 .products-list-tools>div>p{margin:0;color:var(--product-muted);font-size:13px;white-space:nowrap}.products-list-tools>div>small{display:block;font-size:11px;color:#7c889a;margin-top:5px}.products-admin button:disabled{opacity:.5;cursor:not-allowed}
 .products-today-toggle{border:1px solid #e4c78f;background:#fffaf0;color:#855a0f;border-radius:7px;padding:8px 10px;min-height:38px;font-size:11px;white-space:nowrap}.products-today-toggle:hover{background:#fff0ce}.products-today-toggle.is-unavailable{border-color:#b9dac6;background:#eef8f2;color:#286b45}.products-today-toggle.is-unavailable:hover{background:#dff1e6}.is-reordering .products-today-toggle{pointer-events:none;opacity:.5}
+
+.products-tools .products-visibility{display:inline-flex;align-items:center;gap:8px;min-height:44px;font-size:12px;cursor:pointer}.products-visibility input{width:18px;height:18px;accent-color:var(--product-accent);cursor:pointer}

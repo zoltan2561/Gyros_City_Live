@@ -284,7 +284,10 @@ class GiftPromotionsTest extends TestCase
     {
         $promotion = $this->promotion(); $this->line(1, 2);
         DB::table('extras')->insert(['id'=>91,'item_id'=>3,'name'=>'Vaníliás','price'=>250]);
-        app(GiftPromotions::class)->choose($promotion->id, [3], 0, [91]);
+        Item::find(3)->update(['addons_id'=>'6']);
+        DB::table('addons_group')->insert(['id'=>6,'name'=>'Flavour','selection_type'=>1,'selection_count'=>1]);
+        DB::table('addons')->insert(['id'=>601,'addongroup_id'=>6,'name'=>'Cocoa','price'=>300]);
+        app(GiftPromotions::class)->choose($promotion->id, [3], 0, [91], [[601]]);
         $gateway = Mockery::mock(BarionService::class); $gateway->shouldReceive('environment')->andReturn('test');
         $gateway->shouldReceive('startPayment')->once()->withArgs(function ($id, $email, $items, $total) {
             $this->assertCount(1, $items); $this->assertSame(2000.0, $total);
@@ -298,6 +301,8 @@ class GiftPromotionsTest extends TestCase
         $this->assertSame(0, $items[1]['item_price']);
         $this->assertSame('Vaníliás', $items[1]['extras_name']);
         $this->assertSame(0, $items[1]['extras_total_price']);
+        $this->assertSame('Cocoa', $items[1]['addons_name']);
+        $this->assertSame('0', $items[1]['addons_price']);
     }
 
     public function test_gift_flavour_is_required_validated_and_saved_for_free(): void
@@ -338,5 +343,32 @@ class GiftPromotionsTest extends TestCase
         $service->transferGuestChoices(100,[0],false);
         $this->assertSame([['item_id'=>3,'extra_id'=>81]],session('gift_choices.100.0.'.$promotion->id));
         $this->assertNull(session('gift_choices.guest.0'));
+    }
+    public function test_two_pizzas_require_the_pancake_group_flavour_and_keep_it_free(): void
+    {
+        $promotion = $this->promotion(['gift_item_ids'=>[3]]); $this->line(1,2);
+        Item::find(3)->update(['addons_id'=>'6']);
+        DB::table('addons_group')->insert(['id'=>6,'name'=>'Pancake flavour','selection_type'=>1,'selection_count'=>1,'min_count'=>1,'max_count'=>1]);
+        DB::table('addons')->insert([
+            ['id'=>601,'addongroup_id'=>6,'name'=>'Cocoa','price'=>200],
+            ['id'=>602,'addongroup_id'=>6,'name'=>'Jam','price'=>250],
+            ['id'=>603,'addongroup_id'=>99,'name'=>'Foreign flavour','price'=>100],
+        ]);
+        $this->getJson('/cart/promotions?buynow=0')->assertOk()->assertJson(['pending'=>true])
+            ->assertSee('Cocoa')->assertSee('Jam');
+        $payload=['promotion_id'=>$promotion->id,'choices'=>[3],'extra_choices'=>[0],'buynow'=>0];
+        $this->postJson('/cart/promotions',$payload)->assertStatus(422);
+        $this->postJson('/cart/promotions',$payload+['addon_choices'=>[[603]]])->assertStatus(422);
+        $this->postJson('/cart/promotions',$payload+['addon_choices'=>[[601,602]]])->assertStatus(422);
+        $this->postJson('/cart/promotions',$payload+['addon_choices'=>[[602]]])->assertOk()->assertJson(['pending'=>false]);
+        $gift=app(GiftPromotions::class)->giftLines(Cart::all())->first();
+        $this->assertSame('602',$gift->addons_id);
+        $this->assertSame('Jam',$gift->addons_name);
+        $this->assertSame('0',$gift->addons_price);
+        $this->assertSame(0,$gift->addons_total_price);
+        $this->assertSame(0,$gift->item_price);
+        DB::table('addons')->where('id',602)->update(['is_available'=>2]);
+        $this->assertTrue(app(GiftPromotions::class)->offers(Cart::all())->first()['pending']);
+        $this->assertCount(0,app(GiftPromotions::class)->giftLines(Cart::all()));
     }
 }

@@ -40,7 +40,18 @@
     }
     document.addEventListener('change', event => {
         const choice = event.target.closest('[data-gift-choice]');
-        if (choice) choice.closest('label').querySelector('[data-gift-extra]').value = choice.selectedOptions[0]?.dataset.extraId || '0';
+        if (choice) {
+            const slot = choice.closest('[data-gift-slot]');
+            slot.querySelector('[data-gift-extra]').value = choice.selectedOptions[0]?.dataset.extraId || '0';
+            slot.querySelectorAll('[data-gift-options]').forEach(options => {
+                const active = options.dataset.giftOptions === choice.value;
+                options.hidden = !active;
+                options.querySelectorAll('[data-gift-addon]').forEach(input => {
+                    input.disabled = !active;
+                    input.required = active && input.hasAttribute('data-gift-required');
+                });
+            });
+        }
     });
     document.addEventListener('submit', async event => {
         const form = event.target.closest('[data-gift-form]');

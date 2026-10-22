@@ -24,8 +24,10 @@ class GiftPromotionController extends Controller
             'promotion_id' => 'required|integer', 'choices' => 'required|array|max:1000',
             'choices.*' => 'required|integer', 'extra_choices' => 'nullable|array|max:1000',
             'extra_choices.*' => 'nullable|integer|min:0', 'buynow' => 'required|integer|in:0,1',
+            'addon_choices' => 'nullable|array|max:1000', 'addon_choices.*' => 'array|max:100',
+            'addon_choices.*.*' => 'nullable|integer|min:1',
         ]);
-        if (!$service->choose((int) $data['promotion_id'], $data['choices'], (int) $data['buynow'], $data['extra_choices'] ?? [])) {
+        if (!$service->choose((int) $data['promotion_id'], $data['choices'], (int) $data['buynow'], $data['extra_choices'] ?? [], $data['addon_choices'] ?? [])) {
             return response()->json(['message' => 'A kosár vagy az ajándék elérhetősége megváltozott. Válassz újra.'], 422);
         }
         return $this->index($request, $service);

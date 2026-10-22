@@ -12,7 +12,9 @@
             <input type="hidden" name="promotion_id" value="{{ $offer['promotion']->id }}">
             <input type="hidden" name="buynow" value="{{ $buynow }}">
             @foreach ($offer['choices'] as $slot => $choice)
-                <label class="city-gift-choice">{{ $slot + 1 }}. ajándék
+                @php($displayChoice = $choice ?? ($offer['gifts']->count() === 1 && $offer['gifts']->first()->extras->isEmpty() && $offer['gifts']->first()->giftGroups->isNotEmpty() ? (int) $offer['gifts']->first()->id : null))
+                <div class="city-gift-choice" data-gift-slot>
+                    <label>{{ $slot + 1 }}. ajándék
                     <select name="choices[]" data-gift-choice required class="form-select">
                         <option value="">Válassz ételt vagy ízt</option>
                         @foreach ($offer['gifts'] as $gift)
@@ -23,12 +25,37 @@
                                     @endforeach
                                 </optgroup>
                             @else
-                                <option value="{{ $gift->id }}" @selected($choice === (int) $gift->id)>{{ $gift->item_name }} · 0 Ft</option>
+                                <option value="{{ $gift->id }}" @selected($displayChoice === (int) $gift->id)>{{ $gift->item_name }} · 0 Ft</option>
                             @endif
                         @endforeach
                     </select>
                     <input type="hidden" data-gift-extra name="extra_choices[{{ $slot }}]" value="{{ $offer['extraChoices'][$slot] ?? 0 }}">
-                </label>
+                    </label>
+                    @foreach ($offer['gifts'] as $gift)
+                        <div data-gift-options="{{ $gift->id }}" @if($displayChoice !== (int) $gift->id) hidden @endif>
+                            @foreach ($gift->giftGroups as $group)
+                                <fieldset class="mt-3">
+                                    <legend class="fs-6">{{ $group->name }}</legend>
+                                    @if ((int) $group->selection_count === 1)
+                                        <select name="addon_choices[{{ $slot }}][]" class="form-select" data-gift-addon
+                                            @if((int) $group->selection_type === 1) data-gift-required @endif
+                                            @disabled($displayChoice !== (int) $gift->id) @required($displayChoice === (int) $gift->id && (int) $group->selection_type === 1)>
+                                            <option value="">Válassz{{ (int) $group->selection_type === 1 ? ' ízt vagy kiegészítőt' : ' (opcionális)' }}</option>
+                                            @foreach ($group->options as $addon)
+                                                <option value="{{ $addon->id }}" @selected($choice === (int) $gift->id && in_array((int) $addon->id, $offer['addonChoices'][$slot], true))>{{ $addon->name }} · 0 Ft</option>
+                                            @endforeach
+                                        </select>
+                                    @else
+                                        @foreach ($group->options as $addon)
+                                            <label class="d-block"><input type="checkbox" data-gift-addon name="addon_choices[{{ $slot }}][]" value="{{ $addon->id }}"
+                                                @disabled($displayChoice !== (int) $gift->id) @checked($choice === (int) $gift->id && in_array((int) $addon->id, $offer['addonChoices'][$slot], true))> {{ $addon->name }} · 0 Ft</label>
+                                        @endforeach
+                                    @endif
+                                </fieldset>
+                            @endforeach
+                        </div>
+                    @endforeach
+                </div>
             @endforeach
             <div class="d-flex flex-wrap gap-3 align-items-center mt-3">
                 <button type="submit" class="btn city-button">Ajándék kiválasztása</button>

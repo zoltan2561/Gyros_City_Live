@@ -77,7 +77,7 @@ class ItemController extends Controller
                 ->groupBy('item.id', 'cart.item_id')
                 ->where('item.slug', '=', $request->slug)
                 ->visibleOnMenu()
-                ->first();
+                ->firstOrFail();
             $getitemdata['addons_group'] = AddonsGroup::select('id', 'name', 'selection_type', 'selection_count', 'min_count', 'max_count')->whereIn('id', explode(',', $getitemdata->addons_id))->where('is_deleted', 2)->where('is_available', 1)->orderByDesc('id')->get();
             $getitemdata['addons'] = Addons::select('id', 'addongroup_id', 'name', 'price')->where('is_deleted', 2)->where('is_available', 1)->orderByDesc('id')->get();
             foreach ($getitemdata['addons_group'] as $addons_group) {
@@ -110,7 +110,7 @@ class ItemController extends Controller
                 ->groupBy('item.id', 'cart.item_id')
                 ->where('item.slug', '=', $request->slug)
                 ->visibleOnMenu()
-                ->first();
+                ->firstOrFail();
             $getitemdata['addons_group'] = AddonsGroup::select('id', 'name', 'selection_type', 'selection_count', 'min_count', 'max_count')->whereIn('id', explode(',', $getitemdata->addons_id))->where('is_deleted', 2)->where('is_available', 1)->orderByDesc('id')->get();
             $getitemdata['addons'] = Addons::select('id', 'addongroup_id', 'name', 'price')->where('is_deleted', 2)->where('is_available', 1)->orderByDesc('id')->get();
             foreach ($getitemdata['addons_group'] as $addons_group) {
@@ -130,16 +130,13 @@ class ItemController extends Controller
                 ->take(3)->get();
         }
         $itemreviewdata = Ratting::publicReviews('product_review')->with('user_info')->select('id', 'ratting', 'comment', 'item_id', 'user_id', 'created_at')->where('item_id', $getitemdata->id)->where('status', 1)->get();
-        $fivestaraverage = Ratting::publicReviews('product_review')->where('item_id', $getitemdata->id)->where('status', 1)->where('ratting', 5)->count();
-        $fourstaraverage = Ratting::publicReviews('product_review')->where('item_id', $getitemdata->id)->where('status', 1)->where('ratting', 4)->count();
-        $threestaraverage = Ratting::publicReviews('product_review')->where('item_id', $getitemdata->id)->where('status', 1)->where('ratting', 3)->count();
-        $twostaraverage = Ratting::publicReviews('product_review')->where('item_id', $getitemdata->id)->where('status', 1)->where('ratting', 2)->count();
-        $onestaraverage = Ratting::publicReviews('product_review')->where('item_id', $getitemdata->id)->where('status', 1)->where('ratting', 1)->count();
-        $data['fivestaraverage'] = $fivestaraverage;
-        $data['fourstaraverage'] = $fourstaraverage;
-        $data['threestaraverage'] = $threestaraverage;
-        $data['twostaraverage'] = $twostaraverage;
-        $data['onestaraverage'] = $onestaraverage;
+        // These approved reviews are already loaded for the page. Reuse them
+        // instead of issuing five more count queries (and settings lookups).
+        $counts = $itemreviewdata->countBy('ratting');
+        $data = [];
+        foreach ([1 => 'one', 2 => 'two', 3 => 'three', 4 => 'four', 5 => 'five'] as $stars => $label) {
+            $data[$label.'staraverage'] = $counts->get($stars, 0);
+        }
 
         return view('web.productdetails', $data, compact('topdeals', 'getitemdata', 'getrelateditems', 'itemreviewdata'));
     }

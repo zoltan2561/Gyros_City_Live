@@ -7,6 +7,16 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Terméklinkek, indexek és rendelési archívum – 2026. október 22.
+
+A nem létező és rejtett kategóriába tartozó termékek oldala 404-et ad vendégként és bejelentkezve is. A szüneteltetett étel továbbra is látható. Az árformázás egy beállítás-lekérdezést használ áranként a korábbi 5–6 helyett, az értékelési eloszlás pedig a már betöltött jóváhagyott véleményeket számolja.
+
+A `2026_10_22_000003_add_storefront_lookup_indexes.php` kizárólag nem egyedi keresési indexeket ad hozzá a kosárhoz, rendelési sorokhoz, rendelésekhez, termékekhez, extrákhoz és kedvencekhez. MariaDB/MySQL alatt `ALGORITHM=INPLACE, LOCK=NONE` szükséges; nem vált át blokkoló táblamásolásra, ha ezt a motor nem támogatja. A szöveges kosár-munkamenet 64 karakteres előtagindexet kap, a teljes értékegyezést továbbra is ellenőrzi az adatbázis. Éles futtatás előtt mentés és kis forgalmú időszak szükséges; DDL tranzakcióval nem görgethető vissza, a `down()` csak az új indexeket távolítja el. Csak ezt a migrációt kell futtatni `--path=database/migrations/2026_10_22_000003_add_storefront_lookup_indexes.php --force` kapcsolókkal.
+
+Az `orders:archive --before=2026-09-22` csak felmér. A `--write --output=/private/existing-directory/orders.jsonl.gz` kapcsolókkal új, tömörített JSONL archívum készül a projektmappán és webrooton kívül; már létező fájlt nem ír felül. Csak a határnap előtti befejezett/törölt rendeléseket másolja a terméksorokkal együtt; folyamatban lévő és rendezetlen online fizetésű rendelés kimarad. A határnap alapértelmezetten egy naptári hónappal korábbi budapesti dátum, éjfél. A forrásadatokat nem törli vagy módosítja, így a keresés, vásárlói előzmények, fizetési visszahívások és kimutatások megmaradnak. Az archívum személyes adatot tartalmaz: privát tárolás, 0600 jogosultság és ellenőrzőösszeg szükséges. A végén `complete: true` rekord igazolja a sikeres exportot. Az archívum nem csökkenti az aktív adatbázis méretét; tényleges adatmozgatás külön, az archív előzmények megjelenítését is kezelő változtatást igényel.
+
+A `.playwright-mcp` ellenőrzési fájljai nem részei a kiadásnak; a termék- és kategóriaképekhez ez a változtatás nem nyúl.
+
 ## Online rendelési határidő – 2026. október 22.
 
 Az **Admin → Nyitvatartás → Online rendelés eddig** mező naponta külön állítható. A napi nyitás, szünet, zárt nap és a kézi BE/KI kapcsoló együtt érvényesül; a határidő pillanatától már nem fogad új online rendelést. A zárás későbbi lehet, mint a rendelési határidő. Az éjfél utáni időpont az előző nyitási naphoz tartozik. A vendégoldali nyitvatartási ablakban és a kapcsolatoldalon is megjelenik a határidő.

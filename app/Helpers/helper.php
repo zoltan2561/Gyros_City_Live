@@ -262,33 +262,34 @@ class helper
     public static function currency_format($price)
     {
         $price = (float)$price;
-        if (@helper::appdata()->currency_position == "1") {
-            if (@helper::appdata()->decimal_separator == "1") {
-                if (@helper::appdata()->currency_space == "1") {
-                    return @helper::appdata()->currency . ' ' . number_format($price, @helper::appdata()->currency_formate, '.', ',');
+        $settings = helper::appdata();
+        if (@$settings->currency_position == "1") {
+            if (@$settings->decimal_separator == "1") {
+                if (@$settings->currency_space == "1") {
+                    return @$settings->currency . ' ' . number_format($price, @$settings->currency_formate, '.', ',');
                 } else {
-                    return @helper::appdata()->currency . number_format($price, @helper::appdata()->currency_formate, '.', ',');
+                    return @$settings->currency . number_format($price, @$settings->currency_formate, '.', ',');
                 }
             } else {
-                if (@helper::appdata()->currency_space == "1") {
-                    return @helper::appdata()->currency . ' ' . number_format($price, @helper::appdata()->currency_formate, ',', '.');
+                if (@$settings->currency_space == "1") {
+                    return @$settings->currency . ' ' . number_format($price, @$settings->currency_formate, ',', '.');
                 } else {
-                    return @helper::appdata()->currency . number_format($price, @helper::appdata()->currency_formate, ',', '.');
+                    return @$settings->currency . number_format($price, @$settings->currency_formate, ',', '.');
                 }
             }
         }
-        if (@helper::appdata()->currency_position == "2") {
-            if (@helper::appdata()->decimal_separator == "1") {
-                if (@helper::appdata()->currency_space == "1") {
-                    return number_format($price, @helper::appdata()->currency_formate, '.', ',') . ' ' . @helper::appdata()->currency;
+        if (@$settings->currency_position == "2") {
+            if (@$settings->decimal_separator == "1") {
+                if (@$settings->currency_space == "1") {
+                    return number_format($price, @$settings->currency_formate, '.', ',') . ' ' . @$settings->currency;
                 } else {
-                    return number_format($price, @helper::appdata()->currency_formate, '.', ',') . @helper::appdata()->currency;
+                    return number_format($price, @$settings->currency_formate, '.', ',') . @$settings->currency;
                 }
             } else {
-                if (@helper::appdata()->currency_space == "1") {
-                    return number_format($price, @helper::appdata()->currency_formate, ',', '.') . ' ' . @helper::appdata()->currency;
+                if (@$settings->currency_space == "1") {
+                    return number_format($price, @$settings->currency_formate, ',', '.') . ' ' . @$settings->currency;
                 } else {
-                    return number_format($price, @helper::appdata()->currency_formate, ',', '.') . @helper::appdata()->currency;
+                    return number_format($price, @$settings->currency_formate, ',', '.') . @$settings->currency;
                 }
             }
         }

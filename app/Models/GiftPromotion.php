@@ -10,7 +10,7 @@ class GiftPromotion extends Model
 
     protected $casts = [
         'trigger_item_ids' => 'array', 'gift_item_ids' => 'array',
-        'repeat' => 'boolean', 'active' => 'boolean',
+        'repeat' => 'boolean', 'per_item' => 'boolean', 'active' => 'boolean',
         'required_qty' => 'integer', 'gift_qty' => 'integer',
         'starts_at' => 'date', 'ends_at' => 'date',
     ];

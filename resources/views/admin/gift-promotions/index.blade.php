@@ -17,7 +17,7 @@
                 <input type="hidden" name="id" value="{{ $editing->id }}">
                 <h2 class="h5 mb-4">{{ $editing->exists ? 'Akció szerkesztése' : 'Új ajándékakció' }}</h2>
                 <label for="promotion-name" class="form-label">Akció neve (a vásárló is látja)</label>
-                <input id="promotion-name" name="name" class="form-control mb-3" maxlength="120" required value="{{ old('name', $editing->name) }}" placeholder="Például: Két pizza mellé ajándék palacsinta">
+                <input id="promotion-name" name="name" class="form-control mb-3" maxlength="120" required value="{{ old('name', $editing->name) }}" placeholder="Például: 2 pizzától minden pizzához egy palacsinta">
                 @php $triggerType = old('trigger_type', $editing->category_id || !$editing->exists ? 'category' : 'items'); @endphp
                 <label for="trigger-type" class="form-label">Miből kell rendelni?</label>
                 <select id="trigger-type" name="trigger_type" class="form-select mb-3">
@@ -51,6 +51,7 @@
                     </div>
                 </fieldset>
                 <label class="d-flex gap-2 mb-3"><input type="checkbox" name="repeat" value="1" @checked(old('repeat', session()->hasOldInput() ? false : $editing->repeat))> Minden teljes darabszám után újra járjon (pl. 4 pizzához 2 ajándék).</label>
+                <label class="d-flex gap-2 mb-3"><input type="checkbox" name="per_item" value="1" @checked(old('per_item', session()->hasOldInput() ? false : $editing->per_item))> A minimum elérése után minden darabhoz járjon egy ajándék (2 pizzához 2, 3-hoz 3, 5-höz 5). Mindegyik íze külön választható.</label>
                 <div class="row g-3 mb-3">
                     <div class="col-sm-6"><label for="starts-at" class="form-label">Első nap (nem kötelező)</label><input id="starts-at" type="date" class="form-control" name="starts_at" value="{{ old('starts_at', $editing->starts_at?->format('Y-m-d')) }}"></div>
                     <div class="col-sm-6"><label for="ends-at" class="form-label">Utolsó nap (nem kötelező)</label><input id="ends-at" type="date" class="form-control" name="ends_at" value="{{ old('ends_at', $editing->ends_at?->format('Y-m-d')) }}"></div>
@@ -65,7 +66,7 @@
             @forelse ($promotions as $promotion)
                 <article class="card p-3 mb-3">
                     <div class="d-flex justify-content-between gap-2"><h3 class="h6">{{ $promotion->name }}</h3><span class="badge {{ $promotion->active ? 'bg-success' : 'bg-secondary' }} align-self-start">{{ $promotion->active ? 'Bekapcsolva' : 'Kikapcsolva' }}</span></div>
-                    <p class="mb-2">{{ $promotion->required_qty }} db → {{ $promotion->gift_qty }} db ajándék. {{ $promotion->repeat ? 'Ismétlődő.' : 'Rendelésenként egyszer.' }}</p>
+                    <p class="mb-2">@if ($promotion->per_item){{ $promotion->required_qty }} db-tól minden darabhoz egy ajándék, külön ízzel.@else{{ $promotion->required_qty }} db → {{ $promotion->gift_qty }} db ajándék. {{ $promotion->repeat ? 'Ismétlődő.' : 'Rendelésenként egyszer.' }}@endif</p>
                     <p class="small text-muted">Feltétel: {{ $promotion->category_id ? ($categories->firstWhere('id', $promotion->category_id)?->category_name ?? 'Korábbi kategória') : $items->whereIn('id', $promotion->trigger_item_ids ?? [])->pluck('item_name')->join(', ') }}<br>Ajándék: {{ $items->whereIn('id', $promotion->gift_item_ids ?? [])->pluck('item_name')->join(', ') }}</p>
                     <a href="{{ route('admin.gift-promotions', ['edit' => $promotion->id]) }}" class="btn btn-outline-primary btn-sm align-self-start">Szerkesztés</a>
                 </article>

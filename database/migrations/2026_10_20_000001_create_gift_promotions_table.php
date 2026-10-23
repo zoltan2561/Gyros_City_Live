@@ -17,6 +17,7 @@ return new class extends Migration
             $table->json('gift_item_ids');
             $table->unsignedInteger('gift_qty')->default(1);
             $table->boolean('repeat')->default(false);
+            $table->boolean('per_item')->default(false);
             $table->boolean('active')->default(false)->index();
             $table->date('starts_at')->nullable();
             $table->date('ends_at')->nullable();

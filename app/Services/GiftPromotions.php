@@ -79,8 +79,7 @@ class GiftPromotions
                     : in_array((int) $item->id, $promotion->trigger_item_ids ?? [], true);
                 return $matches ? max(0, (int) $line->qty) : 0;
             });
-            $batches = intdiv($qty, max(1, $promotion->required_qty));
-            $earned = ($promotion->repeat ? $batches : min(1, $batches)) * $promotion->gift_qty;
+            $earned = $this->earnedCount($promotion, $qty);
             $gifts = collect($promotion->gift_item_ids)->map(fn ($id) => $items->get($id))
                 ->filter(fn ($item) => $item && $item->is_orderable)->values();
             $choices = []; $extraChoices = []; $addonChoices = []; $savedChoices = []; $pending = false;
@@ -172,6 +171,17 @@ class GiftPromotions
             }
         }
         return $lines;
+    }
+
+    private function earnedCount(GiftPromotion $promotion, int $qty): int
+    {
+        $required = max(1, (int) $promotion->required_qty);
+        if ($promotion->per_item) {
+            return $qty >= $required ? $qty : 0;
+        }
+        $batches = intdiv($qty, $required);
+
+        return ($promotion->repeat ? $batches : min(1, $batches)) * (int) $promotion->gift_qty;
     }
 
     private function selectedAddons(Item $item, array $ids): ?Collection

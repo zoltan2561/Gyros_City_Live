@@ -259,6 +259,7 @@ class GiftPromotionsTest extends TestCase
         $this->assertTrue(GiftPromotion::first()->active);
         $this->post('/admin/gift-promotions', array_replace($data, ['id' => GiftPromotion::first()->id, 'active' => 0]))->assertRedirect();
         $this->assertSame(1, GiftPromotion::count()); $this->assertFalse(GiftPromotion::first()->active);
+        $this->assertFalse(GiftPromotion::first()->per_item);
         $owner->type = 2;
         $this->post('/admin/gift-promotions', $data)->assertForbidden();
     }
@@ -344,6 +345,50 @@ class GiftPromotionsTest extends TestCase
         $this->assertSame([['item_id'=>3,'extra_id'=>81]],session('gift_choices.100.0.'.$promotion->id));
         $this->assertNull(session('gift_choices.guest.0'));
     }
+    public function test_existing_pancake_promotion_switches_to_one_per_pizza(): void
+    {
+        $this->promotion(['name' => 'Két pizza mellé ajándék palacsinta', 'per_item' => false]);
+        (require base_path('database/migrations/2026_10_23_000001_add_per_item_to_gift_promotions.php'))->up();
+        $promotion = GiftPromotion::first();
+        $this->assertTrue($promotion->per_item);
+        $this->assertSame(2, $promotion->required_qty);
+        $this->assertSame('2 pizzától minden pizzához egy palacsinta', $promotion->name);
+        $this->line(1, 3);
+        $this->assertSame(3, app(GiftPromotions::class)->offers(Cart::all())->first()['earned']);
+    }
+
+    public function test_from_two_pizzas_each_pizza_earns_its_own_pancake_flavour(): void
+    {
+        $promotion = $this->promotion(['per_item' => true, 'gift_item_ids' => [3]]);
+        Item::find(3)->update(['addons_id' => '6']);
+        DB::table('addons_group')->insert(['id' => 6, 'name' => 'Palacsinta íze', 'selection_type' => 1, 'selection_count' => 1, 'min_count' => 1, 'max_count' => 1]);
+        foreach ([601 => 'Kakaós', 602 => 'Nutellás', 603 => 'Fahéjas', 604 => 'Csokis', 605 => 'Karamellás'] as $id => $name) {
+            DB::table('addons')->insert(['id' => $id, 'addongroup_id' => 6, 'name' => $name, 'price' => 200]);
+        }
+        $line = $this->line(1, 1);
+        $service = app(GiftPromotions::class);
+        $this->assertSame(0, $service->offers(Cart::all())->first()['earned']);
+        foreach ([2 => 2, 3 => 3, 5 => 5] as $pizzas => $pancakes) {
+            $line->update(['qty' => $pizzas]);
+            $this->assertSame($pancakes, $service->offers(Cart::all())->first()['earned']);
+        }
+        $html = $this->getJson('/cart/promotions?buynow=0')->assertOk()->json('html');
+        $this->assertStringContainsString('1. ajándék íze', $html);
+        $this->assertStringContainsString('5. ajándék íze', $html);
+        $this->assertStringContainsString('Kakaós', $html);
+        $this->assertStringContainsString('Karamellás', $html);
+        $this->assertFalse($service->choose($promotion->id, [3, 3, 3, 3, 3]));
+        $this->assertTrue($service->choose($promotion->id, [3, 3, 3, 3, 3], 0, [], [[601], [602], [603], [604], [605]]));
+        $gifts = $service->giftLines(Cart::all());
+        $this->assertSame(['Kakaós', 'Nutellás', 'Fahéjas', 'Csokis', 'Karamellás'], $gifts->pluck('addons_name')->all());
+        $this->assertTrue($gifts->every(fn ($gift) => (int) $gift->item_price === 0 && (int) $gift->addons_total_price === 0 && $gift->addons_price === '0'));
+        $line->update(['qty' => 2]);
+        $this->assertTrue($service->choose($promotion->id, [3, 3], 0, [], [[601], [601]]));
+        $same = $service->giftLines(Cart::all());
+        $this->assertCount(2, $same);
+        $this->assertSame(['Kakaós', 'Kakaós'], $same->pluck('addons_name')->all());
+    }
+
     public function test_two_pizzas_require_the_pancake_group_flavour_and_keep_it_free(): void
     {
         $promotion = $this->promotion(['gift_item_ids'=>[3]]); $this->line(1,2);

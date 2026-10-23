@@ -37,6 +37,7 @@ class GiftPromotionController extends Controller
             'gift_item_ids.*' => ['integer', 'distinct', 'exists:item,id'],
             'gift_qty' => ['required', 'integer', 'min:1', 'max:10'],
             'active' => ['nullable', 'boolean'], 'repeat' => ['nullable', 'boolean'],
+            'per_item' => ['nullable', 'boolean'],
             'starts_at' => ['nullable', 'date_format:Y-m-d'],
             'ends_at' => ['nullable', 'date_format:Y-m-d', Rule::when($request->filled('starts_at'), 'after_or_equal:starts_at')],
         ]);
@@ -46,6 +47,7 @@ class GiftPromotionController extends Controller
         $data['gift_item_ids'] = array_map('intval', $data['gift_item_ids']);
         $data['active'] = $request->boolean('active');
         $data['repeat'] = $request->boolean('repeat');
+        $data['per_item'] = $request->boolean('per_item');
         unset($data['trigger_type']);
         $promotion->fill($data)->save();
         return redirect()->route('admin.gift-promotions')->with('success', 'Az akciót elmentettük.');

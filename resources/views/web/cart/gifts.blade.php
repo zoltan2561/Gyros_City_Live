@@ -3,18 +3,18 @@
     <div class="city-eyebrow">Ajándék a rendelésed mellé</div>
     <h2>{{ $offer['promotion']->name }}</h2>
     @if ($offer['earned'] < 1)
-        <p class="mb-0">Még {{ max(0, $offer['promotion']->required_qty - $offer['qty']) }} db a megadott ételekből, és jár az ajándék.</p>
+        <p class="mb-0">Még {{ max(0, $offer['promotion']->required_qty - $offer['qty']) }} db a megadott ételekből, @if ($offer['promotion']->per_item)és onnantól minden darabhoz egy ajándék jár. Mindegyik ízét külön kiválaszthatod.@else és jár az ajándék.@endif</p>
     @elseif ($offer['gifts']->isEmpty())
         <p class="mb-0" role="status">Az akcióhoz tartozó ajándékok jelenleg nem elérhetők.</p>
     @else
-        <p>{{ $offer['earned'] }} db ajándék jár. Válaszd ki, melyiket kéred!</p>
+        <p>@if ($offer['promotion']->per_item){{ $offer['earned'] }} ajándék jár, minden rendelt darabhoz egy. Mindegyik ízét külön válaszd ki.@else{{ $offer['earned'] }} db ajándék jár. Válaszd ki, melyiket kéred!@endif</p>
         <form class="city-gift-form" data-gift-form>
             <input type="hidden" name="promotion_id" value="{{ $offer['promotion']->id }}">
             <input type="hidden" name="buynow" value="{{ $buynow }}">
             @foreach ($offer['choices'] as $slot => $choice)
                 @php($displayChoice = $choice ?? ($offer['gifts']->count() === 1 && $offer['gifts']->first()->extras->isEmpty() && $offer['gifts']->first()->giftGroups->isNotEmpty() ? (int) $offer['gifts']->first()->id : null))
                 <div class="city-gift-choice" data-gift-slot>
-                    <label>{{ $slot + 1 }}. ajándék
+                    <label>{{ $slot + 1 }}. {{ $offer['promotion']->per_item ? 'ajándék íze' : 'ajándék' }}
                     <select name="choices[]" data-gift-choice required class="form-select">
                         <option value="">Válassz ételt vagy ízt</option>
                         @foreach ($offer['gifts'] as $gift)

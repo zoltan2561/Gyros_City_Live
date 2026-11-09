@@ -38,10 +38,11 @@ class SignageController extends Controller {
             $bindings[]=['id'=>'row-'.$i,'card_id'=>!empty($b['group'])?'group-'.substr(hash('sha256',$b['group']),0,20):'row-'.$i,
                 'item_id'=>$b['item_id'],'label'=>$b['label']??'','title'=>$b['title']??'',
                 'photo_media_id'=>$b['photo_media_id']??null,
+                'artwork'=>$b['artwork']??null,
                 'group'=>$b['group']??'',
                 'addons_id'=>implode('|',$b['addons']??[]),'extras_id'=>implode('|',$b['extras']??[])];
         }
-        $content=app(\App\Services\Signage\SignageSceneDefinition::class)->validate($request->only(['type','theme','title','duration','media_id','background_media_id','logo_media_id','background','accent','text_color','font_family','name_size','price_size','gap','media_side','media_fit','media_focus_x','media_focus_y'])+['bindings'=>$bindings,'play_to_end'=>$request->boolean('play_to_end')]);
+        $content=app(\App\Services\Signage\SignageSceneDefinition::class)->validate($request->only(['type','theme','title','design','duration','slide_seconds','media_id','background_media_id','logo_media_id','background','accent','text_color','font_family','name_size','price_size','gap','media_side','media_fit','media_focus_x','media_focus_y'])+['bindings'=>$bindings,'play_to_end'=>$request->boolean('play_to_end')]);
         $record=$request->filled('id')?\App\Models\SignageScene::findOrFail($request->integer('id')):new \App\Models\SignageScene();
         if($record->exists)abort_unless(hash_equals(hash('sha256',json_encode($record->content)),(string)$request->input('version')),409,'A jelenetet közben módosították. Frissítsd az oldalt.');
         $record->fill(['name'=>$request->input('name'),'content'=>$content])->save();

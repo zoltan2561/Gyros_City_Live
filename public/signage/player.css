@@ -1,4 +1,7 @@
 :root{color-scheme:dark;font-family:Arial,sans-serif;--scene-bg:#190c0a;--scene-accent:#ffc747;--scene-text:#fff3d2}
+@font-face{font-family:GCReference;src:url('reference-assets/BebasNeue-Regular.ttf') format('truetype');font-display:block}
+@font-face{font-family:GCReferenceScript;src:url('reference-assets/Satisfy-Regular.ttf') format('truetype');font-display:block}
+.food-description{display:none}
 *{box-sizing:border-box}body{margin:0;background:#130a08;color:#fff}button,a,select{font:inherit}button,a{cursor:pointer}button:focus-visible,a:focus-visible,select:focus-visible{outline:3px solid #ffc747;outline-offset:4px}
 .signage-stage{position:relative;isolation:isolate;width:100vw;height:100vh;overflow:hidden;padding:5vh 5vw;background:var(--scene-bg,#190c0a);color:var(--scene-text);display:flex;flex-direction:column}
 .theme-dark{--scene-bg:#190c0a;--scene-accent:#ffc747;--scene-text:#fff3d2;background-image:radial-gradient(ellipse at 50% 110%,#7e241b66,transparent 70%)}
@@ -19,7 +22,7 @@
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 .pair-panel{position:fixed;inset:15% 20%;z-index:6;background:#fff;color:#251514;padding:4vw;border-radius:12px;text-align:center;box-shadow:0 20px 80px #0008}.pair-panel[hidden]{display:none}.pair-code{display:block;font-size:clamp(40px,7vw,130px);letter-spacing:.1em;margin:3vh 0}.pair-panel button{background:#a61264;color:#fff;border:0;border-radius:6px;padding:12px 18px;margin:8px}.pair-panel p{font-size:clamp(16px,1.5vw,28px)}.food-name{line-height:1.25;max-height:2.5em}@media(max-width:600px){.pair-panel{inset:10% 5%;padding:24px}}
 
-/* Restaurant menu motion: the food and prices settle; only the backdrop keeps moving. */
+/* Shared restaurant advert atmosphere and entry choreography. */
 .kiosk-atmosphere{position:absolute;inset:0;overflow:hidden;z-index:-1;pointer-events:none}
 .kiosk-atmosphere::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(135deg,transparent 0 6px,rgba(255,255,255,.012) 6px 7px),radial-gradient(ellipse at 50% 35%,transparent 35%,rgba(0,0,0,.42) 100%)}
 .kiosk-glow{position:absolute;display:block;width:85vw;height:80vh;border-radius:50%;opacity:.28;animation:kiosk-glow-drift 19s ease-in-out infinite alternate}
@@ -62,3 +65,127 @@
 @keyframes kiosk-ember-rise{0%{opacity:0;transform:translate3d(0,0,0)}15%{opacity:.55}75%{opacity:.24}100%{opacity:0;transform:translate3d(calc(var(--spark-drift) * 1px),-88vh,0)}}
 @keyframes kiosk-orbit{from{transform:translate3d(0,0,0) scale(.94)}to{transform:translate3d(-6vw,8vh,0) scale(1.04)}}
 @media(prefers-reduced-motion:reduce){.kiosk-ember{display:none}.kiosk-glow,.kiosk-atmosphere::after,.food-card,.scene-heading,.scene-media,.fallback-brand{animation:none!important;transform:none!important}}
+
+/* Continuous advert: moving food, rotating highlights and full-size product spots. */
+.scene-word{position:absolute;top:10vh;left:-2vw;z-index:-1;white-space:nowrap;font:900 25vw/.9 Impact,'Arial Narrow',sans-serif;text-transform:uppercase;letter-spacing:-.035em;color:transparent;-webkit-text-stroke:1px color-mix(in srgb,var(--scene-accent) 14%,transparent);opacity:.65;animation:ad-word-drift 18s ease-in-out infinite alternate;pointer-events:none}
+.signage-stage:not(.scene-media):not(.signage-fallback){background-image:radial-gradient(ellipse at 10% 110%,#a735173d,transparent 65%)}
+.kiosk-glow{opacity:.5;animation-duration:9s}.kiosk-glow-accent{opacity:.17;animation-duration:13s}
+.kiosk-atmosphere::after{content:"";position:absolute;width:52vw;height:52vw;border:1px solid color-mix(in srgb,var(--scene-accent) 18%,transparent);border-radius:50%;right:-20vw;top:-38vw;box-shadow:0 0 0 5vw color-mix(in srgb,var(--scene-accent) 3%,transparent),0 0 0 10vw color-mix(in srgb,var(--scene-accent) 2%,transparent);animation:ad-orbit 14s linear infinite}
+.scene-heading{padding-bottom:1.7vh}.scene-brand{letter-spacing:-.07em;font-size:2.5vw}.scene-title{font-size:3.8vw;line-height:1;text-transform:uppercase;letter-spacing:-.015em}
+.scene-heading::after{width:12vw;animation:ad-rule 7s ease-in-out infinite alternate}
+.scene-grid .food-visual{padding:1vh .8vw;transition:transform 1.1s cubic-bezier(.16,1,.3,1)}
+.scene-grid .food-card[data-focused="true"] .food-visual{transform:translateY(-.6vh) scale(1.055)}
+.scene-grid .food-photo{animation:ad-food-float 6s ease-in-out infinite alternate;animation-delay:calc(var(--card-order,0) * -1.1s)}
+.scene-grid .food-name{transition:color .8s;max-height:3.75em}.scene-grid .food-card[data-focused="true"] .food-name{color:var(--scene-accent)}
+.scene-grid .food-card::before{content:"";position:absolute;inset:0 -1vw -1vh;z-index:-1;background:radial-gradient(ellipse,var(--scene-accent),transparent 68%);opacity:0;transition:opacity 1.2s;transform:scale(.9)}
+.scene-grid .food-card[data-focused="true"]::before{opacity:.12}
+.scene-footer{overflow:hidden;text-align:left;opacity:.65;border-top:1px solid color-mix(in srgb,var(--scene-accent) 20%,transparent);padding-top:1vh;margin-top:1.8vh;height:3.5vh;min-height:3.5vh}
+.scene-ticker{display:flex;width:max-content;gap:4vw;animation:ad-ticker 34s linear infinite;white-space:nowrap;font-weight:700;letter-spacing:.2em;font-size:.82vw}
+.scene-grid .food-grid[data-count="1"],.scene-grid .food-grid[data-count="2"],.scene-grid .food-grid[data-count="3"]{grid-template-rows:1fr;grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch}
+.scene-grid .food-grid[data-count="1"]{grid-template-columns:1fr}.scene-grid .food-grid[data-count="2"]{grid-template-columns:repeat(2,minmax(0,1fr))}
+.scene-grid .food-grid[data-count="4"]{grid-template-columns:repeat(2,minmax(0,1fr))}
+.scene-featured .food-grid,.scene-slideshow .food-grid{grid-template-columns:1fr;grid-template-rows:1fr}
+.scene-slideshow .scene-body,.scene-featured .scene-body{position:relative;padding-top:3vh;padding-bottom:6vh}
+.scene-slideshow .food-card,.scene-featured .food-card{display:grid;grid-template-columns:57% 1fr;grid-template-rows:1fr 1fr;gap:0 4vw;text-align:left;align-items:center;animation:ad-hero-arrive .9s cubic-bezier(.16,1,.3,1) both}
+.scene-slideshow .food-card[hidden]{display:none}
+.scene-slideshow .food-visual,.scene-featured .food-visual{grid-row:1/3;height:100%;width:100%;position:relative;isolation:isolate}
+.scene-slideshow .food-visual::before,.scene-featured .food-visual::before{content:"";position:absolute;inset:5%;z-index:-1;border:1px solid color-mix(in srgb,var(--scene-accent) 22%,transparent);border-radius:50%;transform:rotate(-16deg);box-shadow:0 0 0 2.4vw color-mix(in srgb,var(--scene-accent) 3%,transparent);animation:ad-halo 8s ease-in-out infinite alternate}
+.scene-slideshow .food-photo,.scene-featured .food-photo{width:100%;height:100%;object-fit:contain;border-radius:1.6vh;animation:ad-hero-photo 7s ease-in-out infinite alternate;filter:drop-shadow(0 2vh 2vh #0005)}
+.signage-stage.scene-slideshow .food-name,.signage-stage.scene-featured .food-name{font:900 clamp(32px,3.65vw,74px)/1.08 Impact,'Arial Narrow',Arial,sans-serif;letter-spacing:-.02em;text-wrap:balance;max-height:4.4em;align-self:end;margin:0 0 3vh;text-transform:uppercase;animation:ad-copy-arrive .9s .12s cubic-bezier(.16,1,.3,1) both;overflow:hidden}
+.scene-slideshow .food-prices,.scene-featured .food-prices{align-self:start;animation:ad-copy-arrive .9s .26s cubic-bezier(.16,1,.3,1) both}
+.scene-slideshow .food-price-row,.scene-featured .food-price-row{justify-content:flex-start}
+.signage-stage.scene-slideshow .food-price,.signage-stage.scene-featured .food-price{font-size:clamp(46px,5.1vw,100px);padding:.1em .32em .14em;border-radius:0;transform:rotate(-3deg);box-shadow:.14em .14em 0 color-mix(in srgb,var(--scene-accent) 18%,transparent)}
+.scene-slideshow .food-label,.scene-featured .food-label{font-size:1.3vw}
+.slide-counter{position:absolute;right:0;top:1.8vh;color:var(--scene-accent);font:800 1.2vw/1 Arial,sans-serif;letter-spacing:.15em}
+.slide-next{position:absolute;left:61%;right:0;bottom:2vh;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;font-size:1.05vw;opacity:.65}
+.slide-progress{position:absolute;bottom:.5vh;left:61%;right:0;height:3px;background:color-mix(in srgb,var(--scene-accent) 18%,transparent)}
+.slide-progress-fill{display:block;width:100%;height:100%;background:var(--scene-accent);transform-origin:left;animation:ad-progress var(--slide-seconds,7s) linear both}
+.scene-split .scene-word{font-size:20vw}.scene-media .scene-word{display:none}
+.theme-light .scene-word{opacity:.5}.theme-light .food-price{box-shadow:.08em .08em 0 #a612641a}
+.theme-light .scene-grid .food-photo{filter:drop-shadow(0 .9vh 1.3vh #54213925)}
+.theme-light .scene-heading{border-color:#a6126433}
+.signage-stage[data-paused="true"],.signage-stage[data-paused="true"] *,.signage-stage[data-paused="true"] *::before,.signage-stage[data-paused="true"] *::after{animation-play-state:paused!important}
+.preview-controls{font-size:12px;bottom:10px;left:10px;padding:8px}.preview-controls button[aria-pressed="true"]{background:#ffc747;color:#211514}.preview-status{pointer-events:none}.preview-controls p{font-size:11px;max-width:210px}.clean-preview .preview-status{display:none}
+@keyframes ad-food-float{from{transform:translate3d(-.25vw,.5vh,0) rotate(-.7deg)}to{transform:translate3d(.35vw,-.65vh,0) rotate(.7deg)}}
+@keyframes ad-hero-photo{from{transform:translate3d(-.5vw,.5vh,0) scale(.97) rotate(-1deg)}to{transform:translate3d(.5vw,-.5vh,0) scale(1.035) rotate(.5deg)}}
+@keyframes ad-hero-arrive{from{opacity:0;transform:translate3d(0,5vh,0) scale(.96)}to{opacity:1;transform:none}}
+@keyframes ad-copy-arrive{from{opacity:0;transform:translate3d(5vw,0,0)}to{opacity:1;transform:none}}
+@keyframes ad-halo{from{transform:rotate(-16deg) scale(.92)}to{transform:rotate(12deg) scale(1.08)}}
+@keyframes ad-word-drift{from{transform:translate3d(-3vw,0,0)}to{transform:translate3d(6vw,2vh,0)}}
+@keyframes ad-rule{from{transform:translateX(0) scaleX(.7)}to{transform:translateX(72vw) scaleX(1.2)}}
+@keyframes ad-orbit{to{transform:rotate(360deg) translate3d(2vw,3vh,0)}}
+@keyframes ad-ticker{to{transform:translateX(-25%)}}
+@keyframes ad-progress{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@media(prefers-reduced-motion:reduce){.signage-stage *,.signage-stage *::before,.signage-stage *::after{animation:none!important;transition:none!important}.food-photo,.food-visual{transform:none!important}.scene-grid .food-card[data-focused="true"] .food-visual{transform:none}.slide-progress-fill{transform:scaleX(1)}}
+
+/* Named recreations of the three supplied videos. Generic TV scenes stay separate. */
+.reference-scene{padding:0;background-color:var(--scene-bg);background-image:none!important;color:#fff}
+.reference-scene .scene-heading,.reference-scene .scene-footer,.reference-scene .scene-word,.reference-scene .slide-counter,.reference-scene .slide-next,.reference-scene .slide-progress{display:none}
+.reference-scene .scene-body{padding:0;gap:0;position:relative;width:100%;height:100%}
+.reference-scene .kiosk-atmosphere::before,.reference-scene .kiosk-atmosphere::after{display:none}
+.reference-burger .kiosk-atmosphere,.reference-pizza .kiosk-atmosphere{background:#190000 var(--reference-embers,url('reference-assets/embers.webp')) center/cover}
+.reference-burger .kiosk-glow,.reference-pizza .kiosk-glow{opacity:.65;bottom:-30vh;animation-duration:6s}
+.reference-scene .kiosk-ember{width:var(--spark-size);height:calc(var(--spark-size) * 1.6);border-radius:35%;filter:blur(.4px);background:#fb6d1b;box-shadow:0 0 14px #ff790b88;animation-name:reference-ember}
+.reference-scene .food-card{animation:reference-card-enter .7s cubic-bezier(.16,1,.3,1) both;animation-delay:calc(var(--card-order,0) * 65ms);gap:0}
+.reference-scene .food-visual{padding:0;transform:none!important;transition:none}
+.reference-scene .food-photo{border-radius:0;filter:none;animation:reference-food-breathe 8s ease-in-out infinite alternate;animation-delay:calc(var(--card-order,0) * -1.3s)}
+.reference-scene .food-card::before,.reference-scene .food-visual::before{display:none}
+.reference-scene .food-name{color:inherit!important;text-shadow:none;margin:0;font-weight:700;letter-spacing:0}
+.reference-scene .food-price{background:none;box-shadow:none;padding:0;border-radius:0;transform:none;color:inherit;line-height:1.1;white-space:nowrap;letter-spacing:0}
+.reference-scene .food-prices{width:auto;gap:0}.reference-scene .food-price-row{gap:.35vw;flex-wrap:nowrap}
+.reference-burger .food-grid{gap:0;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr))}
+.reference-burger .food-card{padding:0 .4vw .4vh;display:flex;flex-direction:column;align-items:stretch}
+.reference-burger .food-visual{flex:1;min-height:0}.reference-burger .food-photo{max-width:100%;max-height:100%;object-fit:contain}
+.reference-burger .food-caption{display:flex;justify-content:center;align-items:baseline;gap:.2vw;color:#ffba00;flex-shrink:0;padding:.4vh 0;mask-image:var(--reference-grunge-mask,url('reference-assets/grunge-mask.svg'));mask-size:45vw 15vh}
+.signage-stage.reference-burger .food-name,.signage-stage.reference-burger .food-price{font:400 3.8vw/1.12 var(--reference-display-font,GCReference),Impact,sans-serif;max-height:1.12em}
+.reference-burger .food-name::after{content:' -'}.reference-burger .food-prices{flex-shrink:0}
+.reference-menu{padding:1.3vh 1.2vw 2.5vh}.reference-menu .kiosk-atmosphere,.reference-kebab .kiosk-atmosphere{display:none}
+.reference-menu .food-grid{gap:2.3vh 2.4vw;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr))}
+.reference-menu .food-card,.reference-kebab .food-card{display:flex;flex-direction:column;align-items:stretch;padding:0;min-height:0}
+.reference-menu .food-visual,.reference-kebab .food-visual{flex:1;min-height:0}.reference-menu .food-photo{object-fit:contain}
+.reference-menu .food-caption{background:#ff0073;color:#fff;border-radius:1.6vh;padding:.45vh .35vw .65vh;display:flex;align-items:baseline;justify-content:center;gap:.35vw;flex-shrink:0;box-shadow:0 0 0 1px #c0005260}
+.signage-stage.reference-menu .food-name,.signage-stage.reference-menu .food-price{font:700 1.8vw/1.08 Arial,sans-serif;max-height:2.16em}
+.reference-menu .food-name::after{content:' -'}.reference-menu .food-prices{display:flex;flex-wrap:nowrap}.reference-menu .food-price-row+.food-price-row::before{content:'/';padding:0 .25vw}
+.reference-menu .food-grid[data-count="7"],.reference-menu .food-grid[data-count="8"]{grid-template-columns:repeat(4,minmax(0,1fr))}
+.reference-menu .food-grid[data-count="7"]{grid-template-columns:repeat(12,minmax(0,1fr))}.reference-menu .food-grid[data-count="7"] .food-card{grid-column:span 3}.reference-menu .food-grid[data-count="7"] .food-card:nth-child(n+5){grid-column:span 4}
+.reference-menu .food-grid[data-count="7"] .food-caption,.reference-menu .food-grid[data-count="8"] .food-caption{flex-direction:column;align-items:center;gap:.1vh;text-align:center}
+.reference-menu .food-grid[data-count="7"] .food-name::after,.reference-menu .food-grid[data-count="8"] .food-name::after{content:''}
+.reference-menu .food-grid[data-count="7"] .food-name,.reference-menu .food-grid[data-count="7"] .food-price,.reference-menu .food-grid[data-count="8"] .food-name,.reference-menu .food-grid[data-count="8"] .food-price{font-size:1.65vw}
+.reference-kebab{padding:3vh 10vw 7vh;background:#0a0702!important}.reference-kebab .scene-body{padding:2vh 2vw;background:#b77b2e var(--reference-wood,url('reference-assets/wood.webp')) center/100% 100%}
+.reference-kebab .food-grid{grid-template-columns:repeat(6,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:2vh 1vw}
+.reference-kebab .food-card{grid-column:span 2}.reference-kebab .food-card:nth-child(-n+2){grid-column:span 3}
+.reference-kebab .food-caption{display:flex;justify-content:center;align-items:baseline;gap:.4vw;flex-wrap:wrap;color:#fff;padding:.4vh 0}
+.signage-stage.reference-kebab .food-name,.signage-stage.reference-kebab .food-price{font:700 2vw/1.08 Arial,sans-serif;max-height:2.2em}
+.reference-pizza .food-grid,.reference-intro .food-grid{display:block;position:relative;width:100%;height:100%}
+.reference-pizza .food-card,.reference-intro .food-card{position:absolute;inset:0;display:block;animation:none}
+.reference-pizza .food-card[hidden]{display:none}
+.reference-pizza .food-visual{position:absolute;left:-1vw;top:21vh;width:71vw;height:78vh;animation:reference-pizza-arrive 1.25s cubic-bezier(.16,1,.3,1) both}
+.reference-pizza .food-photo{width:100%;height:100%;object-fit:contain;animation:reference-pizza-breathe 20s ease-in-out both}
+.signage-stage.reference-pizza .food-name{position:absolute;top:4vh;left:46vw;right:1vw;font:400 8.5vw/.98 var(--reference-display-font,GCReference),Impact,sans-serif;text-transform:uppercase;text-align:center;max-height:2.05em;overflow:visible;animation:none;mask-image:var(--reference-grunge-mask,url('reference-assets/grunge-mask.svg'));mask-size:45vw 25vh}
+.ref-letter{display:inline-block;animation:reference-letter-enter .75s cubic-bezier(.16,1,.3,1) both;animation-delay:calc(.4s + var(--letter) * .065s)}
+.reference-pizza .food-prices{position:absolute;right:8vw;top:29vh;animation:reference-price-enter .8s var(--price-reveal-delay,6s) both}
+.signage-stage.reference-pizza .food-price{font:400 4.4vw/1 var(--reference-display-font,GCReference),Impact,sans-serif;color:#ffbd00;mask-image:var(--reference-grunge-mask,url('reference-assets/grunge-mask.svg'))}
+.reference-pizza .food-description{display:block;position:absolute;bottom:2.5vh;right:1.5vw;width:32vw;max-height:35vh;overflow:hidden;margin:0;font:400 1.6vw/1.35 var(--reference-script-font,GCReferenceScript),Georgia,serif;text-align:center;color:#fff;animation:reference-copy-enter 1s 1s both}
+.reference-intro{background:#060606 var(--reference-smoke,url('reference-assets/smoke.webp')) center/cover!important;isolation:isolate}
+.reference-intro::before{content:'';position:absolute;right:0;top:0;bottom:0;width:28%;background:#ff5800;clip-path:polygon(12% 0,100% 0,100% 100%,0 100%,15% 72%,0 55%,11% 36%,0 20%)}
+.reference-intro .kiosk-atmosphere{background:none}.reference-intro .kiosk-glow{display:none}.reference-intro .kiosk-ember{opacity:.15}
+.reference-intro .food-visual{position:absolute;right:-3vw;top:-12vh;width:60vw;height:95vh;animation:reference-promo-pizza 1.2s cubic-bezier(.16,1,.3,1) both}
+.reference-intro .food-photo{width:100%;height:100%;object-fit:contain;animation:reference-intro-breathe 16s ease-in-out infinite alternate}
+.reference-intro .food-name,.reference-intro .food-prices,.reference-intro .food-description{display:none}
+.reference-promo{position:absolute;left:5vw;top:14vh;width:48vw;z-index:2;animation:reference-copy-enter 1s .25s both}
+.promo-eyebrow{font:700 1.15vw Arial,sans-serif;letter-spacing:.16em;margin:0 0 4vh}.promo-brand{font:400 6.1vw/1 var(--reference-script-font,GCReferenceScript),cursive;color:#f76a14;transform:rotate(-5deg);margin-left:2vw}
+.promo-title{font:400 10.5vw/.85 var(--reference-display-font,GCReference),Impact,sans-serif;margin:0 0 2vh;letter-spacing:-.01em;color:#fff;mask-image:var(--reference-grunge-mask,url('reference-assets/grunge-mask.svg'));mask-size:45vw 25vh}
+.promo-copy{white-space:pre-line;font:400 1.8vw/1.35 Arial,sans-serif;margin:0 0 3vh;max-width:36vw}.promo-cta{display:inline-block;border:2px solid #d74c13;padding:1vh .6vw;font:700 1.8vw Arial,sans-serif;letter-spacing:.03em}.promo-site{font:400 1.15vw Arial,sans-serif;letter-spacing:.12em;margin-top:6vh;color:#ccc}
+.promo-dessert{position:absolute;left:44vw;bottom:-9vh;width:29vw;height:43vh;object-fit:contain;z-index:2;border-radius:50%;animation:reference-dessert-arrive 1.2s .4s both}
+@keyframes reference-ember{0%{opacity:0;transform:translate3d(-8vw,14vh,0) rotate(-20deg) scale(.3)}15%{opacity:.8}80%{opacity:.6}100%{opacity:0;transform:translate3d(18vw,-110vh,0) rotate(80deg) scale(1.3)}}
+@keyframes reference-card-enter{from{opacity:0;transform:translate3d(0,7vh,0) scale(.8)}to{opacity:1;transform:none}}
+@keyframes reference-food-breathe{from{transform:scale(.985) translateY(.2vh)}to{transform:scale(1.015) translateY(-.35vh)}}
+@keyframes reference-pizza-arrive{from{opacity:0;transform:translate3d(-40vw,20vh,0) rotate(-15deg)}to{opacity:1;transform:none}}
+@keyframes reference-pizza-breathe{from{transform:scale(.97) rotate(-1deg)}to{transform:scale(1.025) rotate(1deg)}}
+@keyframes reference-letter-enter{from{opacity:0;transform:translate3d(0,-20vh,0) rotate(-18deg)}to{opacity:1;transform:none}}
+@keyframes reference-price-enter{from{opacity:0;transform:translateX(18vw)}to{opacity:1;transform:none}}
+@keyframes reference-copy-enter{from{opacity:0;transform:translateY(5vh)}to{opacity:1;transform:none}}
+@keyframes reference-promo-pizza{from{opacity:0;transform:translate3d(30vw,-20vh,0) rotate(60deg)}to{opacity:1;transform:none}}
+@keyframes reference-intro-breathe{from{transform:rotate(-3deg) scale(.95)}to{transform:rotate(6deg) scale(1.04)}}
+@keyframes reference-dessert-arrive{from{opacity:0;transform:translate3d(0,30vh,0) rotate(-30deg)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.reference-scene *,.reference-scene *::before,.reference-scene *::after{animation:none!important;transition:none!important;transform:none!important}.reference-scene .kiosk-ember{display:none}.reference-pizza .food-prices{opacity:1}}

@@ -25,6 +25,7 @@ class SignageCatalogTest extends \Tests\TestCase
         Schema::create('item', function (Blueprint $t) {
             $t->id(); $t->integer('cat_id')->default(1); $t->string('item_name')->default('City Burger');
             $t->string('price')->default('2260'); $t->string('original_price')->default('2500');
+            $t->text('item_description')->nullable();
             $t->string('tax')->default('13'); $t->string('addons_id')->nullable();
             $t->integer('item_status')->default(1); $t->boolean('today_unavailable')->default(false);
             $t->integer('is_top_deals')->default(0); $t->timestamps();
@@ -70,6 +71,29 @@ class SignageCatalogTest extends \Tests\TestCase
         $this->assertSame('2,260 Ft', $row['formatted_price']); $this->assertTrue($row['available']);
         $this->assertNull($row['image']); $this->assertArrayNotHasKey('tax', $row);
         $this->assertSame('2026-11-09T12:00:00+00:00', $result['valid_until']);
+    }
+
+    public function test_tv_ingredients_keep_tooltip_labels_and_remove_definitions_and_html(): void
+    {
+        DB::table('item')->where('id',1)->update(['item_description'=>'<p>[[Mozzarella|A long cheese explanation]], [[Bazsalikom||Herb tooltip]]</p>']);
+        $this->assertSame('Mozzarella, Bazsalikom',$this->snapshot()['products'][0]['description']);
+    }
+
+    public function test_local_demo_follows_reference_order_and_skips_unavailable_pizzas(): void
+    {
+        $this->mock(SignageCatalog::class,function ($mock) {
+            $mock->shouldReceive('snapshot')->once()->andReturnUsing(function ($bindings) {
+                return ['products'=>array_map(fn($b)=>['id'=>$b['id'],'item_id'=>$b['item_id'],
+                    'available'=>!in_array($b['item_id'],[341,338,329],true),'price'=>'2200.00','image'=>'/pizza.jpg'],$bindings)];
+            });
+        });
+        $data=app(\App\Services\Signage\SignageDemoPrograms::class)->build(new \DateTimeImmutable('2026-11-09T12:00:00Z'));
+        $pizza=collect($data['programs'])->firstWhere('id','pizza')['scenes'][1];
+        $this->assertSame([336,342,339,333,335,334,332],array_column($pizza['bindings'],'item_id'));
+        $this->assertSame(140,$pizza['duration']);
+        $menu=collect($data['programs'])->firstWhere('id','menu')['scenes'];
+        $this->assertCount(6,$menu);$this->assertSame(96,array_sum(array_column($menu,'duration')));
+        $this->assertSame([60,61,62,63,65,64],array_column(collect($data['programs'])->firstWhere('id','burger')['scenes'][0]['bindings'],'item_id'));
     }
 
     /** @dataProvider dealPrices */

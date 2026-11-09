@@ -1,5 +1,17 @@
 # Helyi végrehajtási napló
 
+## Az alap commitolása
+
+A felhasználó jóváhagyta az elkészült alap commitolását a `feature/gctv-v1-local` ágon. A commit a folyamatos reklámműsort, a három referenciavideó kioszkos változatát, a hozzájuk tartozó ármentes asseteket, regressziós teszteket és dokumentációt foglalja össze. A folytatás külön fejlesztési kör lesz; ez a lépés nem tartalmaz push-t, publikálást vagy élesítést.
+
+## Három forrásvideó alapján újraépített kioszk – 2026-11-09
+
+A felhasználó megadta mindhárom eredeti helyi videót, és a három változat másolatát kérte. A korábbi általános demót a megfigyelt kompozíciókhoz igazítottuk: hat burger egy parázslapon, hat eredeti étlapoldal a megfelelő 3×2/4+3/4×2/2+3 rácsokkal, illetve Pizza Time nyitókép és egyedi nagy pizzák. Fotók/hátterek leválasztva, a történeti árak nem kerültek át a médiába. Helyi fontok és licencek, termékazonosítóhoz kötött referenciaképek, közös renderelőben választható megjelenések készültek.
+
+A három helyi vázlat listaazonosítója 7/8/9; egyik sincs publikálva. A jelenlegi rendelhetőség miatt 7/10 referencia-pizza aktív; termékstátusz és katalógusár nem változott. A nyitó akciós felirat a felhasználó videójának másolata, nem ajándékpromóció-aktiválás. A kép-/fontverziók teljes SHA-256-os fizikai fájlt és jelenethez kötött descriptorokat kaptak, ezért régi és új kiadás együtt is előtölthető. Az eszköz ezeket blob-URL-ekkel használja, a fontcsalád is checksumhoz kötött.
+
+Teljes ellenőrzés: **324 PHP-teszt / 1401 állítás**, **87 JS-teszt**, Blade cache és szigorú UI statikus audit sikeres. Valódi böngészős referenciakép-összevetés, két TV-felbontás, teljes lapozás, rövid árfelfedés, árfrissítési DOM-megőrzés, szünet, lejárat és 13 fájlos offline checksum-próba sikeres. Független reviewer utolsó readbackjében nem maradt fontos találat. Részletek: `acceptance.md`, `reference-rebuild.md` és az assetmappa README-je. A módosítások továbbra is helyiek és nem commitoltak; élesítés nincs.
+
 Terv: [implementation-plan.md](implementation-plan.md), GCTV-V1-20261109. A felhasználó 2026-11-09-én jóváhagyta: „kövesd a tervet és haladj önállóan”. Helyi fejlesztés, külön feature branch, commit/push engedélyezett; élesítés nincs.
 
 Végrehajtás: ugyanebben a munkamenetben, T0–T6 sorrendben. A helyszíni T7 külön, igazolt hardverrel végezhető.
@@ -42,3 +54,11 @@ A részletes bizonyíték és korlátok: [acceptance.md](acceptance.md). A helyi
 Task T1: complete — commit `5cd278b`; az árparitási és kapcsolódó checkout-tesztek sikeresek.
 
 Task T2–T6: helyi megvalósítás — commit `2956f4b`; a teljes PHPUnit-futás 311 teszt / 1357 állítás, a teljes Node-futás 71 teszt, minden teszt sikeres. PHP-lint: 53 fájl, 0 hiba; Blade cache és JS-szintaxis sikeres. Az utolsó megismételt videó + DB-árpróba 23 921 ms és változatlan videóelem; az eredeti 2260 Ft-os ár újra visszaolvasva. A végső offline újraindítás és online helyreállás is sikeres.
+
+## Folyamatos reklámműsor – 2026-11-09
+
+A felhasználó aktív, folyamatosan futó reklámot kért az egyszer beúszó rács helyett, külön egyenkénti pizzabemutatóval. Megvalósult a közös `slideshow` jelenettípus, beállítható diánkénti idő, automatikus teljes jelenethossz, folyamatos fotómozgás/kiemelés/háttérfelirat és görgetett márkafelirat. A demo kilenc jelenetet játszik körbe három külön is választható műsorban; a 14 érvényes pizza 98 másodperces bemutatót kap. A termékadatok olvasása és árfrissítése változatlan közös árforrást használ, üzleti adatot nem írtunk.
+
+A normál eszköz-jelenetváltás már a következő tartalom előkészítése után cserél, köztes tartalékfelvillanás nélkül; lejárat/visszavonás továbbra is azonnal leállítja az áras tartalmat. Független review nyomán javítva: az osztott nézet kártyaszám szerinti CSS-felülírása, a részben eltelt diánál megnyomott szünet hátralévő ideje és a szüneteltetett adminelőnézet árlejárata. Ezek végrehajtott regressziós tesztet kaptak.
+
+Ellenőrzés: teljes PHPUnit 317 teszt / 1374 állítás; a JavaScript- és böngészős eredményeket az acceptance kiegészítése rögzíti. Az eredeti videófájlok továbbra sem állnak rendelkezésre, a harmadik referencia sem érkezett meg: pontos másolati egyezés nem állítható. Fizikai TV-próba és élesítés nem történt. A mostani módosítások helyi, még nem commitolt munkafa-változások a meglévő feature ágon.

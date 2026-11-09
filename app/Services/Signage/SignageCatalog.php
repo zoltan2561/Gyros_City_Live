@@ -21,6 +21,7 @@ class SignageCatalog
             $item = $items->get($binding['item_id'] ?? 0);
             $row = ['id' => (string) $binding['id'], 'item_id' => (int) ($binding['item_id'] ?? 0),
                 'label' => (string) ($binding['label'] ?? ''), 'name' => $item ? $item->item_name : '',
+                'description' => $item ? preg_replace('/\[\[([^|\]]+)\|{1,2}.*?\]\]/su','$1',strip_tags((string)$item->item_description)) : '',
                 'available' => false, 'price' => null, 'formatted_price' => null,
                 'reference_price' => null, 'formatted_reference_price' => null, 'image' => null,
                 'reason' => 'unavailable'];
@@ -45,6 +46,7 @@ class SignageCatalog
                         $photo=\App\Models\SignageMedia::where('status','ready')->where('mime','like','image/%')->find($binding['photo_media_id']);
                         $row['image']=$photo?url('signage/api/v1/media/'.$photo->checksum):null;
                     }
+                    if(empty($binding['photo_media_id'])&&!empty($binding['artwork']))$row['image']=app(SignageReferenceAssets::class)->image($binding['artwork'],(int)$item->id,$binding['artwork_file']??null);
                 } catch (ValidationException $e) {
                     $row['reason'] = 'configuration_required';
                 }

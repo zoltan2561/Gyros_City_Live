@@ -13,6 +13,21 @@ async function cached(request){
  }
  return null;
 }
+async function activeArtwork(request){
+ // Read the application's committed package without creating an empty IndexedDB.
+ const manifest=await new Promise(resolve=>{
+  const opened=indexedDB.open('gc-signage-'+base.pathname);
+  opened.onupgradeneeded=()=>opened.transaction.abort();
+  opened.onerror=()=>resolve(null);
+  opened.onsuccess=()=>{
+   const db=opened.result;if(!db.objectStoreNames.contains('state')){db.close();resolve(null);return;}
+   const read=db.transaction('state','readonly').objectStore('state').get('manifest');
+   read.onsuccess=()=>{db.close();resolve(read.result);};read.onerror=()=>{db.close();resolve(null);};
+  };
+ });
+ if(!manifest?.cache_name)return null;
+ return (await caches.open(manifest.cache_name)).match(request.url);
+}
 async function range(response,header){
  const bytes=await response.arrayBuffer(),total=bytes.byteLength,match=/^bytes=(\d*)-(\d*)$/.exec(header||'');
  if(!match)return new Response(null,{status:416,headers:{'Content-Range':'bytes */'+total}});
@@ -25,8 +40,15 @@ self.addEventListener('fetch',event=>{
  if(event.request.method!=='GET'||url.origin!==base.origin)return;
  const isShell=shellUrls.includes(url.href);
  const isMedia=url.pathname.startsWith(new URL('api/v1/media/',base).pathname);
- if(!isShell&&!isMedia)return;
+ const isArtwork=url.pathname.startsWith(new URL('public/signage/reference-assets/',project).pathname);
+ if(!isShell&&!isMedia&&!isArtwork)return;
  event.respondWith((async()=>{
+  if(isArtwork){
+   // A checksum-verified preload must see the new network bytes, never old cached artwork.
+   if(event.request.cache==='no-store')return fetch(event.request);
+   try{const response=await activeArtwork(event.request);if(response)return response;}catch(e){}
+   return fetch(event.request);
+  }
   if(isShell){
    try{const response=await fetch(event.request);if(response.ok){(await caches.open(shell)).put(event.request,response.clone());return response;}}catch(e){}
   }

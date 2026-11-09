@@ -17,9 +17,9 @@ class SignagePublisher {
             $record=SignageScene::find($id);
             if(!$record)throw ValidationException::withMessages(['playlist'=>'Hiányzó jelenet.']);
             $scene=app(SignageSceneDefinition::class)->validate($record->content);
-            $prefix='s'.$id.'-'.substr(hash('sha256',json_encode($scene)),0,12).'-';
+            $prefix='s'.$id.'-'.substr(hash('sha256',json_encode([$scene,app(SignageReferenceAssets::class)->files([$scene])])),0,12).'-';
             $scene['id']=$prefix.$position;
-            foreach($scene['bindings'] as &$binding){$binding['id']=$prefix.$binding['id'];$bindings[$binding['id']]=$binding;}unset($binding);
+            foreach($scene['bindings'] as &$binding){$binding=app(SignageReferenceAssets::class)->pin($binding);$binding['id']=$prefix.$binding['id'];$bindings[$binding['id']]=$binding;}unset($binding);
             foreach(['media_id'=>'media','background_media_id'=>'background_media','logo_media_id'=>'logo'] as $field=>$target){
                 if(empty($scene[$field]))continue;
                 $m=SignageMedia::find($scene[$field]);
@@ -44,11 +44,11 @@ class SignagePublisher {
                 if(!$photo||!$photo->path||!Storage::disk('local')->exists($photo->path)||!hash_equals($photo->checksum,hash_file('sha256',Storage::disk('local')->path($photo->path))))throw ValidationException::withMessages(['photo'=>'Hiányzó vagy még nem kész termékfotó.']);
                 $media[$photo->checksum]=['id'=>$photo->id,'checksum'=>$photo->checksum,'bytes'=>$photo->bytes,'mime'=>$photo->mime,'url'=>url('signage/api/v1/media/'.$photo->checksum),'baked_prices'=>false];
             }
-            $scenes[]=$scene;
+            $scenes[]=app(SignageReferenceAssets::class)->decorate($scene);
         }
         $quote=app(SignageCatalog::class)->snapshot(array_values($bindings),new \DateTimeImmutable());
         foreach($quote['products'] as $p)if(!$p['available'])throw ValidationException::withMessages(['bindings'=>'Nem elérhető étel vagy hiányos feltétválasztás: '.$p['name']]);
-        $files=array_values($media);
+        $files=array_merge(array_values($media),app(SignageReferenceAssets::class)->files($scenes));
         foreach($quote['products'] as $p){
             if(!$p['image'])continue;
             $filename=basename(parse_url($p['image'],PHP_URL_PATH));$path=storage_path('app/public/admin-assets/images/item/'.$filename);

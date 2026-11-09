@@ -20,12 +20,19 @@
         }
     }
     document.querySelectorAll('.binding-row').forEach(r=>choices(r,true));
+    function sceneType(){const slides=document.getElementById('scene-type')?.value==='slideshow';const options=document.getElementById('slide-options');if(options)options.hidden=!slides;const duration=document.getElementById('scene-duration');if(duration)duration.readOnly=slides;}
+    document.getElementById('scene-type')?.addEventListener('change',sceneType);sceneType();
+    document.getElementById('scene-design')?.addEventListener('change',e=>{
+        const types={'reference-burger':'grid','reference-menu':'grid','reference-kebab':'grid','reference-pizza':'slideshow','reference-intro':'featured'};
+        if(types[e.target.value])document.getElementById('scene-type').value=types[e.target.value];
+        if(e.target.value==='reference-pizza')document.getElementById('scene-slide-seconds').value='20';sceneType();
+    });
     document.getElementById('scene-theme')?.addEventListener('change',e=>{
         const light=e.target.value==='light';document.getElementById('scene-bg').value=light?'#f6f2f2':'#190c0a';
         document.getElementById('scene-accent').value=light?'#a61264':'#ffc747';document.getElementById('scene-text-color').value=light?'#22131f':'#fff3d2';
     });
     const rows=document.getElementById('binding-rows');
-    rows?.addEventListener('change',e=>{if(e.target.matches('.binding-item'))choices(e.target.closest('.binding-row'),false);});
+    rows?.addEventListener('change',e=>{if(e.target.matches('.binding-item')){const row=e.target.closest('.binding-row');row.querySelector('.binding-artwork').value='';row.querySelector('input[name$="[title]"]').value='';choices(row,false);}});
     rows?.addEventListener('click',e=>{if(e.target.matches('.remove-binding')){e.target.closest('.binding-row').remove();document.getElementById('add-binding').focus();}});
     let nextIndex=rows?Math.max(0,...[...rows.children].map(r=>Number(r.dataset.index)))+1:0;
     document.getElementById('add-binding')?.addEventListener('click',()=>{

@@ -64,15 +64,18 @@ async function synchronize(){
  finally{syncing=false;}
 }
 async function hydrate(scene){
- const result=structuredClone(scene);
- for(const key of ['media','background_media','logo'])if(result[key]){const u=await GCSignageStorage.blobUrl(manifest,result[key].url);urls.push(u);result[key].url=u;}
+ const result=structuredClone(scene),preparedUrls=[],images=new Map();
+ try{
+ for(const key of ['media','background_media','logo'])if(result[key]){const u=await GCSignageStorage.blobUrl(manifest,result[key].url);preparedUrls.push(u);result[key].url=u;}
+ for(const asset of Object.values(result.reference_assets||{})){const u=await GCSignageStorage.blobUrl(manifest,asset.url);preparedUrls.push(u);asset.url=u;}
  const products=[];
  for(const p of catalog?.products||[]){
   let image=p.image;
-  if(image)try{const source=image;image=await GCSignageStorage.blobUrl(manifest,image);urls.push(image);cachedImages.set(source,image);}catch(e){image=null;}
+  if(image)try{const source=image;image=await GCSignageStorage.blobUrl(manifest,image);preparedUrls.push(image);images.set(source,image);}catch(e){image=null;}
   products.push({...p,image});
  }
- return {scene:result,products};
+ return {scene:result,products,urls:preparedUrls,images};
+ }catch(e){preparedUrls.forEach(URL.revokeObjectURL);throw e;}
 }
 async function next(){
  if(!token||changing)return;changing=true;
@@ -88,10 +91,12 @@ async function next(){
   if((failedScenes.get(scene.id)||0)>performance.now())continue;
   if(!GCSignageSchedule.sceneAllowed(scene,state))continue;
   if(scene.type!=='media'&&!GCSignage.cardsForScene(scene,catalog?.products||[]).length)continue;
-  fallback();const cycle=cycleId;
+  const preparationCycle=cycleId;
   try{
-   const ready=await hydrate(scene);if(cycle!==cycleId||!token)return;
-   renderer=GCSignage.render(root,ready.scene,ready.products);current={...scene,release_id:releaseId};
+   const ready=await hydrate(scene);if(preparationCycle!==cycleId||!token){ready.urls.forEach(URL.revokeObjectURL);return;}
+   if(!GCSignageSchedule.sceneAllowed(scene,{fresh:fresh(),invalid_media:catalog?.invalid_media||[]})){ready.urls.forEach(URL.revokeObjectURL);fallback();return;}
+   const cycle=++cycleId;
+   renderer=GCSignage.render(root,ready.scene,ready.products);urls.forEach(URL.revokeObjectURL);urls=ready.urls;cachedImages=ready.images;current={...scene,release_id:releaseId};
    started=performance.now();videoChecked=started;videoProgress=0;
    heartbeat();
    root.querySelectorAll('video').forEach(video=>{

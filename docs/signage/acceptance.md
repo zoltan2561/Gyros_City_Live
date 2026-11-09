@@ -1,5 +1,20 @@
 # Helyi elfogadási eredmények
 
+## A három rendelkezésre álló videó kioszkos változata
+
+2026-11-09, újabb kör: mindhárom helyi forrásvideó metaadata, idővonala és mintaképkockái ellenőrizve. Eredeti ételfotók/hátterek alapján újraépített 20 mp-es burgerlap, hatoldalas 96 mp-es étlap és nyitóképes pizzaműsor. A videók teljes editoranimációjának képkockánkénti azonossága nem állítható; a mozgás webes újraépítés.
+
+- Teljes PHP: **324 teszt / 1401 állítás**, teljes JavaScript: **87 teszt**, minden teszt sikeres. Parancsok: `php -d auto_prepend_file=tests/offline-prepend.php vendor/phpunit/phpunit/phpunit`, `node --test tests/frontend/*.test.cjs`.
+- Blade cache sikeres. A prémium UI statikus auditja szigorú módban 0 hibát/jelzést adott. A Python-assetgenerátor szintaxisa és a valódi három forrásfájllal végrehajtott generálás sikeres.
+- Playwright: 1920×1080 és 1280×720, minden referenciaoldal; a hét aktív pizza és mind a hat étlapoldal körbefutása; valós idejű fotómozgás; szünet utáni maradék idő; árlejárat. Nincs levágott név vagy JavaScript-oldalhiba.
+- Ötmásodperces pizzadián az ár láthatóvá vált a következő termék előtt. Árfrissítéskor ugyanaz a fotó és ugyanazok a cím-betűelemek maradtak; a font betöltve. A szintetikus ár csak az izolált böngészős tesztben változott, üzleti árat nem írt.
+- A gyrosoldal bejelentkezett adminmentése után a közös kártya két ársora és a referenciastílus megmaradt. A három helyi adminvázlat (listák 7/8/9) csomagépítése sikeres; nem történt publikálás vagy kijelző-hozzárendelés.
+- Valódi service worker, hálózat nélküli 13 referenciafájl-letöltés: minden kép/font/háttér checksum egyezett a kijelölt csomaggal, korábbi ütköző cache mellett is. Külön regresszió védi a verziók fizikai változatlanságát és a régi/új jelenetekhez tartozó külön assetválasztást.
+- Független review: az eltérő assetverziók és rövid pizzadiák árfelfedési hibái javítva, végső readbackben nem maradt fontos találat.
+- Eltérések az üzleti állapot miatt: a Carbonara, Magyaros és Songoku le van tiltva, ezért az aktív körben hét pizza van. Az eredeti nyitókép akciószövege másolva, rendelési ajándékakció nem aktiválva. Fizikai TV-s/24 órás pilot és élesítés továbbra sem történt.
+
+Képernyőképek és QA-segédek az ignorált `.playwright-mcp/reference-copy-*`, `signage-reference-*.cjs` fájlokban. A következő szakaszok a korábbi fejlesztési körök történeti eredményei.
+
 2026-11-09 · GCTV-V1-20261109 · Windows / XAMPP PHP 8.2.12 / Laravel 9.52.16 / MariaDB 10.4.32 / helyi Chromium.
 
 ## Bizonyított helyi működés
@@ -57,3 +72,13 @@ Független kódreview után regresszió védi a shell cache megőrzését, azono
 - Legalább 24 órás valós lejátszás, áramkimaradás és a visszatérés idejének mérése.
 
 Merge, deploy és helyszíni pilot nem történt. Ez helyben tesztelhető fejlesztési változat.
+# Folyamatos reklám kiegészítés – 2026-11-09
+
+- Teljes PHP: `php -d auto_prepend_file=tests/offline-prepend.php vendor/phpunit/phpunit/phpunit` → **317 teszt, 1374 állítás, sikeres**.
+- Teljes JavaScript: `node --test tests/frontend/*.test.cjs` → **82 teszt, sikeres**. Új regresszió: diaváltás/körbefutás, árfrissítés közbeni DOM- és időzítőmegőrzés, eltűnő termék, időzítő-megszüntetés, részben eltelt dia szüneteltetése, automatikus adminelőnézet és lejárat szünet közben.
+- `artisan view:cache` és `git diff --check` sikeres. Az új PHP-validáció és demoprogram-szűrés a teljes tesztfutás része.
+- Valódi helyi HTTP-katalógus: burger 2 jelenet, világos étlap 6 oldal, pizza 1 jelenet / 14 termék. A teljes műsor 9 jelenet. Sem a katalógusárak, sem a termékképek nem módosultak.
+- Playwright: 1920×1080 és 1280×720 minden demojelenet, nincs kilógó termékkártya vagy levágott név. Mind a 14 különböző pizza sorra került, majd a sor elölről indult. Automatikus burger- és étlapváltás, szünet/folytatás, csökkentett mozgás és szintetikus rövid árérvényesség miatti tartalék igazolt.
+- Bejelentkezett adminelőnézet automatikus lapozása, 2/3 kártyás osztott nézet egyoszlopos geometriája és szünet közbeni árlejárata böngészőben sikeres. Nincs JavaScript-oldalhiba.
+- Független review után mindhárom talált regresszió javítva és újraellenőrizve; fennmaradó fontos hibát a reviewer nem jelzett.
+- Képernyőképek és helyi QA-script az ignorált `.playwright-mcp/signage-advert-*` fájlokban. Ezek nem helyettesítik az eredeti három videóval végzett vizuális összevetést vagy a valódi TV-s pilotot. Forrásvideók hiányában pontos másolat nem igazolt; élesítés és új üzletiadat-írás nem történt.

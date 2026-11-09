@@ -50,3 +50,14 @@ test('revocation prevents a pending release callback and timers from restarting 
  for(const timer of timers.filter(t=>t.ms===1000))timer.fn();await flush();
  assert.equal(stored.token,null);assert.equal(renders,0);assert(falls>=2);
 });
+
+test('ordinary scene transitions keep the advert on screen without a safety-fallback flash',async()=>{
+ let now=0,renders=0,falls=0;const timers=[];
+ const node={textContent:'',hidden:false,addEventListener(){},querySelectorAll:()=>[],querySelector:()=>null};
+ const manifest={schema_version:1,server_time:'2026-11-09T12:00:00Z',default_release_id:1,schedule_valid_until:'2026-11-16T12:00:00Z',schedules:[],releases:[{id:1,snapshot:{scenes:[{id:'a',type:'grid',duration:5},{id:'b',type:'grid',duration:5}]}}]};
+ const context={URL,Response,AbortController,structuredClone,setTimeout,clearTimeout,performance:{now:()=>now},Date,location:{href:'http://localhost/signage/'},navigator:{onLine:true},document:{getElementById:()=>node},window:{addEventListener(){}},setInterval:(fn,ms)=>timers.push({fn,ms}),
+ GCSignage:{fallback(){falls++;},priceFresh:()=>true,cardsForScene:()=>[{}],render(){renders++;return{update(){}};}},GCSignageSchedule:schedule,GCSignageStorage:{database:()=>({load:async k=>k==='token'?'device':manifest,save:async()=>{}}),stageRelease:async()=>manifest,blobUrl:async()=>''},fetch:async url=>new Response(JSON.stringify(String(url).endsWith('/catalog')?{schema_version:1,server_time:'2026-11-09T12:00:00Z',valid_until:'2026-11-09T12:30:00Z',products:[]}:manifest))};
+ vm.runInNewContext(fs.readFileSync(require.resolve('../../public/signage/player.js'),'utf8'),context);await flush();
+ assert.equal(renders,1);const before=falls;now=5000;timers.find(t=>t.ms===1000).fn();await flush();
+ assert.equal(renders,2);assert.equal(falls,before);
+});

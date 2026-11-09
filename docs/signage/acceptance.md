@@ -25,7 +25,7 @@ A sikeres teljes böngészős menetben nem jelentkezett JavaScript-hiba. A két 
 
 ## Ellenőrzési parancsok
 
-Végső teljes eredmény: **311 PHP-teszt / 1357 állítás**, **71 JavaScript-teszt**, minden teszt sikeres. A PHP-lint 53 változott/új PHP-fájlt ellenőrzött, hiba nélkül. A Blade cache, JS-szintaxis és diffellenőrzés is sikeres.
+A V1-alap átadásakor: **311 PHP-teszt / 1357 állítás**, **71 JavaScript-teszt**, minden teszt sikeres. A PHP-lint 53 változott/új PHP-fájlt ellenőrzött, hiba nélkül. A Blade cache, JS-szintaxis és diffellenőrzés is sikeres.
 
 ```powershell
 php -d auto_prepend_file=tests/offline-prepend.php vendor/phpunit/phpunit/phpunit
@@ -39,6 +39,12 @@ A változott PHP-fájlok külön `php -l`, a signage JS-fájlok `node --check` e
 Helyi, Gitből kizárt bizonyítékok a `.playwright-mcp` mappában: `signage-admin-scenes.png`, `signage-admin-390.png`, `signage-preview-{dark,light,featured,split,media}-1080.png`, `signage-split-live-price.png`, `signage-offline-restart.png`. A tesztsegédek nem részei a kiadásnak, a helyi adminsession nem kerül Gitbe vagy kimenetbe.
 
 ## Review és javítások
+
+### Éttermi TV megjelenés finomítása
+
+A következő helyi körben parázsfény/szikrák, magenta háttérmozgás, lépcsőzetes beúszás, kontrasztos árcímkék és előnézeti újrajátszás készült. A kártyák stabil DOM-elemet kaptak; az ár-, név- és elérhetőség-frissítés nem indítja újra a meglévő kártyák animációját. A fotó átmeneti hibája után a következő frissítés újrapróbálja a betöltést.
+
+Ellenőrzés: **74 teljes frontendteszt**, **4 célzott PHP-/Blade-teszt / 17 állítás**, JS-szintaxis és diffellenőrzés sikeres. Valódi böngészőben a két téma, 5/6/7/8 kártya 1080p/720p méretben, a beúszási sorrend, a folyamatos háttérmozgás, azonos kártya/fotó/videó/animáció árfrissítés után és a csökkentett mozgás kikapcsolása igazolt. JavaScript-hiba és normál terméknevekre téves túlcsordulás-jelzés nem jelentkezett. Képek: `.playwright-mcp/signage-polished-{dark,light,split}.png`. Ez a kör nem érintett adatbázissémát vagy éles környezetet.
 
 Független kódreview után regresszió védi a shell cache megőrzését, azonos revision melletti cache-helyreállítást, a commit utáni takarítás hibáját, a kezdeti kiadás-visszaigazolást, a lejárt beégetett média elkülönített érvénytelenítését és a visszavonás utáni aszinkron callbacket. A tényleges MariaDB-próba külön feltárta és javíttatta a párosítási lejárat automatikus átírását. A videóloop miatti téves watchdog-riasztást valódi videó + ár mérés és futási teszt alapján javítottuk.
 

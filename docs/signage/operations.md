@@ -21,6 +21,8 @@ A modul alapértelmezetten kikapcsolt. A `local` környezetben, loopback kapcsol
 
 A helyi adatbázisban **Bemutató TV** / **TV V1 · helyi bemutató** néven öt jelenetes próbaműsor van, illetve **Videó + ár próba** néven külön, osztott képernyős összeállítás. A mintavideó saját, rövid tesztfájl; nem a hiányzó eredeti referenciavideók egyike. A böngészős QA külön megnevezett próba-vázlatai is megmaradtak.
 
+A témák éttermi TV-hez készült háttérmozgást és egymás után beúszó kártyákat kapnak. A helyi burgerbemutatón a **Beúszás újra** gombbal ismételhető a belépés; témaváltáskor is újraindul. Árfrissítéskor a kártya és az animáció megmarad. A böngésző csökkentett mozgás beállítása minden dekoratív animációt kikapcsol.
+
 ## Árak és időzítés
 
 Az árprofil **katalógusár**. A jelenlegi adatbázis a burgerhez külön csomagolási díjat is rendel; a helyben fizetendő árprofilt a pilot előtt igazolni kell. A signage nem ír katalógusárat és nem számol rendelést.

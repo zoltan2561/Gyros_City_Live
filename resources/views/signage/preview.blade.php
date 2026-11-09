@@ -6,6 +6,7 @@
 <aside class="preview-controls" aria-label="Előnézet beállításai">
 <label for="preview-theme">Téma</label><select id="preview-theme"><option value="dark">Sötét / burger</option><option value="light">Világos / étlap</option></select>
 <button type="button" id="preview-fullscreen">Teljes képernyő</button>
+<button type="button" id="preview-replay">Beúszás újra</button>
 <p>Katalógusárak. A helyszíni árprofil még ellenőrizendő.</p></aside>
 @endunless
 <div class="preview-status" id="preview-status" role="status">Katalógus betöltése…</div>
@@ -29,7 +30,12 @@
         } catch(e) {status.textContent='Nincs friss kapcsolat';}
         finally {busy=false;}
     }
-    document.getElementById('preview-theme')?.addEventListener('change',e=>{scene.theme=e.target.value;renderer=GCSignage.render(stage,scene,products);});
+    function replay(){
+        if(GCSignage.priceFresh(receipt,performance.now(),Date.now()))renderer=GCSignage.render(stage,scene,products);
+        else{GCSignage.fallback(stage);renderer=null;}
+    }
+    document.getElementById('preview-theme')?.addEventListener('change',e=>{scene.theme=e.target.value;replay();});
+    document.getElementById('preview-replay')?.addEventListener('click',replay);
     document.getElementById('preview-fullscreen')?.addEventListener('click',()=>document.documentElement.requestFullscreen().catch(()=>{status.textContent='A teljes képernyőt a böngésző nem engedélyezte.';}));
     setInterval(()=>{if(!GCSignage.priceFresh(receipt,performance.now(),Date.now())){GCSignage.fallback(stage);renderer=null;}},1000);
     setInterval(refresh,30000); window.addEventListener('online',refresh); refresh();

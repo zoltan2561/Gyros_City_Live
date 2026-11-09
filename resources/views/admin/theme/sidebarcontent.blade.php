@@ -1,5 +1,8 @@
 @php $modules = array_map('strval', \App\Support\AdminPermissions::modules(Auth::user())); @endphp
 <ul class="navbar-nav">
+    @if ((config('signage.enabled') || app()->environment('local')) && \App\Support\AdminPermissions::can(Auth::user(), 35))
+    <li class="nav-item mb-2 fs-7"><a class="nav-link rounded d-flex {{ request()->is('admin/signage*') ? 'active' : '' }}" href="{{ route('admin.signage') }}"><i class="fa-solid fa-tv"></i><span class="nav-text">TV kijelzők</span></a></li>
+    @endif
     @if (\App\Support\AdminPermissions::can(Auth::user(), 0))
     <li class="nav-item mb-2 fs-7">
         <a class="nav-link rounded d-flex {{ request()->is('admin/home*') ? 'active' : '' }}"

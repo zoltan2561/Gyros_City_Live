@@ -1,0 +1,4 @@
+<!doctype html><html lang="hu"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Gyros City · TV lejátszó</title><link rel="stylesheet" href="{{ url('public/signage/player.css') }}"></head><body>
+<main id="signage-stage"></main><section id="pair-panel" class="pair-panel" aria-labelledby="pair-title" hidden><h1 id="pair-title">TV párosítása</h1><p>Az adminban nyisd meg a TV kijelzők modult, és add meg ezt a kódot:</p><strong id="pair-code" class="pair-code" aria-live="polite">…</strong><button type="button" id="new-code">Új párosítási kód</button><button type="button" id="player-fullscreen">Teljes képernyő</button></section><div id="player-status" class="preview-status" role="status"></div>
+@foreach(['renderer','schedule','storage','player'] as $script)<script src="{{ url('public/signage/'.$script.'.js') }}"></script>@endforeach
+</body></html>

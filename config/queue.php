@@ -29,6 +29,14 @@ return [
     */
 
     'connections' => [
+        'signage' => [
+            'driver' => 'database',
+            'connection' => null,
+            'table' => 'signage_jobs',
+            'queue' => 'signage',
+            'retry_after' => 2000,
+            'after_commit' => true,
+        ],
 
         'sync' => [
             'driver' => 'sync',

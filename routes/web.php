@@ -63,6 +63,8 @@ Route::post('password/reset', [ResetPasswordController::class, 'reset'])->name('
 
 
 //noti email alert cucc
+Route::get('/signage/demo', [\App\Http\Controllers\Signage\PreviewController::class, 'demo'])->name('signage.demo');
+
 Route::middleware(['auth']) //
 ->post('admin/order-unprocessed-alert', [NotificationController::class, 'unprocessedAlert'])
     ->name('admin.unprocessed.order.alert');

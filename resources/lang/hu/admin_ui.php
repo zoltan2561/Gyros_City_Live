@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'signage' => 'TV kijelzők',
     'workspace' => 'Étterem kezelése',
     'navigation' => 'Admin menü',
     'menu_search' => 'Menüpont keresése',

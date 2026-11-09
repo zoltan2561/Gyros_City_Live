@@ -28,6 +28,7 @@ final class AdminPermissions
             29 => ['reviews.title', 'reviews'], 30 => ['admin_ui.tax', 'tax'],
             31 => ['admin_ui.global_extras', 'global_extras'],
             34 => ['newsletter.title', 'newsletter'],
+            35 => ['admin_ui.signage', 'signage'],
         ];
     }
 
@@ -100,6 +101,22 @@ final class AdminPermissions
     {
         // Explicit controller actions: an added endpoint is denied until mapped.
         return [
+            'App\\Http\\Controllers\\admin\\SignageController@index' => 35,
+            'App\\Http\\Controllers\\admin\\SignageController@scene' => 35,
+            'App\\Http\\Controllers\\admin\\SignageController@playlist' => 35,
+            'App\\Http\\Controllers\\admin\\SignageController@publish' => 35,
+            'App\\Http\\Controllers\\admin\\SignageController@rollback' => 35,
+            'App\\Http\\Controllers\\admin\\SignageController@preview' => 35,
+            'App\\Http\\Controllers\\admin\\SignageController@schedule' => 35,
+            'App\\Http\\Controllers\\admin\\SignageController@unschedule' => 35,
+            'App\\Http\\Controllers\\admin\\SignageMediaController@verify' => 35,
+            'App\\Http\\Controllers\\admin\\SignageMediaController@upload' => 35,
+            'App\\Http\\Controllers\\admin\\SignageMediaController@preview' => 35,
+            'App\\Http\\Controllers\\admin\\SignageMediaController@retry' => 35,
+            'App\\Http\\Controllers\\admin\\SignageMediaController@destroy' => 35,
+            'App\\Http\\Controllers\\admin\\SignageController@screen' => 35,
+            'App\\Http\\Controllers\\admin\\SignageController@pair' => 35,
+            'App\\Http\\Controllers\\admin\\SignageController@revoke' => 35,
             'App\\Http\\Controllers\\admin\\GiftPromotionController@index' => 'owner',
             'App\\Http\\Controllers\\admin\\GiftPromotionController@save' => 'owner',
             'App\\Http\\Controllers\\admin\\GiftPromotionController@destroy' => 'owner',

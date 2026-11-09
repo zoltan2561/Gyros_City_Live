@@ -29,6 +29,7 @@ class RouteServiceProvider extends ServiceProvider
         $this->configureRateLimiting();
 
         $this->routes(function () {
+            Route::group([], base_path('routes/signage.php'));
             Route::prefix('api')
                 ->middleware('api')
                 ->group(base_path('routes/api.php'));
@@ -204,6 +205,16 @@ class RouteServiceProvider extends ServiceProvider
      */
     protected function configureRateLimiting()
     {
+        RateLimiter::for('signage-start',fn(Request $request)=>Limit::perMinute(5)->by('signage-start:'.$request->ip()));
+        RateLimiter::for('signage-status',fn(Request $request)=>[
+            Limit::perMinute(30)->by('signage-status:'.hash('sha256',(string)$request->bearerToken())),
+            Limit::perMinute(240)->by('signage-status-ip:'.$request->ip()),
+        ]);
+        RateLimiter::for('signage-device',fn(Request $request)=>[
+            Limit::perMinute(240)->by('signage-device:'.hash('sha256',(string)$request->bearerToken())),
+            Limit::perMinute(2000)->by('signage-device-ip:'.$request->ip()),
+        ]);
+        RateLimiter::for('signage-pair',fn(Request $request)=>Limit::perMinute(5)->by('signage-pair:'.($request->user()?->id??$request->ip())));
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by(optional($request->user())->id ?: $request->ip());
         });

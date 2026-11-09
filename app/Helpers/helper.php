@@ -518,11 +518,12 @@ class helper
         $getsociallinks = SocialLinks::all();
         return $getsociallinks;
     }
-    public static function top_deals()
+    public static function top_deals(?\DateTimeInterface $at = null)
     {
         date_default_timezone_set(helper::appdata()->timezone);
-        $current_date  = Carbon::now()->format('Y-m-d');
-        $current_time  = Carbon::now()->format('H:i:s');
+        $dealNow = $at ? Carbon::instance($at)->setTimezone(helper::appdata()->timezone) : Carbon::now();
+        $current_date  = $dealNow->format('Y-m-d');
+        $current_time  = $dealNow->format('H:i:s');
         $topdeal = TopDeals::first();
         $topdeals = null;
         if (@helper::checkaddons('top_deals')) {

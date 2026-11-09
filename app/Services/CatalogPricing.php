@@ -27,7 +27,18 @@ class CatalogPricing
         throw ValidationException::withMessages(['cart' => $message]);
     }
 
-    public function selection(Item $item, ?string $addonIds, ?string $extraIds): array
+    public function baseQuote(Item $item, ?\DateTimeInterface $at = null): array
+    {
+        $price = (float) $item->price;
+        if ((int) $item->is_top_deals === 1 && ($deal = helper::top_deals($at))) {
+            $price = (int) $deal->offer_type === 1
+                ? ($price > (float) $deal->offer_amount ? $price - (float) $deal->offer_amount : $price)
+                : $price * (1 - (float) $deal->offer_amount / 100);
+        }
+        return ['item_price' => round(max(0, $price), 2), 'tax' => $item->tax ?? ''];
+    }
+
+    public function selection(Item $item, ?string $addonIds, ?string $extraIds, ?\DateTimeInterface $at = null): array
     {
         $addonIds = $this->ids($addonIds);
         $extraIds = $this->ids($extraIds);
@@ -47,13 +58,7 @@ class CatalogPricing
             $maximum = $single ? 1 : max(1, (int) $group->max_count);
             if ($count < $minimum || $count > $maximum) $this->invalid('A feltétek kiválasztása hiányos vagy túl sok.');
         }
-        $price = (float) $item->price;
-        if ((int) $item->is_top_deals === 1 && ($deal = helper::top_deals())) {
-            $price = (int) $deal->offer_type === 1
-                ? ($price > (float) $deal->offer_amount ? $price - (float) $deal->offer_amount : $price)
-                : $price * (1 - (float) $deal->offer_amount / 100);
-        }
-        $values = ['item_price' => round(max(0, $price), 2), 'tax' => $item->tax ?? ''];
+        $values = $this->baseQuote($item, $at);
         foreach (['addons' => $addons, 'extras' => $extras] as $prefix => $choices) {
             if ($choices->contains(fn ($choice) => !is_numeric($choice->price) || (float) $choice->price < 0)) {
                 $this->invalid('Hibás feltétár a katalógusban.');

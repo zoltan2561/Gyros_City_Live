@@ -1,3 +1,5 @@
+@import url('backgrounds.css');
+@import url('modern.css');
 :root{color-scheme:dark;font-family:Arial,sans-serif;--scene-bg:#190c0a;--scene-accent:#ffc747;--scene-text:#fff3d2}
 @font-face{font-family:GCReference;src:url('reference-assets/BebasNeue-Regular.ttf') format('truetype');font-display:block}
 @font-face{font-family:GCReferenceScript;src:url('reference-assets/Satisfy-Regular.ttf') format('truetype');font-display:block}
@@ -68,7 +70,7 @@
 
 /* Continuous advert: moving food, rotating highlights and full-size product spots. */
 .scene-word{position:absolute;top:10vh;left:-2vw;z-index:-1;white-space:nowrap;font:900 25vw/.9 Impact,'Arial Narrow',sans-serif;text-transform:uppercase;letter-spacing:-.035em;color:transparent;-webkit-text-stroke:1px color-mix(in srgb,var(--scene-accent) 14%,transparent);opacity:.65;animation:ad-word-drift 18s ease-in-out infinite alternate;pointer-events:none}
-.signage-stage:not(.scene-media):not(.signage-fallback){background-image:radial-gradient(ellipse at 10% 110%,#a735173d,transparent 65%)}
+.signage-stage:not(.scene-media):not(.signage-fallback):not(.modern-scene):not([data-signage-backdrop]){background-image:radial-gradient(ellipse at 10% 110%,#a735173d,transparent 65%)}
 .kiosk-glow{opacity:.5;animation-duration:9s}.kiosk-glow-accent{opacity:.17;animation-duration:13s}
 .kiosk-atmosphere::after{content:"";position:absolute;width:52vw;height:52vw;border:1px solid color-mix(in srgb,var(--scene-accent) 18%,transparent);border-radius:50%;right:-20vw;top:-38vw;box-shadow:0 0 0 5vw color-mix(in srgb,var(--scene-accent) 3%,transparent),0 0 0 10vw color-mix(in srgb,var(--scene-accent) 2%,transparent);animation:ad-orbit 14s linear infinite}
 .scene-heading{padding-bottom:1.7vh}.scene-brand{letter-spacing:-.07em;font-size:2.5vw}.scene-title{font-size:3.8vw;line-height:1;text-transform:uppercase;letter-spacing:-.015em}
@@ -119,7 +121,7 @@
 @media(prefers-reduced-motion:reduce){.signage-stage *,.signage-stage *::before,.signage-stage *::after{animation:none!important;transition:none!important}.food-photo,.food-visual{transform:none!important}.scene-grid .food-card[data-focused="true"] .food-visual{transform:none}.slide-progress-fill{transform:scaleX(1)}}
 
 /* Named recreations of the three supplied videos. Generic TV scenes stay separate. */
-.reference-scene{padding:0;background-color:var(--scene-bg);background-image:none!important;color:#fff}
+.reference-scene{padding:4vh 4vw;background-color:var(--scene-bg);background-image:none!important;color:#fff}
 .reference-scene .scene-heading,.reference-scene .scene-footer,.reference-scene .scene-word,.reference-scene .slide-counter,.reference-scene .slide-next,.reference-scene .slide-progress{display:none}
 .reference-scene .scene-body{padding:0;gap:0;position:relative;width:100%;height:100%}
 .reference-scene .kiosk-atmosphere::before,.reference-scene .kiosk-atmosphere::after{display:none}
@@ -134,16 +136,16 @@
 .reference-scene .food-price{background:none;box-shadow:none;padding:0;border-radius:0;transform:none;color:inherit;line-height:1.1;white-space:nowrap;letter-spacing:0}
 .reference-scene .food-prices{width:auto;gap:0}.reference-scene .food-price-row{gap:.35vw;flex-wrap:nowrap}
 .reference-burger .food-grid{gap:0;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr))}
-.reference-burger .food-card{padding:0 .4vw .4vh;display:flex;flex-direction:column;align-items:stretch}
+.reference-burger .food-card{padding:1vh 1vw;display:flex;flex-direction:column;align-items:stretch}
 .reference-burger .food-visual{flex:1;min-height:0}.reference-burger .food-photo{max-width:100%;max-height:100%;object-fit:contain}
-.reference-burger .food-caption{display:flex;justify-content:center;align-items:baseline;gap:.2vw;color:#ffba00;flex-shrink:0;padding:.4vh 0;mask-image:var(--reference-grunge-mask,url('reference-assets/grunge-mask.svg'));mask-size:45vw 15vh}
-.signage-stage.reference-burger .food-name,.signage-stage.reference-burger .food-price{font:400 3.8vw/1.12 var(--reference-display-font,GCReference),Impact,sans-serif;max-height:1.12em}
+.reference-burger .food-caption{display:flex;justify-content:center;align-items:baseline;flex-wrap:wrap;gap:.2vw;color:#ffba00;flex-shrink:0;padding:.4vh 0;mask-image:var(--reference-grunge-mask,url('reference-assets/grunge-mask.svg'));mask-size:45vw 15vh}
+.signage-stage.reference-burger .food-name,.signage-stage.reference-burger .food-price{font:400 3.2vw/1.12 var(--reference-display-font,GCReference),Impact,sans-serif;max-height:1.12em}
 .reference-burger .food-name::after{content:' -'}.reference-burger .food-prices{flex-shrink:0}
-.reference-menu{padding:1.3vh 1.2vw 2.5vh}.reference-menu .kiosk-atmosphere,.reference-kebab .kiosk-atmosphere{display:none}
+.reference-menu{padding:4vh 4vw}.reference-menu .kiosk-atmosphere,.reference-kebab .kiosk-atmosphere{display:none}
 .reference-menu .food-grid{gap:2.3vh 2.4vw;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr))}
 .reference-menu .food-card,.reference-kebab .food-card{display:flex;flex-direction:column;align-items:stretch;padding:0;min-height:0}
 .reference-menu .food-visual,.reference-kebab .food-visual{flex:1;min-height:0}.reference-menu .food-photo{object-fit:contain}
-.reference-menu .food-caption{background:#ff0073;color:#fff;border-radius:1.6vh;padding:.45vh .35vw .65vh;display:flex;align-items:baseline;justify-content:center;gap:.35vw;flex-shrink:0;box-shadow:0 0 0 1px #c0005260}
+.reference-menu .food-caption{background:#ff0073;color:#fff;border-radius:1.6vh;padding:.45vh .35vw .65vh;display:flex;align-items:baseline;justify-content:center;flex-wrap:wrap;gap:.35vw;flex-shrink:0;box-shadow:0 0 0 1px #c0005260}
 .signage-stage.reference-menu .food-name,.signage-stage.reference-menu .food-price{font:700 1.8vw/1.08 Arial,sans-serif;max-height:2.16em}
 .reference-menu .food-name::after{content:' -'}.reference-menu .food-prices{display:flex;flex-wrap:nowrap}.reference-menu .food-price-row+.food-price-row::before{content:'/';padding:0 .25vw}
 .reference-menu .food-grid[data-count="7"],.reference-menu .food-grid[data-count="8"]{grid-template-columns:repeat(4,minmax(0,1fr))}
@@ -159,24 +161,24 @@
 .reference-pizza .food-grid,.reference-intro .food-grid{display:block;position:relative;width:100%;height:100%}
 .reference-pizza .food-card,.reference-intro .food-card{position:absolute;inset:0;display:block;animation:none}
 .reference-pizza .food-card[hidden]{display:none}
-.reference-pizza .food-visual{position:absolute;left:-1vw;top:21vh;width:71vw;height:78vh;animation:reference-pizza-arrive 1.25s cubic-bezier(.16,1,.3,1) both}
+.reference-pizza .food-visual{position:absolute;left:1%;top:23%;width:64%;height:73%;animation:reference-pizza-arrive 1.25s cubic-bezier(.16,1,.3,1) both}
 .reference-pizza .food-photo{width:100%;height:100%;object-fit:contain;animation:reference-pizza-breathe 20s ease-in-out both}
-.signage-stage.reference-pizza .food-name{position:absolute;top:4vh;left:46vw;right:1vw;font:400 8.5vw/.98 var(--reference-display-font,GCReference),Impact,sans-serif;text-transform:uppercase;text-align:center;max-height:2.05em;overflow:visible;animation:none;mask-image:var(--reference-grunge-mask,url('reference-assets/grunge-mask.svg'));mask-size:45vw 25vh}
+.signage-stage.reference-pizza .food-name{position:absolute;top:0;left:50%;right:0;font:400 8.5vw/.98 var(--reference-display-font,GCReference),Impact,sans-serif;text-transform:uppercase;text-align:center;max-height:2.3em;padding-bottom:.2em;overflow:visible;animation:none;mask-image:var(--reference-grunge-mask,url('reference-assets/grunge-mask.svg'));mask-size:45vw 25vh}
 .ref-letter{display:inline-block;animation:reference-letter-enter .75s cubic-bezier(.16,1,.3,1) both;animation-delay:calc(.4s + var(--letter) * .065s)}
-.reference-pizza .food-prices{position:absolute;right:8vw;top:29vh;animation:reference-price-enter .8s var(--price-reveal-delay,6s) both}
+.reference-pizza .food-prices{position:absolute;right:5%;top:29%;animation:reference-price-enter .8s var(--price-reveal-delay,6s) both}
 .signage-stage.reference-pizza .food-price{font:400 4.4vw/1 var(--reference-display-font,GCReference),Impact,sans-serif;color:#ffbd00;mask-image:var(--reference-grunge-mask,url('reference-assets/grunge-mask.svg'))}
-.reference-pizza .food-description{display:block;position:absolute;bottom:2.5vh;right:1.5vw;width:32vw;max-height:35vh;overflow:hidden;margin:0;font:400 1.6vw/1.35 var(--reference-script-font,GCReferenceScript),Georgia,serif;text-align:center;color:#fff;animation:reference-copy-enter 1s 1s both}
+.reference-pizza .food-description{display:block;position:absolute;bottom:3%;right:1%;width:32%;max-height:35vh;overflow:hidden;margin:0;font:400 1.6vw/1.35 var(--reference-script-font,GCReferenceScript),Georgia,serif;text-align:center;color:#fff;animation:reference-copy-enter 1s 1s both}
 .reference-intro{background:#060606 var(--reference-smoke,url('reference-assets/smoke.webp')) center/cover!important;isolation:isolate}
 .reference-intro::before{content:'';position:absolute;right:0;top:0;bottom:0;width:28%;background:#ff5800;clip-path:polygon(12% 0,100% 0,100% 100%,0 100%,15% 72%,0 55%,11% 36%,0 20%)}
 .reference-intro .kiosk-atmosphere{background:none}.reference-intro .kiosk-glow{display:none}.reference-intro .kiosk-ember{opacity:.15}
-.reference-intro .food-visual{position:absolute;right:-3vw;top:-12vh;width:60vw;height:95vh;animation:reference-promo-pizza 1.2s cubic-bezier(.16,1,.3,1) both}
+.reference-intro .food-visual{position:absolute;right:2%;top:5%;width:46%;height:66%;animation:reference-promo-pizza 1.2s cubic-bezier(.16,1,.3,1) both}
 .reference-intro .food-photo{width:100%;height:100%;object-fit:contain;animation:reference-intro-breathe 16s ease-in-out infinite alternate}
 .reference-intro .food-name,.reference-intro .food-prices,.reference-intro .food-description{display:none}
-.reference-promo{position:absolute;left:5vw;top:14vh;width:48vw;z-index:2;animation:reference-copy-enter 1s .25s both}
+.reference-promo{position:absolute;left:2%;top:10%;width:52%;z-index:2;animation:reference-copy-enter 1s .25s both}
 .promo-eyebrow{font:700 1.15vw Arial,sans-serif;letter-spacing:.16em;margin:0 0 4vh}.promo-brand{font:400 6.1vw/1 var(--reference-script-font,GCReferenceScript),cursive;color:#f76a14;transform:rotate(-5deg);margin-left:2vw}
 .promo-title{font:400 10.5vw/.85 var(--reference-display-font,GCReference),Impact,sans-serif;margin:0 0 2vh;letter-spacing:-.01em;color:#fff;mask-image:var(--reference-grunge-mask,url('reference-assets/grunge-mask.svg'));mask-size:45vw 25vh}
 .promo-copy{white-space:pre-line;font:400 1.8vw/1.35 Arial,sans-serif;margin:0 0 3vh;max-width:36vw}.promo-cta{display:inline-block;border:2px solid #d74c13;padding:1vh .6vw;font:700 1.8vw Arial,sans-serif;letter-spacing:.03em}.promo-site{font:400 1.15vw Arial,sans-serif;letter-spacing:.12em;margin-top:6vh;color:#ccc}
-.promo-dessert{position:absolute;left:44vw;bottom:-9vh;width:29vw;height:43vh;object-fit:contain;z-index:2;border-radius:50%;animation:reference-dessert-arrive 1.2s .4s both}
+.promo-dessert{position:absolute;left:51%;bottom:1%;width:27%;height:33%;object-fit:contain;z-index:2;border-radius:50%;animation:reference-dessert-arrive 1.2s .4s both}
 @keyframes reference-ember{0%{opacity:0;transform:translate3d(-8vw,14vh,0) rotate(-20deg) scale(.3)}15%{opacity:.8}80%{opacity:.6}100%{opacity:0;transform:translate3d(18vw,-110vh,0) rotate(80deg) scale(1.3)}}
 @keyframes reference-card-enter{from{opacity:0;transform:translate3d(0,7vh,0) scale(.8)}to{opacity:1;transform:none}}
 @keyframes reference-food-breathe{from{transform:scale(.985) translateY(.2vh)}to{transform:scale(1.015) translateY(-.35vh)}}

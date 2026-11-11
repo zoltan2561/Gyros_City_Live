@@ -89,8 +89,12 @@ class SignageCatalogTest extends \Tests\TestCase
         });
         $data=app(\App\Services\Signage\SignageDemoPrograms::class)->build(new \DateTimeImmutable('2026-11-09T12:00:00Z'));
         $pizza=collect($data['programs'])->firstWhere('id','pizza')['scenes'][1];
+        $this->assertSame(['burger','menu','pizza','general','modern-burger','modern-menu','modern-pizza'],array_column($data['programs'],'id'));
         $this->assertSame([336,342,339,333,335,334,332],array_column($pizza['bindings'],'item_id'));
         $this->assertSame(140,$pizza['duration']);
+        $modernPizza=collect($data['programs'])->firstWhere('id','modern-pizza')['scenes'][0];
+        $this->assertSame(array_column($pizza['bindings'],'item_id'),array_column($modernPizza['bindings'],'item_id'));
+        $this->assertSame(70,$modernPizza['duration']);
         $menu=collect($data['programs'])->firstWhere('id','menu')['scenes'];
         $this->assertCount(6,$menu);$this->assertSame(96,array_sum(array_column($menu,'duration')));
         $this->assertSame([60,61,62,63,65,64],array_column(collect($data['programs'])->firstWhere('id','burger')['scenes'][0]['bindings'],'item_id'));

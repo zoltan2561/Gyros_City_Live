@@ -30,6 +30,7 @@
         return el;
     }
     function referencePrice(row,design){
+        if(['modern-burger','modern-menu','modern-pizza'].includes(design)&&row.price!==null&&row.price!==''&&/(?:HUF|Ft)\s*$/i.test(row.formatted_price||'')&&Number.isFinite(Number(row.price)))return Number(row.price).toLocaleString('hu-HU',{maximumFractionDigits:2})+' Ft';
         if(!design?.startsWith('reference-')||row.price===null||row.price===''||!/(?:HUF|Ft)\s*$/i.test(row.formatted_price||'')||!Number.isFinite(Number(row.price)))return row.formatted_price;
         const value=Number(row.price).toLocaleString('hu-HU',{useGrouping:false,maximumFractionDigits:2});
         return design==='reference-burger'?value:(design==='reference-menu'?value+(Number.isInteger(Number(row.price))?'.-':''):value+' Ft');
@@ -133,7 +134,11 @@
         views.get(stage)?.dispose();
         stage.replaceChildren(); stage.className='signage-stage theme-'+(scene.theme==='light'?'light':'dark')+' scene-'+scene.type;
         const reference=['reference-burger','reference-menu','reference-pizza','reference-intro','reference-kebab'].includes(scene.design);
+        const modern=['modern-burger','modern-menu','modern-pizza'].includes(scene.design);
         if(reference)stage.classList.add('reference-scene',scene.design);
+        if(modern)stage.classList.add('modern-scene',scene.design);
+        delete stage.dataset.signageBackdrop;
+        if(!reference&&!modern&&['graphite','embers','wood','wine','cream','solid'].includes(scene.backdrop))stage.dataset.signageBackdrop=scene.backdrop;
         stage.style.setProperty('--scene-bg', /^#[0-9a-f]{6}$/i.test(scene.background || '')?scene.background:'');
         stage.style.setProperty('--scene-accent', /^#[0-9a-f]{6}$/i.test(scene.accent || '')?scene.accent:'');
         stage.style.setProperty('--scene-text', /^#[0-9a-f]{6}$/i.test(scene.text_color || '')?scene.text_color:'');
@@ -163,7 +168,9 @@
         const footer=element('footer','scene-footer');
         const ticker=element('div','scene-ticker');ticker.setAttribute('aria-hidden','true');
         for(let i=0;i<4;i++)ticker.append(element('span','','GYROS CITY  /  HELYBEN KÉSZÍTVE. NEKED.  /  '));
-        footer.append(ticker);stage.append(body,footer);
+        if(modern)footer.append(element('span','modern-footer-brand','GYROS CITY'),element('span','modern-footer-site','gyroscity.eu'));
+        else footer.append(ticker);
+        stage.append(body,footer);
         let activeId=null,disposed=false,timer=null,paused=false;
         const slideshow=scene.type==='slideshow';
         const seconds=slideshow?Math.max(5,Math.min(20,Number(scene.slide_seconds)||7)):3.2;
@@ -207,6 +214,7 @@
     function fallback(stage) {
         views.get(stage)?.dispose();
         stage.replaceChildren(); stage.className='signage-stage signage-fallback theme-dark';
+        delete stage.dataset.signageBackdrop;
         stage.append(element('div','fallback-brand','GYROS CITY'),element('p','','Frissen készítjük.'));
     }
     return {cardsForScene, priceFresh, referencePrice, render, fallback};

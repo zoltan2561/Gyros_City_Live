@@ -94,7 +94,7 @@ class SignageDeviceTest extends \Tests\TestCase
         $release=\App\Models\SignageRelease::create(['playlist_id'=>$list->id,'actor_id'=>1,'snapshot'=>['original'=>true]]);
         $this->actingAs(User::find(1))->postJson('/admin/signage/playlists',[
             'id'=>$list->id,'name'=>'Updated','scene_ids'=>[$two->id,$one->id],
-            'version'=>hash('sha256',json_encode($list->scene_ids)),
+            'version'=>$list->editVersion(),
         ])->assertOk();
         $this->assertSame([$two->id,$one->id],$list->fresh()->scene_ids);
         $this->assertSame(['original'=>true],$release->fresh()->snapshot);

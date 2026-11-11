@@ -1,0 +1,9 @@
+/* Shared by the player and the editor's background sample. */
+.signage-stage[data-signage-backdrop],.signage-background-preview[data-signage-backdrop]{background-color:var(--scene-bg);background-image:none;color:var(--scene-text)}
+[data-signage-backdrop="graphite"]{background-image:radial-gradient(ellipse at 75% 20%,#34404d80,transparent 65%),repeating-linear-gradient(135deg,transparent 0 7px,#ffffff03 7px 8px)!important}
+[data-signage-backdrop="embers"]{background-image:radial-gradient(ellipse at 50% 115%,#a32b12b3,transparent 70%),radial-gradient(ellipse at 10% 15%,#6a21114d,transparent 55%)!important}
+[data-signage-backdrop="wood"]{background-image:repeating-linear-gradient(0deg,transparent 0 4px,#d09a5820 4px 5px,transparent 5px 11px,#00000020 11px 12px),repeating-linear-gradient(0deg,transparent 0 110px,#0b0707a3 110px 113px),linear-gradient(110deg,#a75e252e,transparent 45%,#a75e254d)!important}
+[data-signage-backdrop="wine"]{background-image:radial-gradient(ellipse at 85% 15%,#a3375d66,transparent 65%),linear-gradient(135deg,transparent 40%,#ffffff05 40% 40.2%,transparent 40.2% 70%,#ffffff05 70% 70.2%,transparent 70.2%)!important}
+[data-signage-backdrop="cream"]{background-image:radial-gradient(#93654412 1px,transparent 1px),radial-gradient(ellipse at 15% 90%,#d8bb8c55,transparent 65%)!important;background-size:8px 8px,auto!important}
+[data-signage-backdrop] .kiosk-atmosphere::before,[data-signage-backdrop] .kiosk-atmosphere::after,[data-signage-backdrop] .kiosk-glow,[data-signage-backdrop] .kiosk-ember{display:none}
+[data-signage-backdrop="embers"] .kiosk-glow,[data-signage-backdrop="embers"] .kiosk-ember{display:block}

@@ -1,6 +1,40 @@
 const {test}=require('node:test');const assert=require('node:assert/strict');const vm=require('node:vm');const fs=require('node:fs');
 const schedule=require('../../public/signage/schedule.js');
 const flush=async()=>{for(let i=0;i<20;i++)await new Promise(r=>setImmediate(r));};
+
+test('catalog polling preserves playlist position through repeated complete cycles',async()=>{
+ let now=0;const timers=[],shown=[];
+ const node={textContent:'',hidden:false,addEventListener(){},querySelectorAll:()=>[],querySelector:()=>null};
+ const manifest={schema_version:1,playback_mode:'continuous',layout_revision:'unchanged',server_time:'2026-11-09T12:00:00Z',default_release_id:1,schedules:[],releases:[{id:1,snapshot:{scenes:['a','b','c'].map(id=>({id,type:'grid',duration:20}))}}]};
+ const context={URL,Response,AbortController,structuredClone,setTimeout,clearTimeout,performance:{now:()=>now},Date,location:{href:'http://localhost/signage/'},navigator:{onLine:true},document:{getElementById:()=>node},window:{addEventListener(){}},setInterval:(fn,ms)=>timers.push({fn,ms}),
+ GCSignage:{fallback(){},priceFresh:()=>true,cardsForScene:()=>[{}],render(stage,scene){shown.push(scene.id);return{update(){}};}},GCSignageSchedule:schedule,GCSignageStorage:{database:()=>({load:async k=>k==='token'?'device':manifest,save:async()=>{}}),stageRelease:async()=>manifest,blobUrl:async()=>''},fetch:async url=>new Response(JSON.stringify(String(url).endsWith('/catalog')?{schema_version:1,server_time:'2026-11-09T12:00:00Z',valid_until:'2026-11-09T12:30:00Z',products:[]}:manifest))};
+ vm.runInNewContext(fs.readFileSync(require.resolve('../../public/signage/player.js'),'utf8'),context);await flush();
+ for(now=10000;now<=120000;now+=10000){
+  if(now%30000===0){timers.find(t=>t.ms===30000).fn();await flush();}
+  timers.find(t=>t.ms===1000).fn();await flush();
+ }
+ assert.deepEqual(shown,['a','b','c','a','b','c','a']);
+});
+
+test('retiring a previous downloaded release does not restart the current playlist',async()=>{
+ let now=0;const timers=[],shown=[];
+ const node={textContent:'',hidden:false,addEventListener(){},querySelectorAll:()=>[],querySelector:()=>null};
+ const current={id:2,snapshot:{scenes:['a','b','c'].map(id=>({id,type:'grid',duration:20}))}};
+ let incoming={schema_version:1,playback_mode:'continuous',layout_revision:'with-old-release',server_time:'2026-11-09T12:00:00Z',default_release_id:2,schedules:[],releases:[current,{id:1,snapshot:{scenes:[]}}]};
+ const context={URL,Response,AbortController,structuredClone,setTimeout,clearTimeout,performance:{now:()=>now},Date,location:{href:'http://localhost/signage/'},navigator:{onLine:true},document:{getElementById:()=>node},window:{addEventListener(){}},setInterval:(fn,ms)=>timers.push({fn,ms}),
+ GCSignage:{fallback(){},priceFresh:()=>true,cardsForScene:()=>[{}],render(stage,scene){shown.push(scene.id);return{update(){}};}},GCSignageSchedule:schedule,GCSignageStorage:{database:()=>({load:async k=>k==='token'?'device':structuredClone(incoming),save:async()=>{}}),stageRelease:async manifest=>manifest,blobUrl:async()=>''},fetch:async url=>new Response(JSON.stringify(String(url).endsWith('/catalog')?{schema_version:1,server_time:'2026-11-09T12:00:00Z',valid_until:'2026-11-09T12:30:00Z',products:[]}:incoming))};
+ vm.runInNewContext(fs.readFileSync(require.resolve('../../public/signage/player.js'),'utf8'),context);await flush();
+ now=20000;timers.find(t=>t.ms===1000).fn();await flush();
+ incoming={...incoming,layout_revision:'old-release-retired',releases:[current]};
+ now=30000;timers.find(t=>t.ms===30000).fn();await flush();
+ now=40000;timers.find(t=>t.ms===1000).fn();await flush();
+ assert.deepEqual(shown,['a','b','c']);
+ incoming={...incoming,default_release_id:3,layout_revision:'new-playlist',releases:[current,{id:3,snapshot:{scenes:[{id:'new',type:'grid',duration:20}]}}]};
+ now=50000;timers.find(t=>t.ms===30000).fn();await flush();
+ assert.deepEqual(shown,['a','b','c']);
+ now=60000;timers.find(t=>t.ms===1000).fn();await flush();
+ assert.deepEqual(shown,['a','b','c','new']);
+});
 test('blocked video playback backs off instead of retrying and rebuilding every second',async()=>{
  let now=0,renders=0;const timers=[];
  const video={currentTime:0,ended:false,classList:{contains:()=>true},addEventListener(){},play:async()=>{throw new Error('blocked');}};

@@ -57,7 +57,12 @@ async function synchronize(){
    staging=true;
    GCSignageStorage.stageRelease(incoming,token,{store,base:base.href}).then(complete=>{
     if(!token||generation!==sessionGeneration)return;
-    pendingManifest=complete;lastError='';notice('');if(!current){manifest=complete;pendingManifest=null;next();}
+    // Retiring an old downloaded release also changes the package revision.
+    // The current immutable release still has the same scene order.
+    const sameProgram=manifest?.playback_mode==='continuous'&&complete.playback_mode==='continuous'&&manifest.default_release_id===complete.default_release_id;
+    if(manifest?.layout_revision===complete.layout_revision||sameProgram){manifest=complete;pendingManifest=null;}
+    else pendingManifest=complete;
+    lastError='';notice('');if(!current){manifest=complete;pendingManifest=null;next();}
    }).catch(e=>{lastError=e.message;notice('Az új műsor még nem tölthető le. A korábbi folytatódik.');}).finally(()=>{staging=false;});
   }
  }catch(e){lastError=e.message;notice(e.message);}

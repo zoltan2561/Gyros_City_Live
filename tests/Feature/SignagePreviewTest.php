@@ -7,7 +7,9 @@ class SignagePreviewTest extends \Tests\TestCase
     public function test_local_demo_shell_is_available_without_an_admin_session(): void
     {
         $this->app['env'] = 'local';
-        $this->get('/signage/demo')->assertOk()->assertSee('Gyros City');
+        $this->get('/signage/demo')->assertOk()->assertSee('Gyros City')
+            ->assertSee('value="general"',false)->assertSee('value="wood"',false)->assertDontSee('value="all"',false)
+            ->assertSee('value="modern-burger"',false)->assertSee('value="modern-menu"',false)->assertSee('value="modern-pizza"',false);
     }
 
     public function test_local_preview_assets_follow_the_served_checkout_with_a_stale_asset_url(): void

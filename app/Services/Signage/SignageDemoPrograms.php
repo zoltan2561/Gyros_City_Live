@@ -4,7 +4,7 @@ namespace App\Services\Signage;
 
 use DateTimeImmutable;
 
-/** Three locally testable recreations of the supplied videos. Never writes catalogue data. */
+/** Video recreations, a general advert and three original modern versions. */
 class SignageDemoPrograms
 {
     public function definitions(): array
@@ -59,10 +59,52 @@ class SignageDemoPrograms
         $pizza['type']='slideshow';$pizza['slide_seconds']=20;
         $intro=$scene('reference-pizza-intro','reference-intro',[$row(342,'Pizza Time!','','pizza')],40,'#080808');
         $intro['type']='featured';
+        $general=$scene('general-advert','standard',[
+            $row(60,'City Burger','','burger'),$row(336,"'Nduja pizza",'','pizza'),
+            $row(342,'Bufala pizza','','pizza'),$row(121,'Kebab-tál','1|11|1404'),
+            $row(120,'Csirke Dürüm','11|1404'),$row(173,'Palacsinta','27'),
+        ],42);
+        $general=array_replace($general,app(SignageBackgrounds::class)->options()['graphite']);
+        unset($general['label']);
+        $general['title']='A kedvenceid, frissen.';
+        $general['type']='slideshow';$general['slide_seconds']=7;$general['backdrop']='graphite';
+        $modern=function(array $source,string $design,string $title,array $colors)use(&$sequence):array{
+            $source['id']='modern-'.str_replace('reference-','',$source['id']);
+            $source['design']=$design;$source['title']=$title;
+            foreach($source['bindings'] as &$binding)$binding['id']='ref-'.(++$sequence);
+            unset($binding);
+            return array_replace($source,$colors);
+        };
+        $modernBurger=$modern($burger,'modern-burger','Burgerek. City módra.',[
+            'theme'=>'light','background'=>'#f3be3f','accent'=>'#26190e','text_color'=>'#26190e',
+        ]);
+        foreach($modernBurger['bindings'] as &$binding)$binding['artwork']='menu-'.$binding['item_id'];
+        unset($binding);
+        $modernBurger['type']='slideshow';$modernBurger['slide_seconds']=8;$modernBurger['duration']=48;
+        $modernMenus=[];
+        foreach(['Burgerek','Burger menük','Gyrosok és kedvencek','Frissensültek','Köretek és desszertek','Kebab, döner, dürüm'] as $i=>$title){
+            $modernMenus[]=$modern($menus[$i],'modern-menu',$title,[
+                'theme'=>'light','background'=>'#f1f4f0','accent'=>'#155345','text_color'=>'#132b24',
+                'duration'=>[20,22,24,24,14,18][$i],
+            ]);
+        }
+        foreach($modernMenus[2]['bindings'] as &$binding)if(in_array($binding['item_id'],[128,129],true)){
+            $binding['title']='Gyros-tál';
+            $binding['label']=$binding['item_id']===129?'Sajttal':'';
+        }
+        unset($binding);
+        $modernPizza=$modern($pizza,'modern-pizza','Pizzák, ahogy szeretjük.',[
+            'theme'=>'dark','background'=>'#153b30','accent'=>'#e5b662','text_color'=>'#fcf9f0',
+        ]);
+        $modernPizza['slide_seconds']=10;$modernPizza['duration']=100;
         return [
             ['id'=>'burger','name'=>'Burger · az eredeti videó alapján','scenes'=>[$burger]],
             ['id'=>'menu','name'=>'Étlap · az eredeti videó alapján','scenes'=>$menus],
             ['id'=>'pizza','name'=>'Pizza · az eredeti videó alapján','scenes'=>[$intro,$pizza]],
+            ['id'=>'general','name'=>'Általános reklám','scenes'=>[$general]],
+            ['id'=>'modern-burger','name'=>'Burger · saját modern változat','scenes'=>[$modernBurger]],
+            ['id'=>'modern-menu','name'=>'Étlap · saját modern változat','scenes'=>$modernMenus],
+            ['id'=>'modern-pizza','name'=>'Pizza · saját modern változat','scenes'=>[$modernPizza]],
         ];
     }
 
@@ -80,7 +122,6 @@ class SignageDemoPrograms
             }unset($scene);
             $program['scenes']=array_values(array_filter($program['scenes'],fn($s)=>count($s['bindings'])));
         }unset($program);
-        $all=['id'=>'all','name'=>'A három referencia egymás után','scenes'=>array_merge(...array_column($programs,'scenes'))];
-        return $catalog+['programs'=>array_merge([$all],$programs)];
+        return $catalog+['programs'=>$programs];
     }
 }

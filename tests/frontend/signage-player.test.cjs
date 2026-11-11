@@ -2,6 +2,10 @@ const {test}=require('node:test');const assert=require('node:assert/strict');
 const {selectRelease,sceneAllowed}=require('../../public/signage/schedule.js');
 const {stageRelease}=require('../../public/signage/storage.js');
 const {createHash}=require('node:crypto');
+test('continuous playback keeps repeating the selected release without a schedule deadline',()=>{
+ const manifest={playback_mode:'continuous',default_release_id:1,schedule_valid_until:'2026-11-01T00:00:00Z',schedules:[{release_id:2,priority:1}]};
+ assert.equal(selectRelease(manifest,new Date('2027-11-11T12:00:00Z')),1);
+});
 test('offline schedule expires and overnight Budapest schedule selects the right release',()=>{
  const manifest={default_release_id:1,schedule_valid_until:'2026-11-11T00:00:00Z',schedules:[{release_id:2,days:[1],starts_on:'2026-11-01',ends_on:'2026-11-30',start_time:'22:00',end_time:'02:00',priority:1}]};
  assert.equal(selectRelease(manifest,new Date('2026-11-10T00:30:00+01:00')),2);

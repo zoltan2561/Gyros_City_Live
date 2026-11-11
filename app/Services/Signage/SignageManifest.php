@@ -2,16 +2,14 @@
 namespace App\Services\Signage;
 use App\Models\SignageScreen;
 use App\Models\SignageRelease;
-use App\Models\SignageSchedule;
 use DateTimeImmutable;
 use DateTimeZone;
 class SignageManifest {
     public function forScreen(int $screenId, DateTimeImmutable $now): array {
         $screen=SignageScreen::findOrFail($screenId);
-        $schedules=SignageSchedule::where('screen_id',$screenId)->where('ends_on','>=',$now->setTimezone(new DateTimeZone('Europe/Budapest'))->modify('-1 day')->format('Y-m-d'))->get();
-        $ids=$schedules->pluck('release_id')->merge($screen->delivered_release_ids??[])->push($screen->release_id)->push($screen->active_release_id)->filter()->unique();
+        $ids=collect($screen->delivered_release_ids??[])->push($screen->release_id)->push($screen->active_release_id)->filter()->unique();
         $releases=SignageRelease::whereIn('id',$ids)->get()->map(fn($r)=>['id'=>$r->id,'snapshot'=>$r->snapshot])->values()->all();
-        $content=['default_release_id'=>$screen->release_id,'releases'=>$releases,'schedules'=>$schedules->map(fn($s)=>$s->only(['id','release_id','days','starts_on','ends_on','start_time','end_time','priority']))->all()];
+        $content=['playback_mode'=>'continuous','default_release_id'=>$screen->release_id,'releases'=>$releases,'schedules'=>[]];
         return ['schema_version'=>1,'player_version'=>'1','layout_revision'=>hash('sha256',json_encode($content)),
             'server_time'=>$now->setTimezone(new DateTimeZone('UTC'))->format(DATE_ATOM),
             'schedule_valid_until'=>$now->modify('+7 days')->setTimezone(new DateTimeZone('UTC'))->format(DATE_ATOM),

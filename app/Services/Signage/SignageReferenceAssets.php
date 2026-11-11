@@ -40,7 +40,7 @@ class SignageReferenceAssets
 
     public function decorate(array $scene): array
     {
-        if(!str_starts_with($scene['design']??'','reference-'))return $scene;
+        if(!str_starts_with($scene['design']??'','reference-')&&!in_array($scene['design']??'', ['modern-burger','modern-menu','modern-pizza'],true))return $scene;
         $scene['reference_assets']=[];
         foreach($this->files([$scene]) as $file){
             if(!preg_match('/^(burger|menu|pizza)-[0-9]+$/',$file['reference_key']))$scene['reference_assets'][$file['reference_key']]=$file;
@@ -53,6 +53,7 @@ class SignageReferenceAssets
         $requested=[];$registry=$this->registry();
         foreach($scenes as $scene){
             $keys=[];
+            if(in_array($scene['design']??'', ['modern-burger','modern-menu','modern-pizza'],true))$keys=['display-font'];
             if(str_starts_with($scene['design']??'','reference-')){
                 $keys=['embers','smoke','display-font','script-font','grunge-mask'];
                 if(($scene['design']??'')==='reference-intro')$keys[]='promo-dessert';

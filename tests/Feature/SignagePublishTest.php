@@ -49,11 +49,13 @@ class SignagePublishTest extends SignageCatalogTest {
         $this->assertTrue($result['products'][0]['available']);
     }
 
-    public function test_final_overnight_schedule_is_retained_after_midnight(): void {
+    public function test_continuous_manifest_ignores_legacy_schedules_without_deleting_them(): void {
         $screen=SignageScreen::create(['name'=>'A']);
         \App\Models\SignageSchedule::create(['screen_id'=>$screen->id,'release_id'=>1,'days'=>[1],'starts_on'=>'2026-11-09','ends_on'=>'2026-11-09','start_time'=>'22:00','end_time'=>'02:00','priority'=>1]);
         $manifest=app(SignageManifest::class)->forScreen($screen->id,new \DateTimeImmutable('2026-11-10T00:30:00+01:00'));
-        $this->assertCount(1,$manifest['schedules']);
+        $this->assertSame('continuous',$manifest['playback_mode']??null);
+        $this->assertSame([],$manifest['schedules']);
+        $this->assertSame(1,\App\Models\SignageSchedule::count());
     }
 
     public function test_display_photo_override_is_added_to_the_private_media_manifest(): void {

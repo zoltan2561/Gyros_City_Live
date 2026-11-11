@@ -11,21 +11,22 @@ class SignageController extends Controller {
     public function index(Request $request) {
         $ready=\Schema::hasTable('signage_screens');
         if(!$ready)return view('admin.signage.index',['ready'=>false]);
-        $tab=in_array($request->query('tab'),['media','scenes','playlists','schedules'],true)?$request->query('tab'):'screens';
+        $tab=in_array($request->query('tab'),['media','scenes','screens'],true)?$request->query('tab'):'playlists';
         $screens=SignageScreen::orderBy('name')->get();
         $media=\App\Models\SignageMedia::where('status','!=','retired')->latest()->paginate(12,['*'],'media_page')->withQueryString();
         $readyMedia=\App\Models\SignageMedia::where('status','ready')->get(['id','name','mime']);
         $scenes=\App\Models\SignageScene::orderBy('name')->get();
         $playlists=\App\Models\SignagePlaylist::orderBy('name')->get();
         $releases=\App\Models\SignageRelease::latest()->limit(100)->get();
-        $schedules=\App\Models\SignageSchedule::orderByDesc('priority')->paginate(20,['*'],'schedule_page')->withQueryString();
+        $assignedPlaylists=\App\Models\SignageRelease::whereIn('id',$screens->pluck('release_id')->filter())->pluck('playlist_id','id');
+        $screenPlaylists=$screens->mapWithKeys(fn($screen)=>[$screen->id=>$assignedPlaylists[$screen->release_id]??null])->all();
         $items=\App\Models\Item::visibleOnMenu()->orderBy('item_name')->get(['id','item_name','addons_id','item_status','today_unavailable']);
         $groups=\App\Models\AddonsGroup::where('is_available',1)->where('is_deleted',2)->get();
         $addons=\App\Models\Addons::where('is_available',1)->where('is_deleted',2)->get(['id','name','addongroup_id','price']);
         $extras=\App\Models\Extra::get(['id','name','item_id','price']);
         $editing=$request->filled('edit_scene')?\App\Models\SignageScene::findOrFail($request->integer('edit_scene')):null;
-        $editingPlaylist=$request->filled('edit_playlist')?\App\Models\SignagePlaylist::findOrFail($request->integer('edit_playlist')):null;
-        return view('admin.signage.index',compact('ready','tab','screens','media','readyMedia','scenes','playlists','releases','schedules','items','groups','addons','extras','editing','editingPlaylist'));
+        $editingPlaylist=$request->filled('edit_playlist')?\App\Models\SignagePlaylist::findOrFail($request->integer('edit_playlist')):($request->boolean('new_playlist')?null:$playlists->first());
+        return view('admin.signage.index',compact('ready','tab','screens','media','readyMedia','scenes','playlists','releases','screenPlaylists','items','groups','addons','extras','editing','editingPlaylist'));
     }
 
     public function scene(Request $request) {
@@ -42,7 +43,7 @@ class SignageController extends Controller {
                 'group'=>$b['group']??'',
                 'addons_id'=>implode('|',$b['addons']??[]),'extras_id'=>implode('|',$b['extras']??[])];
         }
-        $content=app(\App\Services\Signage\SignageSceneDefinition::class)->validate($request->only(['type','theme','title','design','duration','slide_seconds','media_id','background_media_id','logo_media_id','background','accent','text_color','font_family','name_size','price_size','gap','media_side','media_fit','media_focus_x','media_focus_y'])+['bindings'=>$bindings,'play_to_end'=>$request->boolean('play_to_end')]);
+        $content=app(\App\Services\Signage\SignageSceneDefinition::class)->validate($request->only(['type','theme','title','design','backdrop','duration','slide_seconds','media_id','background_media_id','logo_media_id','background','accent','text_color','font_family','name_size','price_size','gap','media_side','media_fit','media_focus_x','media_focus_y'])+['bindings'=>$bindings,'play_to_end'=>$request->boolean('play_to_end')]);
         $record=$request->filled('id')?\App\Models\SignageScene::findOrFail($request->integer('id')):new \App\Models\SignageScene();
         if($record->exists)abort_unless(hash_equals(hash('sha256',json_encode($record->content)),(string)$request->input('version')),409,'A jelenetet közben módosították. Frissítsd az oldalt.');
         $record->fill(['name'=>$request->input('name'),'content'=>$content])->save();
@@ -50,11 +51,18 @@ class SignageController extends Controller {
     }
 
     public function playlist(Request $request) {
-        $data=$request->validate(['id'=>'nullable|integer|exists:signage_playlists,id','name'=>'required|string|max:120','scene_ids'=>'required|array|min:1|max:100','scene_ids.*'=>'integer|exists:signage_scenes,id']);
-        $record=$request->filled('id')?\App\Models\SignagePlaylist::findOrFail($data['id']):new \App\Models\SignagePlaylist();
-        if($record->exists)abort_unless(hash_equals(hash('sha256',json_encode($record->scene_ids)),(string)$request->input('version')),409,'A listát közben módosították. Frissítsd az oldalt.');
-        $record->fill(['name'=>$data['name'],'scene_ids'=>array_map('intval',$data['scene_ids'])])->save();
-        return $this->saved($request,'Lejátszási lista vázlata elmentve.');
+        $data=$request->validate(['id'=>'nullable|integer|exists:signage_playlists,id','name'=>'required|string|max:120',
+            'scene_ids'=>'required|array|min:1|max:100','scene_ids.*'=>'integer|exists:signage_scenes,id',
+            'screen_ids'=>'nullable|array|max:100','screen_ids.*'=>'integer|distinct|exists:signage_screens,id']);
+        $record=DB::transaction(function()use($data,$request){
+            $record=$request->filled('id')?\App\Models\SignagePlaylist::lockForUpdate()->findOrFail($data['id']):new \App\Models\SignagePlaylist();
+            if($record->exists)abort_unless(hash_equals($record->editVersion(),(string)$request->input('version')),409,'A listát közben módosították. Frissítsd az oldalt.');
+            $record->fill(['name'=>$data['name'],'scene_ids'=>array_values(array_map('intval',$data['scene_ids']))])->save();
+            if(!empty($data['screen_ids']))app(\App\Services\Signage\SignagePublisher::class)->publish($record->id,array_map('intval',$data['screen_ids']),$request->user()->id);
+            return $record;
+        });
+        $message=empty($data['screen_ids'])?'Lejátszási lista elmentve.':'Lista elmentve. A kijelölt TV-k teljes letöltés után automatikusan átveszik a változást.';
+        return $request->expectsJson()?response()->json(['ok'=>true,'id'=>$record->id,'message'=>$message]):redirect()->route('admin.signage',['tab'=>'playlists','edit_playlist'=>$record->id])->with('success',$message);
     }
 
     public function publish(Request $request) {

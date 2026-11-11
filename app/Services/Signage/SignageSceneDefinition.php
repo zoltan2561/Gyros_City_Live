@@ -8,7 +8,8 @@ class SignageSceneDefinition {
             'type'=>'required|in:grid,featured,media,split,slideshow','theme'=>'required|in:dark,light','title'=>'nullable|string|max:80',
             'duration'=>'required|integer|min:5|max:600','play_to_end'=>'nullable|boolean',
             'slide_seconds'=>'nullable|integer|between:5,20',
-            'design'=>'nullable|in:standard,reference-burger,reference-menu,reference-pizza,reference-intro,reference-kebab',
+            'design'=>'nullable|in:standard,reference-burger,reference-menu,reference-pizza,reference-intro,reference-kebab,modern-burger,modern-menu,modern-pizza',
+            'backdrop'=>'nullable|in:'.implode(',',array_keys(app(SignageBackgrounds::class)->options())),
             'background'=>'nullable|regex:/^#[a-fA-F0-9]{6}$/','accent'=>'nullable|regex:/^#[a-fA-F0-9]{6}$/',
             'text_color'=>'nullable|regex:/^#[a-fA-F0-9]{6}$/','font_family'=>'nullable|in:Arial,Trebuchet MS,Georgia',
             'name_size'=>'nullable|integer|between:32,64','price_size'=>'nullable|integer|between:44,96','gap'=>'nullable|integer|between:1,5',
@@ -35,10 +36,11 @@ class SignageSceneDefinition {
             $data['duration']=count($cards)*$data['slide_seconds'];
         }
         $design=$data['design']??'standard';
-        $types=['reference-burger'=>'grid','reference-menu'=>'grid','reference-kebab'=>'grid','reference-pizza'=>'slideshow','reference-intro'=>'featured'];
-        if(isset($types[$design])&&$data['type']!==$types[$design])throw ValidationException::withMessages(['design'=>'Ehhez a videómásolathoz válaszd a megfelelő elrendezést.']);
+        if($design!=='standard'||empty($data['backdrop']))unset($data['backdrop']);
+        $types=['reference-burger'=>'grid','reference-menu'=>'grid','reference-kebab'=>'grid','reference-pizza'=>'slideshow','reference-intro'=>'featured','modern-burger'=>'slideshow','modern-menu'=>'grid','modern-pizza'=>'slideshow'];
+        if(isset($types[$design])&&$data['type']!==$types[$design])throw ValidationException::withMessages(['design'=>'Ehhez a megjelenéshez válaszd a megfelelő elrendezést.']);
         if($design==='reference-burger'&&count($cards)>6)throw ValidationException::withMessages(['bindings'=>'A burger videómásolat legfeljebb hat kártyát mutat.']);
-        $artworks=app(SignageReferenceAssets::class);$prefix=match($design){'reference-burger'=>'burger','reference-menu','reference-kebab'=>'menu','reference-pizza','reference-intro'=>'pizza',default=>null};
+        $artworks=app(SignageReferenceAssets::class);$prefix=match($design){'reference-burger'=>'burger','reference-menu','reference-kebab','modern-menu','modern-burger'=>'menu','reference-pizza','reference-intro','modern-pizza'=>'pizza',default=>null};
         foreach($data['bindings'] as &$binding){
             if(empty($binding['artwork'])&&empty($binding['photo_media_id'])&&$prefix&&$artworks->image($prefix.'-'.$binding['item_id'],(int)$binding['item_id']))$binding['artwork']=$prefix.'-'.$binding['item_id'];
             if(!empty($binding['artwork'])&&!$artworks->image($binding['artwork'],(int)$binding['item_id']))throw ValidationException::withMessages(['artwork'=>'A referenciafotó nem ehhez a termékhez tartozik.']);

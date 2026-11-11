@@ -1,7 +1,7 @@
 'use strict';
 const base=new URL('./',self.location.href),project=new URL('../',base);
 const prefix='gc-signage-'+encodeURIComponent(base.pathname)+'-',shell=prefix+'shell-v1';
-const assets=['player.css','renderer.js','schedule.js','storage.js','player.js'].map(f=>new URL('public/signage/'+f,project).href);
+const assets=['player.css','backgrounds.css','modern.css','renderer.js','schedule.js','storage.js','player.js'].map(f=>new URL('public/signage/'+f,project).href);
 const shellUrls=[base.href,...assets];
 self.addEventListener('install',event=>event.waitUntil(caches.open(shell).then(c=>c.addAll(shellUrls)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(self.clients.claim()));

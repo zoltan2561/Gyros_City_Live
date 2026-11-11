@@ -96,4 +96,20 @@ class SignageSlideshowTest extends \Tests\TestCase
         $this->assertSame('old-pizza-336',file_get_contents($disk->path('reference-fixture/'.$old['bindings'][0]['artwork_file'])));
         $this->assertNotNull($assets->image('pizza-336',336,$old['bindings'][0]['artwork_file']));
     }
+
+    public function test_reviewed_price_free_photos_are_pinned_and_packaged_by_the_runtime_registry(): void
+    {
+        $reviewed=json_decode(file_get_contents(public_path('signage/reference-assets/reviewed-artwork.json')),true);
+        $this->assertNotEmpty($reviewed);
+        $assets=app(\App\Services\Signage\SignageReferenceAssets::class);
+        foreach($reviewed as $key=>$filename){
+            $binding=$assets->pin(['id'=>'reviewed-'.$key,'item_id'=>(int)substr($key,strrpos($key,'-')+1),'artwork'=>$key]);
+            $this->assertSame($filename,$binding['artwork_file']);
+            $file=$assets->files([['bindings'=>[$binding]]])[0];
+            $this->assertSame($key,$file['reference_key']);
+            $this->assertSame(hash_file('sha256',public_path('signage/reference-assets/'.$filename)),$file['checksum']);
+            $this->assertSame('image/webp',$file['mime']);
+            $this->assertGreaterThan(0,$file['bytes']);
+        }
+    }
 }

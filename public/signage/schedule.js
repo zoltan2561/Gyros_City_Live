@@ -3,6 +3,7 @@
 const formatter=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Budapest',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
 function localParts(now){const p=Object.fromEntries(formatter.formatToParts(now).map(p=>[p.type,p.value]));const date=p.year+'-'+p.month+'-'+p.day;return {date,time:p.hour+':'+p.minute,day:new Date(date+'T12:00:00Z').getUTCDay()||7};}
 function selectRelease(manifest,now){
+ if(manifest?.playback_mode==='continuous')return manifest.default_release_id;
  if(!manifest||now.getTime()>=Date.parse(manifest.schedule_valid_until))return null;
  const p=localParts(now),prior=new Date(p.date+'T12:00:00Z');prior.setUTCDate(prior.getUTCDate()-1);
  const previous=prior.toISOString().slice(0,10),previousDay=prior.getUTCDay()||7;

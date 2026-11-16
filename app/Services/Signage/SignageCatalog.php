@@ -24,7 +24,8 @@ class SignageCatalog
                 'description' => $item ? preg_replace('/\[\[([^|\]]+)\|{1,2}.*?\]\]/su','$1',strip_tags((string)$item->item_description)) : '',
                 'available' => false, 'price' => null, 'formatted_price' => null,
                 'reference_price' => null, 'formatted_reference_price' => null, 'image' => null,
-                'reason' => 'unavailable'];
+                // 'missing' = the dish no longer exists on the menu; 'unavailable' = switched off for now (comes back by itself).
+                'reason' => $item ? 'unavailable' : 'missing'];
             if ($item && $item->is_orderable) {
                 try {
                     $quote = app(CatalogPricing::class)->selection($item, $binding['addons_id'] ?? null, $binding['extras_id'] ?? null, $now);

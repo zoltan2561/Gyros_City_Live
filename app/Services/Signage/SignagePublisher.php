@@ -47,7 +47,11 @@ class SignagePublisher {
             $scenes[]=app(SignageReferenceAssets::class)->decorate($scene);
         }
         $quote=app(SignageCatalog::class)->snapshot(array_values($bindings),new \DateTimeImmutable());
-        foreach($quote['products'] as $p)if(!$p['available'])throw ValidationException::withMessages(['bindings'=>'Nem elérhető étel vagy hiányos feltétválasztás: '.$p['name']]);
+        // A dish that is only switched off for now stays in the list: the TV hides it live and shows it again when it returns.
+        foreach($quote['products'] as $p){
+            if($p['reason']==='missing')throw ValidationException::withMessages(['bindings'=>'Törölt vagy a menüből eltávolított étel a jelenetben (azonosító: '.$p['item_id'].').']);
+            if($p['reason']==='configuration_required')throw ValidationException::withMessages(['bindings'=>'Hiányos feltétválasztás: '.$p['name']]);
+        }
         $files=array_merge(array_values($media),app(SignageReferenceAssets::class)->files($scenes));
         foreach($quote['products'] as $p){
             if(!$p['image'])continue;

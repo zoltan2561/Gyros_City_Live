@@ -38,6 +38,19 @@ class SignagePublishTest extends SignageCatalogTest {
         app(SignagePublisher::class)->publish($list->id,[$a->id],1);
     }
 
+    public function test_a_dish_switched_off_for_today_does_not_block_publishing_but_a_missing_dish_does(): void {
+        $list=$this->playlist();$screen=SignageScreen::create(['name'=>'A']);
+        DB::table('item')->where('id',1)->update(['today_unavailable'=>1]);
+        $release=app(SignagePublisher::class)->publish($list->id,[$screen->id],1);
+        $this->assertSame($release['id'],$screen->fresh()->release_id);
+        $catalog=app(\App\Services\Signage\SignageCatalog::class)->snapshot($release['snapshot']['bindings'],new \DateTimeImmutable());
+        $this->assertFalse($catalog['products'][0]['available']);
+        $this->assertSame('unavailable',$catalog['products'][0]['reason']);
+        DB::table('item')->where('id',1)->delete();
+        $this->expectException(ValidationException::class);
+        app(SignagePublisher::class)->publish($list->id,[$screen->id],1);
+    }
+
     public function test_expired_baked_price_media_does_not_expire_unrelated_dynamic_prices(): void {
         config(['signage.enabled'=>true]);
         $media=SignageMedia::create(['name'=>'Old ad','mime'=>'video/mp4','original_path'=>'signage/old.mp4','status'=>'ready','baked_prices'=>true,'price_valid_until'=>now()->subMinute(),'price_snapshot'=>['bindings'=>[],'revision'=>'old']]);

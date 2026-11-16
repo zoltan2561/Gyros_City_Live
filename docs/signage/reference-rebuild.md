@@ -51,3 +51,8 @@ A három klón fő hibája a rossz kivágás volt: a burger- és pizzaképek vid
 
 ### Elérhetőség
 A `SignageCatalog` megkülönbözteti a `missing` (törölt étel) és az `unavailable` (aznapra kikapcsolt) okot. A kiadás csak az előbbi és a hiányos feltétválasztás esetén áll le, mert a lejátszó az elérhetetlen kártyát úgyis élőben elrejti.
+
+### Fehér tányérok és élő háttér – 2026-11-16 (második kör)
+- A Vega-tál (`menu-156`), a Gyros-tál extra sajttal (`menu-133`) és a sajtos gyros-tál (`menu-128`) tányérjának jobb és alsó pereme lecsípődött, mert a fehér perem a világos asztalon háttérnek látszott. Most kézzel rajzolt tányér-, villa- (és `menu-128`-nál kés-) körvonal adja a szerkezetet, a pontos peremet szín (fehér a narancs asztalon) határozza meg; a sajthalom a tányér fölött is megmarad. A szalvéta kimarad. Teszt: `WhitePlateTest`.
+- A három saját modern műsor élő hátteret kapott (csak transzformációs, lassú mozgás): burger – napsugaras csíkok, forgó gyűrű, pislákoló fény; étlap – végigsimuló fénysáv, lélegző menta foltok; pizza – forgó sütőfény-sugarak, pulzáló borostyán izzás, felszálló arany szikrák. Csökkentett mozgásnál és szünetben minden megáll.
+

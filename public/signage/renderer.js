@@ -88,14 +88,14 @@
         });
         if (!cards.length&&!container.querySelector('.empty-scene'))container.append(element('p','empty-scene','Gyros City · Frissen készítjük.'));
     }
-    function atmosphere(reference=false){
+    function atmosphere(reference=false,modern=false){
         const layer=element('div','kiosk-atmosphere');layer.setAttribute('aria-hidden','true');
         layer.append(element('span','kiosk-glow kiosk-glow-warm'),element('span','kiosk-glow kiosk-glow-accent'));
-        for(let i=0;i<(reference?64:12);i++){
+        for(let i=0;i<(reference?64:(modern?26:12));i++){
             const spark=element('span','kiosk-ember');
             spark.style.setProperty('--spark-x',String((i*37+11)%100));
             spark.style.setProperty('--spark-drift',String((i*19)%90-45));
-            spark.style.setProperty('--spark-duration',(reference?2.6+(i%7)*.4:12+i%7)+'s');
+            spark.style.setProperty('--spark-duration',(reference?2.6+(i%7)*.4:(modern?14+(i%6)*2.2:12+i%7))+'s');
             spark.style.setProperty('--spark-delay',(-i*1.7)+'s');
             spark.style.setProperty('--spark-size',(2+(i*7)%11)+'px');
             layer.append(spark);
@@ -156,7 +156,7 @@
         const fontsReady=referenceAssets(stage,scene);
         if(scene.media_side==='right')stage.classList.add('media-right');
         if (scene.background_media) { const bg=mediaElement(scene.background_media,true); if(bg) stage.append(bg); }
-        stage.append(atmosphere(reference));
+        stage.append(atmosphere(reference,modern));
         if(scene.type!=='media')stage.append(element('div','scene-word',scene.title||'GYROS CITY'));
         const header=element('header','scene-heading');
         header.append(element('div','scene-brand','GYROS CITY'),element('h1','scene-title',scene.title || 'Frissen készítjük.'));

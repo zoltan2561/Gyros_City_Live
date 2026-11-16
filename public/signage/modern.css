@@ -1,6 +1,6 @@
 /* Original City programmes. Shared cards, catalogue prices and playback lifecycle. */
 .signage-stage.modern-scene{padding:4.5vh 4.5vw;background:var(--scene-bg);color:var(--scene-text);font-family:Arial,sans-serif}
-.modern-scene .kiosk-atmosphere,.modern-scene .scene-word,.modern-scene .scene-heading::after{display:none}
+.modern-scene .scene-word{display:none}
 .signage-stage.modern-scene .scene-heading{padding:0 0 2vh;border-bottom:1px solid currentColor;animation:none;gap:3vw;opacity:1}
 .modern-scene .scene-heading .scene-brand{font:900 2.5vw/1 Arial,sans-serif;letter-spacing:-.07em;text-shadow:none;max-width:none}
 .modern-scene .scene-heading .scene-title{font:400 3.4vw/1 var(--reference-display-font,GCReference),Impact,sans-serif;letter-spacing:.015em;color:inherit;text-transform:uppercase;text-align:right}
@@ -61,3 +61,41 @@
 .signage-stage.modern-pizza .food-grid .food-label,.signage-stage.modern-pizza .food-grid .food-reference{font-size:1.15vw;color:#385347}
 @keyframes city-reveal{from{opacity:0;transform:translateY(1.5vh)}to{opacity:1;transform:none}}
 @keyframes city-food-drift{from{transform:translateY(.3vh) rotate(-.4deg)}to{transform:translateY(-.3vh) rotate(.4deg)}}
+
+/* Living backgrounds: slow, transform-only motion that always stays behind the content. */
+.signage-stage.modern-scene .kiosk-atmosphere{display:block}
+.signage-stage.modern-scene .kiosk-atmosphere::before,.signage-stage.modern-scene .kiosk-atmosphere::after{display:block;content:"";position:absolute;pointer-events:none;will-change:transform}
+.signage-stage.modern-scene .kiosk-glow{will-change:transform}
+.signage-stage.modern-scene .kiosk-ember{display:block;width:var(--spark-size);height:var(--spark-size);border-radius:50%;filter:none;animation-name:kiosk-ember-rise;animation-timing-function:ease-in-out}
+.signage-stage.modern-scene .scene-heading::after{display:block;width:9vw;height:3px;bottom:-2px;background:var(--scene-accent);animation:ad-rule 9s ease-in-out infinite alternate}
+
+/* Burger: warm sun-stripes sweep sideways, creamy light drifts, crumbs of light float up. */
+.signage-stage.modern-burger .kiosk-atmosphere::before{inset:-25%;background:repeating-linear-gradient(115deg,transparent 0 6vw,rgba(255,255,255,.12) 6vw 11vw,transparent 11vw 12vw);animation:city-stripes 22s linear infinite}
+.signage-stage.modern-burger .kiosk-atmosphere::after{width:60vw;height:60vw;right:-14vw;bottom:-30vw;border-radius:50%;border:.5vw solid rgba(38,25,14,.07);animation:city-spin 90s linear infinite}
+.signage-stage.modern-burger .kiosk-glow-warm{background:radial-gradient(ellipse,rgba(255,255,255,.75),transparent 66%);opacity:.55;left:-25vw;bottom:-45vh}
+.signage-stage.modern-burger .kiosk-glow-accent{background:radial-gradient(ellipse,rgba(214,126,6,.6),transparent 65%);opacity:.5;right:-20vw;top:-30vh}
+.signage-stage.modern-burger .kiosk-ember{background:rgba(255,250,232,.85);bottom:-4vh}
+.signage-stage.modern-burger .kiosk-ember:nth-child(3n+1){background:rgba(120,70,0,.28)}
+.signage-stage.modern-burger .food-grid .food-visual::before{animation:city-spin 46s linear infinite}
+.signage-stage.modern-burger .food-grid .food-visual::after{content:"";position:absolute;inset:8% 10%;z-index:-1;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.4),transparent 70%);animation:city-pulse 5s ease-in-out infinite alternate}
+
+/* Menu: a soft light band glides over the paper, mint blobs breathe, tiny leaves of light rise. */
+.signage-stage.modern-menu .kiosk-atmosphere::before{top:-10%;bottom:-10%;left:-45vw;width:34vw;background:linear-gradient(100deg,transparent,rgba(255,255,255,.85),transparent);transform:skewX(-14deg);animation:city-sheen 12s ease-in-out infinite}
+.signage-stage.modern-menu .kiosk-atmosphere::after{width:46vw;height:46vw;right:-18vw;top:-22vw;border-radius:50%;border:.3vw solid color-mix(in srgb,var(--scene-accent) 14%,transparent);animation:city-spin 120s linear infinite}
+.signage-stage.modern-menu .kiosk-glow-warm{background:radial-gradient(ellipse,color-mix(in srgb,var(--scene-accent) 34%,transparent),transparent 66%);opacity:.22;left:-30vw;bottom:-46vh}
+.signage-stage.modern-menu .kiosk-glow-accent{background:radial-gradient(ellipse,color-mix(in srgb,var(--scene-accent) 26%,transparent),transparent 66%);opacity:.18;right:-26vw;top:-36vh}
+.signage-stage.modern-menu .kiosk-ember{background:color-mix(in srgb,var(--scene-accent) 38%,transparent);bottom:-4vh}
+
+/* Pizza: oven-light rays turn behind the pizza, an amber glow pulses, golden sparks rise. */
+.signage-stage.modern-pizza .kiosk-atmosphere::before{inset:-45%;background:repeating-conic-gradient(from 0deg at 30% 58%,rgba(229,182,98,.07) 0 6deg,transparent 6deg 20deg);animation:city-sunburst 140s linear infinite}
+.signage-stage.modern-pizza .kiosk-atmosphere::after{width:44vw;height:44vw;left:-8vw;bottom:-18vw;border-radius:50%;background:radial-gradient(circle,rgba(240,160,40,.28),transparent 68%);animation:city-pulse 6s ease-in-out infinite alternate}
+.signage-stage.modern-pizza .kiosk-glow-warm{background:radial-gradient(ellipse,rgba(235,150,40,.5),transparent 66%);opacity:.4;left:-20vw;bottom:-40vh}
+.signage-stage.modern-pizza .kiosk-glow-accent{background:radial-gradient(ellipse,rgba(120,200,160,.3),transparent 65%);opacity:.3;right:-24vw;top:-34vh}
+.signage-stage.modern-pizza .kiosk-ember{background:#f6c96b;box-shadow:0 0 10px 2px rgba(240,170,50,.4);bottom:-3vh}
+.signage-stage.modern-pizza .food-grid .food-visual::before{animation:city-spin 60s linear infinite}
+
+@keyframes city-stripes{to{transform:translate3d(-12.04vw,0,0)}}
+@keyframes city-sheen{0%{transform:translate3d(0,0,0) skewX(-14deg)}55%,100%{transform:translate3d(190vw,0,0) skewX(-14deg)}}
+@keyframes city-spin{to{transform:rotate(360deg)}}
+@keyframes city-pulse{from{transform:scale(.92);opacity:.65}to{transform:scale(1.08);opacity:1}}
+@keyframes city-sunburst{to{transform:rotate(360deg)}}

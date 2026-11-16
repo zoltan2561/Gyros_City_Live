@@ -42,6 +42,22 @@ class CutoutSourcesTest(unittest.TestCase):
             self.assertGreater(sum(alpha.histogram()[201:]), image.width * image.height * 0.25, key)
 
 
+class WhitePlateTest(unittest.TestCase):
+    def test_the_whole_white_plate_survives_the_cut_out(self):
+        try:
+            from PIL import Image
+        except ImportError:
+            self.skipTest('Pillow is not installed')
+        manifest = json.loads((ROOT / 'manifest.json').read_text(encoding='utf-8'))
+        # Landmarks on the lower and right plate rim: a white rim on a light table is what the model tends to drop.
+        landmarks = {'menu-133': [(.5, .72), (.55, .78), (.9, .55)], 'menu-156': [(.5, .72), (.55, .78), (.9, .55)],
+                     'menu-128': [(.57, .73), (.5, .78), (.88, .6)]}
+        for key, points in landmarks.items():
+            alpha = Image.open(ROOT / manifest[key]).convert('RGBA').getchannel('A')
+            for x, y in points:
+                self.assertGreater(alpha.getpixel((int(x * alpha.width), int(y * alpha.height))), 200, key + ' lost its plate rim')
+
+
 class KebabTableTest(unittest.TestCase):
     def test_kebab_background_is_the_whole_table_not_the_dark_bottom_edge_of_the_frame(self):
         try:

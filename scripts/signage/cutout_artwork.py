@@ -40,6 +40,28 @@ FISH_BURGER = [(228, 258), (226, 225), (235, 185), (262, 145), (300, 115), (350,
                (515, 442), (480, 456), (430, 469), (380, 474), (330, 472), (292, 461), (262, 443), (244, 424), (230, 400),
                (226, 384), (195, 378), (195, 330), (205, 308), (222, 300), (216, 285), (222, 270)]
 KEEP_ONLY = {'menu-65': FISH_BURGER, 'burger-65': FISH_BURGER}
+# White plates are the model's weak spot (a white rim on a light table reads as background): Vega-tál and the cheese
+# gyros plate share one photo. The plate polygon is traced by hand; the exact rim is then found by colour (the plate is
+# white, the table saturated orange). The fork keeps the model's edge inside its traced outline. Napkin and the knife that
+# runs out of the frame are left out on purpose.
+GYROS_PLATE = [(150, 300), (165, 290), (547, 222), (1090, 150), (1105, 150), (1112, 160), (1528, 745), (1534, 760),
+               (1522, 775), (1500, 780), (410, 962), (392, 962), (380, 950), (160, 312)]
+GYROS_FORK = [(46, 382), (52, 372), (70, 375), (80, 370), (98, 366), (108, 364), (125, 366), (135, 364), (140, 368),
+              (150, 430), (170, 500), (182, 548), (180, 575), (165, 592), (152, 602), (200, 760), (230, 880), (262, 950),
+              (272, 985), (262, 1002), (240, 1008), (215, 1003), (195, 990), (172, 840), (150, 740), (128, 640), (125, 604),
+              (105, 590), (85, 575), (70, 548), (68, 500), (60, 440), (50, 400)]
+# The cheese pile rises above the plate's back rim; the model's edge is trusted inside this allowance area.
+GYROS_CHEESE = [(420, 236), (500, 150), (700, 90), (1000, 75), (1110, 110), (1100, 152), (547, 224)]
+# The cheese-sauce gyros plate (menu-128): same set-up, different positions; the knife ends just inside the frame.
+SAUCE_PLATE = [(222, 222), (232, 207), (1105, 100), (1120, 102), (1128, 112), (1478, 742), (1481, 758), (1470, 772),
+               (1445, 775), (375, 928), (350, 930), (340, 915), (228, 235)]
+SAUCE_FORK = [(100, 232), (106, 224), (125, 228), (133, 222), (150, 225), (165, 222), (190, 224), (196, 232), (210, 300),
+              (222, 380), (228, 425), (222, 470), (205, 490), (222, 520), (240, 700), (262, 880), (266, 915), (255, 935),
+              (225, 945), (188, 935), (178, 880), (175, 700), (168, 520), (155, 490), (125, 470), (108, 440), (102, 380),
+              (98, 300)]
+SAUCE_KNIFE = [(1230, 166), (1240, 160), (1262, 166), (1330, 290), (1385, 390), (1420, 450), (1500, 600), (1538, 690),
+               (1538, 722), (1525, 730), (1495, 724), (1440, 640), (1380, 520), (1340, 410), (1290, 320), (1245, 230)]
+PLATES = {'menu-128': ([SAUCE_PLATE], [SAUCE_FORK, SAUCE_KNIFE], []), 'menu-133': ([GYROS_PLATE], [GYROS_FORK], [GYROS_CHEESE]), 'menu-156': ([GYROS_PLATE], [GYROS_FORK], [GYROS_CHEESE])}
 
 
 def sha256(data: bytes) -> str:
@@ -72,7 +94,32 @@ def food_mask(photo, key, session):
         ImageDraw.Draw(keep).polygon([(x * 4, y * 4) for x, y in KEEP_ONLY[key]], fill=255)
         keep = keep.resize(photo.size, Image.LANCZOS).filter(ImageFilter.MaxFilter(3))  # the model sets the true edge
         alpha = ImageChops.multiply(alpha, keep)
+    if key in PLATES:
+        alpha = plate_mask(photo, alpha, key)
     return alpha
+
+
+def plate_mask(photo, model_alpha, key):
+    import numpy as np
+    from PIL import Image, ImageDraw
+    from scipy import ndimage as ndi
+    plate_polygons, extra_polygons, allowed_polygons = PLATES[key]
+
+    def raster(polygons):
+        layer = Image.new('L', photo.size, 0)
+        for polygon in polygons:
+            ImageDraw.Draw(layer).polygon(polygon, fill=255)
+        return np.asarray(layer) > 127
+
+    plate, extra, allowed = raster(plate_polygons), raster(extra_polygons), raster(allowed_polygons)
+    hsv = np.asarray(photo.convert('HSV'), dtype=np.float32) / 255.0
+    whiteish = (hsv[..., 1] < 0.22) & (hsv[..., 2] > 0.62)
+    model = np.asarray(model_alpha) > 127
+    rim = ndi.binary_dilation(plate, iterations=10)
+    result = ndi.binary_erosion(plate, iterations=14) | (rim & whiteish) | (model & ndi.binary_dilation(plate, iterations=4))
+    result |= (model & ndi.binary_dilation(extra, iterations=6)) | ndi.binary_erosion(extra, iterations=6) | (model & allowed)
+    result = ndi.binary_fill_holes(ndi.binary_opening(result, iterations=2))
+    return Image.fromarray((result * 255).astype(np.uint8))
 
 
 def cut_with_model(source, key, session):

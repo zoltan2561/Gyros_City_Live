@@ -28,6 +28,10 @@ MANUAL_MASKS = {
         [(207, 136), (250, 175), (290, 205), (305, 215), (330, 213), (345, 205), (420, 160), (447, 140), (437, 225),
          (420, 300), (402, 388), (238, 386), (228, 330), (215, 255), (207, 160)],
     ],
+    # The cardboard box of the Kebab-tál: front wall and rim are table-coloured.
+    'menu-121': [
+        [(82, 60), (432, 60), (438, 70), (462, 242), (458, 250), (50, 250), (44, 240), (48, 225), (78, 70)],
+    ],
     # The chip box behind the burger of the City Burger Plusz menu.
     'menu-136': [
         [(222, 73), (262, 30), (300, 22), (335, 40), (380, 60), (415, 66), (418, 100), (417, 196), (380, 200), (300, 200),
@@ -61,7 +65,36 @@ SAUCE_FORK = [(100, 232), (106, 224), (125, 228), (133, 222), (150, 225), (165, 
               (98, 300)]
 SAUCE_KNIFE = [(1230, 166), (1240, 160), (1262, 166), (1330, 290), (1385, 390), (1420, 450), (1500, 600), (1538, 690),
                (1538, 722), (1525, 730), (1495, 724), (1440, 640), (1380, 520), (1340, 410), (1290, 320), (1245, 230)]
-PLATES = {'menu-128': ([SAUCE_PLATE], [SAUCE_FORK, SAUCE_KNIFE], []), 'menu-133': ([GYROS_PLATE], [GYROS_FORK], [GYROS_CHEESE]), 'menu-156': ([GYROS_PLATE], [GYROS_FORK], [GYROS_CHEESE])}
+# Tray meals (rántott sajt menü, nuggets menü): a white plate on a white tray on a red table. One tray polygon plus the
+# plate oval; the can and the fries that rise above the plate are allowed through from the model.
+CHEESE_TRAY = [(100, 190), (110, 183), (505, 182), (515, 188), (522, 200), (522, 345), (515, 362), (500, 372), (120, 375),
+               (95, 366), (85, 348), (88, 330)]
+CHEESE_PLATE = [(72, 290), (80, 255), (110, 215), (160, 190), (235, 178), (320, 185), (385, 215), (402, 260), (395, 310),
+                (360, 345), (300, 372), (240, 380), (170, 372), (110, 345), (80, 315)]
+NUGGET_TRAY = [(95, 205), (105, 194), (528, 190), (540, 195), (548, 212), (549, 350), (543, 368), (525, 382), (110, 385),
+               (78, 372), (68, 355), (75, 330)]
+NUGGET_PLATE = [(58, 265), (64, 235), (90, 205), (140, 190), (240, 185), (330, 190), (390, 215), (416, 255), (410, 310),
+                (375, 350), (310, 378), (240, 385), (160, 378), (95, 350), (65, 310)]
+TRAY_ALLOWED = {'menu-165': [[(376, 45), (451, 45), (451, 245), (376, 245)], [(130, 150), (420, 150), (420, 200), (130, 200)]],
+                'menu-248': [[(388, 35), (476, 35), (476, 255), (388, 255)], [(130, 160), (430, 160), (430, 200), (130, 200)]]}
+# Round white plates the model drops from the cutlet and fries dishes (rántott szelet, rántott sajt, halrudacska).
+CUTLET_PLATE = [(78, 285), (85, 230), (110, 185), (160, 150), (230, 135), (320, 130), (420, 120), (500, 130), (570, 170),
+                (615, 230), (634, 290), (625, 330), (580, 365), (520, 395), (450, 420), (370, 438), (300, 438), (220, 430),
+                (150, 405), (100, 360), (80, 320)]
+CUTLET_MENU_PLATE = [(8, 385), (12, 330), (35, 285), (90, 262), (200, 250), (330, 240), (450, 245), (550, 270), (615, 310),
+                     (642, 345), (635, 380), (590, 415), (520, 440), (430, 458), (340, 466), (250, 462), (160, 450), (80, 430),
+                     (30, 410)]
+CHEESE_PLATE_ROUND = [(94, 210), (100, 180), (130, 145), (190, 115), (260, 98), (340, 90), (420, 92), (490, 105), (540, 135),
+                      (560, 185), (562, 225), (545, 265), (500, 295), (430, 325), (360, 342), (300, 347), (230, 340), (160, 318),
+                      (115, 280), (96, 240)]
+STICKS_PLATE = [(125, 208), (132, 180), (165, 150), (225, 128), (300, 115), (380, 112), (450, 118), (500, 135), (535, 175),
+                (545, 225), (530, 265), (490, 300), (430, 328), (360, 345), (300, 348), (230, 338), (170, 310), (135, 265)]
+PLATES = {'menu-161': ([CUTLET_PLATE], [], [[(280, 80), (590, 80), (590, 200), (280, 200)]]),
+          'menu-167': ([CUTLET_MENU_PLATE], [], [[(462, 20), (604, 20), (604, 262), (462, 262)], [(120, 160), (380, 160), (380, 255), (120, 255)], [(30, 200), (600, 200), (600, 300), (30, 300)]]),
+          'menu-158': ([CHEESE_PLATE_ROUND], [], [[(150, 100), (500, 100), (500, 150), (150, 150)]]),
+          'menu-160': ([STICKS_PLATE], [], [[(230, 90), (520, 90), (520, 150), (230, 150)]]),
+          'menu-165': ([CHEESE_TRAY, CHEESE_PLATE], [], TRAY_ALLOWED['menu-165']), 'menu-248': ([NUGGET_TRAY, NUGGET_PLATE], [], TRAY_ALLOWED['menu-248']),
+          'menu-128': ([SAUCE_PLATE], [SAUCE_FORK, SAUCE_KNIFE], []), 'menu-133': ([GYROS_PLATE], [GYROS_FORK], [GYROS_CHEESE]), 'menu-156': ([GYROS_PLATE], [GYROS_FORK], [GYROS_CHEESE])}
 
 
 def sha256(data: bytes) -> str:
@@ -118,6 +151,10 @@ def plate_mask(photo, model_alpha, key):
     rim = ndi.binary_dilation(plate, iterations=10)
     result = ndi.binary_erosion(plate, iterations=14) | (rim & whiteish) | (model & ndi.binary_dilation(plate, iterations=4))
     result |= (model & ndi.binary_dilation(extra, iterations=6)) | ndi.binary_erosion(extra, iterations=6) | (model & allowed)
+    # A wooden serving board behind the plate is tan (low saturation); breading, cheese and fries are far more saturated.
+    # Tan pixels that are not deep inside the plate are board, never food.
+    tan = (hsv[..., 0] > 0.05) & (hsv[..., 0] < 0.12) & (hsv[..., 1] > 0.18) & (hsv[..., 1] < 0.58) & (hsv[..., 2] > 0.5)
+    result &= ~(tan & ~ndi.binary_erosion(plate, iterations=14))
     result = ndi.binary_fill_holes(ndi.binary_opening(result, iterations=2))
     return Image.fromarray((result * 255).astype(np.uint8))
 

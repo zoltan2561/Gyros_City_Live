@@ -58,6 +58,38 @@ class WhitePlateTest(unittest.TestCase):
                 self.assertGreater(alpha.getpixel((int(x * alpha.width), int(y * alpha.height))), 200, key + ' lost its plate rim')
 
 
+class TraysPlatesAndBoxesTest(unittest.TestCase):
+    """Rántott sajt menü, nuggets menü, halrudacska, rántott sajt and the kebab tál lost plates, trays or a box wall."""
+
+    def setUp(self):
+        try:
+            from PIL import Image
+        except ImportError:
+            self.skipTest('Pillow is not installed')
+        self.Image = Image
+        self.manifest = json.loads((ROOT / 'manifest.json').read_text(encoding='utf-8'))
+
+    def white_share(self, key):
+        image = self.Image.open(ROOT / self.manifest[key]).convert('RGBA')
+        pixels = list(image.getdata()) if not hasattr(image, 'get_flattened_data') else list(image.get_flattened_data())
+        solid = [p for p in pixels if p[3] > 200]
+        return sum(1 for r, g, b, _ in solid if min(r, g, b) > 205) / max(len(solid), 1)
+
+    def test_white_plates_and_trays_are_kept(self):
+        for key, minimum in {'menu-158': .2, 'menu-160': .15, 'menu-248': .2}.items():
+            self.assertGreater(self.white_share(key), minimum, key + ' lost its plate or tray')
+
+    def test_the_tray_front_edge_of_the_cheese_and_nugget_menus_survives(self):
+        for key in ('menu-165', 'menu-248'):
+            alpha = self.Image.open(ROOT / self.manifest[key]).convert('RGBA').getchannel('A')
+            for x, y in ((.5, .88), (.5, .93)):
+                self.assertGreater(alpha.getpixel((int(x * alpha.width), int(y * alpha.height))), 200, key)
+
+    def test_the_kebab_box_keeps_its_front_wall(self):
+        image = self.Image.open(ROOT / self.manifest['menu-121'])
+        self.assertLess(image.width / image.height, 2.25)  # contents only is about 2.34 wide-to-high
+
+
 class KebabTableTest(unittest.TestCase):
     def test_kebab_background_is_the_whole_table_not_the_dark_bottom_edge_of_the_frame(self):
         try:

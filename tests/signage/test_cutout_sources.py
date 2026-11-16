@@ -42,5 +42,19 @@ class CutoutSourcesTest(unittest.TestCase):
             self.assertGreater(sum(alpha.histogram()[201:]), image.width * image.height * 0.25, key)
 
 
+class KebabTableTest(unittest.TestCase):
+    def test_kebab_background_is_the_whole_table_not_the_dark_bottom_edge_of_the_frame(self):
+        try:
+            from PIL import Image
+        except ImportError:
+            self.skipTest('Pillow is not installed')
+        manifest = json.loads((ROOT / 'manifest.json').read_text(encoding='utf-8'))
+        image = Image.open(ROOT / manifest['wood']).convert('L')
+        self.assertGreater(image.height, image.width)  # a vertical strip is stretched sideways into horizontal wood grain
+        pixels = image.resize((1, 8), Image.BOX)
+        for row in range(8):
+            self.assertGreater(pixels.getpixel((0, row)), 70, 'row ' + str(row) + ' of the table texture is black')
+
+
 if __name__ == '__main__':
     unittest.main()

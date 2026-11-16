@@ -82,7 +82,10 @@
         if(!playlist)return;
         const count=playlist.children.length;
         document.getElementById('playlist-empty').hidden=count>0;
-        document.getElementById('playlist-summary').textContent=count+' jelenet · folyamatos ismétlés';
+        const total=[...playlist.children].reduce((sum,row)=>sum+(Number(row.dataset.duration)||0),0);
+        const minutes=Math.floor(total/60),seconds=total%60,parts=[];
+        if(minutes)parts.push(minutes+' perc');if(seconds||!minutes)parts.push(seconds+' mp');
+        document.getElementById('playlist-summary').textContent=count+' jelenet'+(total?' · egy kör '+parts.join(' '):'')+' · folyamatos ismétlés';
         const save=document.getElementById('playlist-save');save.disabled=count===0;
         const selected=document.querySelectorAll('#playlist-form input[name="screen_ids[]"]:checked').length;
         save.textContent=selected?'Mentés és TV-k frissítése':'Lista mentése';
@@ -95,7 +98,7 @@
     }
     function addScene(scene){
         const {id,name}=scene;
-        const row=document.createElement('li');row.className='list-group-item playlist-row';row.draggable=true;
+        const row=document.createElement('li');row.className='list-group-item playlist-row';row.draggable=true;row.dataset.duration=String(Number(scene.duration)||0);
         const label=document.createElement('span');label.className='playlist-label';
         const title=document.createElement('strong');title.textContent=name;label.append(title);
         if(scene.duration){const duration=document.createElement('small');duration.className='text-muted d-block';duration.textContent=scene.duration+' mp';label.append(duration);}

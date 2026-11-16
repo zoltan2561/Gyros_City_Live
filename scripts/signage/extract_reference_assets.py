@@ -110,7 +110,7 @@ for name,time in [('bundles',25),('gyros',45),('fried',65),('sides',83),('kebab'
    save(f'menu-{item}',image.crop(box))
    if item==173:save('promo-dessert',cutout(image.crop(box),82))
  else:
-  save('wood',image.crop((130,695,1150,715)))
+  save('wood',image.crop((131,20,171,700)))
   for item,box in {121:(160,40,660,292),124:(684,35,1140,293),119:(160,365,480,585),120:(485,370,807,586),123:(805,360,1135,586)}.items():save(f'menu-{item}',image.crop(box))
 for key,name in [('display-font','BebasNeue-Regular.ttf'),('script-font','Satisfy-Regular.ttf'),('grunge-mask','grunge-mask.svg')]:register(key,name)
 manifest=apply_reviewed_artwork(manifest,out)

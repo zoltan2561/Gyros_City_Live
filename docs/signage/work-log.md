@@ -62,3 +62,10 @@ A felhasználó aktív, folyamatosan futó reklámot kért az egyszer beúszó r
 A normál eszköz-jelenetváltás már a következő tartalom előkészítése után cserél, köztes tartalékfelvillanás nélkül; lejárat/visszavonás továbbra is azonnal leállítja az áras tartalmat. Független review nyomán javítva: az osztott nézet kártyaszám szerinti CSS-felülírása, a részben eltelt diánál megnyomott szünet hátralévő ideje és a szüneteltetett adminelőnézet árlejárata. Ezek végrehajtott regressziós tesztet kaptak.
 
 Ellenőrzés: teljes PHPUnit 317 teszt / 1374 állítás; a JavaScript- és böngészős eredményeket az acceptance kiegészítése rögzíti. Az eredeti videófájlok továbbra sem állnak rendelkezésre, a harmadik referencia sem érkezett meg: pontos másolati egyezés nem állítható. Fizikai TV-próba és élesítés nem történt. A mostani módosítások helyi, még nem commitolt munkafa-változások a meglévő feature ágon.
+
+
+## Klónok kivágásjavítása, elérhetőség és admin – 2026-11-16
+
+A felhasználó jelezte, hogy a három klón nagyjából kész, de néhol rossz a kivágás. A poligonos burger- és pizzakivágásokat, valamint az étlap négyszögletes fotóit rembg-es, sima szélű átlátszó kivágások váltották fel (54 kulcs), a kebabreferencia alsó fele pedig végre faasztal. Az ármentes háttérrel a helyi, adatbázis nélküli renderelős próba 1920×1080-ban egyezik a videók szerkezetével. A hosszú összetevőlista kicsinyítve látszik, a saját modern programok gazdagabbak lettek.
+
+Hiba javítva: az aznapra kikapcsolt étel miatt a lista nem volt menthető/kiadható. Most csak a törölt étel és a hiányos feltétválasztás tiltja. Admin: élő TV-állapotsáv, egy kör teljes ideje a listán, érthető kijelzőállapot és színes jelenetlista. A régi helyi MySQL-adatbázis ezen a gépen nem áll rendelkezésre, ezért a valódi katalógusos próba és a TV-s helyszíni próba nem történt meg.

@@ -153,11 +153,11 @@
 .reference-menu .food-grid[data-count="7"] .food-caption,.reference-menu .food-grid[data-count="8"] .food-caption{flex-direction:column;align-items:center;gap:.1vh;text-align:center}
 .reference-menu .food-grid[data-count="7"] .food-name::after,.reference-menu .food-grid[data-count="8"] .food-name::after{content:''}
 .reference-menu .food-grid[data-count="7"] .food-name,.reference-menu .food-grid[data-count="7"] .food-price,.reference-menu .food-grid[data-count="8"] .food-name,.reference-menu .food-grid[data-count="8"] .food-price{font-size:1.65vw}
-.reference-kebab{padding:3vh 10vw 7vh;background:#0a0702!important}.reference-kebab .scene-body{padding:2vh 2vw;background:#b77b2e var(--reference-wood,url('reference-assets/wood.webp')) center/100% 100%}
+.reference-kebab{padding:3vh 10vw 4vh;background:#0a0702!important}.reference-kebab .scene-body{padding:2vh 2vw;background:#b77b2e var(--reference-wood,url('reference-assets/wood.webp')) center/100% 100%}
 .reference-kebab .food-grid{grid-template-columns:repeat(6,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:2vh 1vw}
 .reference-kebab .food-card{grid-column:span 2}.reference-kebab .food-card:nth-child(-n+2){grid-column:span 3}
 .reference-kebab .food-caption{display:flex;justify-content:center;align-items:baseline;gap:.4vw;flex-wrap:wrap;color:#fff;padding:.4vh 0}
-.signage-stage.reference-kebab .food-name,.signage-stage.reference-kebab .food-price{font:700 2vw/1.08 Arial,sans-serif;max-height:2.2em}
+.signage-stage.reference-kebab .food-name,.signage-stage.reference-kebab .food-price{font:700 2.5vw/1.08 Arial,sans-serif;max-height:2.2em;text-shadow:0 .2vh .5vh rgba(60,25,0,.35)}
 .reference-pizza .food-grid,.reference-intro .food-grid{display:block;position:relative;width:100%;height:100%}
 .reference-pizza .food-card,.reference-intro .food-card{position:absolute;inset:0;display:block;animation:none}
 .reference-pizza .food-card[hidden]{display:none}

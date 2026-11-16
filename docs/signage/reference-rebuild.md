@@ -37,3 +37,17 @@ A korábbi ellenőrzés a képernyőhatárokat mérte; ez nem mutatta ki a forr�
 - `menu-123`: Edit target: the attached Gyros City doner menu food photo. Change only these defects: completely remove the large white overlaid '2950 Ft' price at the top left, replacing it with seamless continuation of the same wooden tabletop. Reframe slightly wider so the entire pita/doner at the left and all French fries at the top are visible with a 5 percent clean margin inside the photo. Preserve the exact food, filling, fries carton, Pepsi can and its real printed branding, camera angle, warm wood background and lighting. Do not add any overlaid text, price or labels. Do not add props or change the meal.
 - `menu-120`: Edit target: the attached Gyros City chicken durum photo on a warm wooden table. Remove only the stray partial neighboring fries/food fragment intruding from the right edge, replacing that fragment with uninterrupted matching wooden table. Keep the entire original durum and all filling exactly the same, same camera angle and lighting. Reframe slightly wider with a small even margin so no part of the durum is clipped. No text, prices, labels or additional props; only the single durum on the same wood surface.
 - `menu-119`: Edit target: the attached Gyros City chicken doner in pita photo. Reframe slightly wider so the whole pita and all its fries/filling, including the far-left pieces, sit fully inside the image with a 5 percent clean margin. Continue the same warm wooden tabletop in the added border. Preserve the exact existing meal, filling, camera angle, colors, lighting and photographic texture. No text, no prices, no labels, no new props or extra food.
+
+
+## Kivágásjavítás – 2026-11-16
+
+A három klón fő hibája a rossz kivágás volt: a burger- és pizzaképek videókockákból poligonnal kivágott, lecsípett szélű változatok maradtak, az étlapon pedig négyszögletes asztali fotók, a videóban viszont tiszta, kivágott ételek vannak.
+
+- `scripts/signage/cutout_artwork.py` a `cutout-sources.json` szerinti eredeti fotókból átlátszó hátterű képet készít (rembg/u2net, csak fejlesztői gépen: `pip install rembg[cpu] pillow numpy`). A modell színben/kontrasztban megerősített másolatot lát, hogy a kraft papír dobozok és tányérok megmaradjanak. Kézi poligon egészíti ki a sültkrumplis dobozokat (`menu-170`, `menu-136`), és a Fish Burger (65) csak magát a burgert tartja meg a vágódeszkából.
+- 6 burger (`burger-60..65`), 40 étlapkép és 7 videóból származó pizza (`pizza-336/342/341/339/333/332/338`, a legnagyobb belefoglalt ellipszisre vágva) új, tartalomhashes fájlt kapott. A `reviewed-artwork.json` és a `manifest.json` ezekre mutat; a régi fájlok megmaradnak a korábbi kiadásoknak.
+- A pizza ImageGen-nel javított három képe (`pizza-335/334/329`) változatlan.
+- Kebab: a `wood` háttér eddig a videókocka alsó, sötét 20 pixeles csíkja volt (az oldal alsó fele fekete lett). Most a kocka bal szélének függőleges faasztal-csíkja (131,20–171,700), amely oldalra nyújtva vízszintes erezetet ad.
+- Teszt: `tests/signage/test_cutout_sources.py` (forrás-ellenőrzőösszeg, megegyező étel, átlátszó sarok, nem sötét kebabháttér).
+
+### Elérhetőség
+A `SignageCatalog` megkülönbözteti a `missing` (törölt étel) és az `unavailable` (aznapra kikapcsolt) okot. A kiadás csak az előbbi és a hiányos feltétválasztás esetén áll le, mert a lejátszó az elérhetetlen kártyát úgyis élőben elrejti.

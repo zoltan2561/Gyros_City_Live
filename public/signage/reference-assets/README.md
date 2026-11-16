@@ -27,3 +27,7 @@ The unmodified local fonts are [Bebas Neue](https://github.com/google/fonts/tree
 `scripts/signage/reviewed_artwork.py` verifies the product key, filename and SHA-256 before applying these overrides at the end of extraction. A raw video rebuild therefore cannot restore the faulty crop. Old immutable files remain available to historical releases. New drafts/previews use the latest registry; existing published releases require an explicit list save/update in the admin.
 
 Review the actual pixels as well as browser bounds. A photo can fit completely inside the viewport while its source pixels still contain a clipped meal or a baked-in price. Cleanup provenance and prompts are in `docs/signage/reference-rebuild.md`.
+
+## Cut-outs, 2026-11-16
+
+`cutout-sources.json` lists, per artwork key, the immutable source photo and the method (`rembg` or `ellipse`). `python scripts/signage/cutout_artwork.py` rebuilds the transparent cut-outs and re-points `manifest.json` and `reviewed-artwork.json` at the new content-hashed files (dev machine only: `pip install rembg[cpu] pillow numpy`). The previous files stay for historical releases. Hand-drawn masks (kraft chip boxes, the Fish Burger board) are in the script. `wood` is now the left-edge table strip of the kebab frame, stretched sideways into horizontal grain.

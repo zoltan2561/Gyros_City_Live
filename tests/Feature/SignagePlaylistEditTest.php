@@ -43,7 +43,7 @@ class SignagePlaylistEditTest extends SignageCatalogTest
         $scene=$this->scene('Általános reklám');
         foreach(app(\App\Services\Signage\SignageBackgrounds::class)->options() as $key=>$preset){
             $request=Request::create('/admin/signage/scenes','POST',[
-                'id'=>$scene->id,'name'=>$scene->name,'version'=>hash('sha256',json_encode($scene->content)),
+                'id'=>$scene->id,'name'=>$scene->name,'version'=>$scene->editVersion(),
                 'type'=>'grid','design'=>'standard','duration'=>15,'backdrop'=>$key,
                 'theme'=>$preset['theme'],'background'=>$preset['background'],'accent'=>$preset['accent'],'text_color'=>$preset['text_color'],
                 'bindings'=>[['item_id'=>1]],
@@ -107,6 +107,81 @@ class SignagePlaylistEditTest extends SignageCatalogTest
             $this->assertSame(409,$e->getStatusCode());
             $this->assertSame('New name',$list->fresh()->name);
         }
+    }
+
+    public function test_a_stale_scene_editor_cannot_overwrite_a_newer_scene_name(): void
+    {
+        $scene=$this->scene('Original');
+        $version=$scene->editVersion();
+        $scene->update(['name'=>'Updated by another editor']);
+        $request=Request::create('/admin/signage/scenes','POST',[
+            'id'=>$scene->id,'name'=>'Stale name','version'=>$version,
+            'type'=>'grid','theme'=>'dark','title'=>'Original','duration'=>15,
+            'bindings'=>[['item_id'=>1]],
+        ]);
+        $request->headers->set('Accept','application/json');
+        try {
+            app(SignageController::class)->scene($request);
+            $this->fail('A stale scene edit was accepted');
+        } catch (HttpException $e) {
+            $this->assertSame(409,$e->getStatusCode());
+            $this->assertSame('Updated by another editor',$scene->fresh()->name);
+        }
+    }
+
+    public function test_scene_validation_recovery_preserves_the_editor_version_and_unsaved_state(): void
+    {
+        $scene=$this->scene('Original');$version=$scene->editVersion();
+        $scene->update(['name'=>'Updated by another editor']);
+        $request=Request::create('/admin/signage','GET',['tab'=>'scenes','edit_scene'=>$scene->id]);
+        $request->setLaravelSession(session()->driver());$this->app->instance('request',$request);
+        session()->flashInput(['signage_editor'=>'scene','name'=>'My unsaved name','version'=>$version]);
+        $data=app(SignageController::class)->index($request)->getData();
+        $html=view('admin.signage.scenes',$data)->render();
+        $this->assertStringContainsString('data-restored="true"',$html);
+        $this->assertStringContainsString('name="version" value="'.$version.'"',$html);
+        $this->assertStringContainsString('value="My unsaved name"',$html);
+    }
+
+    public function test_scene_save_returns_to_the_scene_just_edited(): void
+    {
+        $scene=$this->scene('Original');
+        $request=Request::create('/admin/signage/scenes','POST',[
+            'id'=>$scene->id,'name'=>'Edited','version'=>$scene->editVersion(),
+            'type'=>'grid','theme'=>'dark','title'=>'Original','duration'=>15,
+            'bindings'=>[['item_id'=>1]],
+        ]);
+        $response=app(SignageController::class)->scene($request);
+        $this->assertStringContainsString('edit_scene='.$scene->id,$response->getTargetUrl());
+        $this->assertSame('Edited',$scene->fresh()->name);
+    }
+
+    public function test_stale_scene_form_returns_with_unsaved_input_and_a_recovery_message(): void
+    {
+        $scene=$this->scene('Original');$version=$scene->editVersion();
+        $scene->update(['name'=>'Updated by another editor']);
+        $this->withoutMiddleware();
+        $this->from('/admin/signage?tab=scenes&edit_scene='.$scene->id)->post('/admin/signage/scenes',[
+            'signage_editor'=>'scene','id'=>$scene->id,'name'=>'My changes','version'=>$version,
+            'type'=>'grid','theme'=>'dark','title'=>'Original','duration'=>15,
+            'bindings'=>[['item_id'=>1]],
+        ])->assertRedirect('/admin/signage?tab=scenes&edit_scene='.$scene->id)
+          ->assertSessionHasErrors('version')->assertSessionHasInput('name','My changes')
+          ->assertSessionHasInput('version',$version);
+        $this->assertSame('Updated by another editor',$scene->fresh()->name);
+    }
+
+    public function test_stale_playlist_form_returns_with_unsaved_input(): void
+    {
+        $scene=$this->scene('One');$list=SignagePlaylist::create(['name'=>'Original','scene_ids'=>[$scene->id]]);
+        $version=$list->editVersion();$list->update(['name'=>'Updated by another editor']);
+        $this->withoutMiddleware();
+        $this->from('/admin/signage?tab=playlists&edit_playlist='.$list->id)->post('/admin/signage/playlists',[
+            'signage_editor'=>'playlist','id'=>$list->id,'name'=>'My changes','version'=>$version,'scene_ids'=>[$scene->id],
+        ])->assertRedirect('/admin/signage?tab=playlists&edit_playlist='.$list->id)
+          ->assertSessionHasErrors('version')->assertSessionHasInput('name','My changes')
+          ->assertSessionHasInput('version',$version);
+        $this->assertSame('Updated by another editor',$list->fresh()->name);
     }
 
     public function test_saving_without_selected_tvs_keeps_a_draft(): void

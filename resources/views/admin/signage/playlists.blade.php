@@ -31,8 +31,9 @@
         <p class="small text-muted">A TV sorban végigjátssza a listát, majd kezdi elölről. Nincs kezdési vagy befejezési idő.</p>
     </aside>
     <div class="col-lg-8">
-        <form class="card p-4" method="post" action="{{ url('admin/signage/playlists') }}" id="playlist-form" novalidate>
+        <form class="card p-4" method="post" action="{{ url('admin/signage/playlists') }}" id="playlist-form" data-restored="{{ old('signage_editor')==='playlist'?'true':'false' }}" novalidate>
             @csrf
+            <input type="hidden" name="signage_editor" value="playlist">
             <input type="hidden" name="id" value="{{ $editingPlaylist?->id }}">
             <input type="hidden" name="version" value="{{ old('version',$editingPlaylist?->editVersion()) }}">
             <input type="hidden" name="screen_selection" value="1">
@@ -66,10 +67,11 @@
                 @empty
                 <p class="small text-muted">Még nincs TV. A listát már összeállíthatod, a kijelzőt később a <a href="{{ route('admin.signage',['tab'=>'screens']) }}">Kijelzők oldalon</a> adhatod hozzá.</p>
                 @endforelse
-                @if($screens->isNotEmpty())<p class="small text-muted mb-0">A kijelölt TV-k teljes letöltés után automatikusan átveszik ezt a listát. A többi TV folytatja a jelenlegi műsort.</p>@endif
+                @if($screens->isNotEmpty())<p class="small text-muted mb-2">A kijelölt TV-k teljes letöltés után automatikusan átveszik ezt a listát.</p>@endif
+                <p class="small playlist-target-summary mb-0" id="playlist-target-summary" role="status"></p>
             </fieldset>
             <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
-                <span class="small text-muted" id="playlist-summary" role="status"></span>
+                <div class="small"><span class="text-muted d-block" id="playlist-summary" role="status"></span><span id="editor-save-state" class="editor-save-state" role="status"></span></div>
                 <button class="btn btn-primary" id="playlist-save" disabled>Lista mentése</button>
             </div>
         </form>

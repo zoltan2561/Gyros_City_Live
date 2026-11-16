@@ -44,10 +44,14 @@ class SignageController extends Controller {
                 'addons_id'=>implode('|',$b['addons']??[]),'extras_id'=>implode('|',$b['extras']??[])];
         }
         $content=app(\App\Services\Signage\SignageSceneDefinition::class)->validate($request->only(['type','theme','title','design','backdrop','duration','slide_seconds','media_id','background_media_id','logo_media_id','background','accent','text_color','font_family','name_size','price_size','gap','media_side','media_fit','media_focus_x','media_focus_y'])+['bindings'=>$bindings,'play_to_end'=>$request->boolean('play_to_end')]);
-        $record=$request->filled('id')?\App\Models\SignageScene::findOrFail($request->integer('id')):new \App\Models\SignageScene();
-        if($record->exists)abort_unless(hash_equals(hash('sha256',json_encode($record->content)),(string)$request->input('version')),409,'A jelenetet közben módosították. Frissítsd az oldalt.');
-        $record->fill(['name'=>$request->input('name'),'content'=>$content])->save();
-        return $this->saved($request,'Jelenet vázlata elmentve.');
+        $record=DB::transaction(function()use($request,$content){
+            $record=$request->filled('id')?\App\Models\SignageScene::lockForUpdate()->findOrFail($request->integer('id')):new \App\Models\SignageScene();
+            if($record->exists)$this->requireCurrentVersion($request,$record->editVersion(),'A jelenetet');
+            $record->fill(['name'=>$request->input('name'),'content'=>$content])->save();
+            return $record;
+        });
+        $message='Jelenet vázlata elmentve.';
+        return $request->expectsJson()?response()->json(['ok'=>true,'message'=>$message]):redirect()->route('admin.signage',['tab'=>'scenes','edit_scene'=>$record->id])->with('success',$message);
     }
 
     public function playlist(Request $request) {
@@ -56,7 +60,7 @@ class SignageController extends Controller {
             'screen_ids'=>'nullable|array|max:100','screen_ids.*'=>'integer|distinct|exists:signage_screens,id']);
         $record=DB::transaction(function()use($data,$request){
             $record=$request->filled('id')?\App\Models\SignagePlaylist::lockForUpdate()->findOrFail($data['id']):new \App\Models\SignagePlaylist();
-            if($record->exists)abort_unless(hash_equals($record->editVersion(),(string)$request->input('version')),409,'A listát közben módosították. Frissítsd az oldalt.');
+            if($record->exists)$this->requireCurrentVersion($request,$record->editVersion(),'A listát');
             $record->fill(['name'=>$data['name'],'scene_ids'=>array_values(array_map('intval',$data['scene_ids']))])->save();
             if(!empty($data['screen_ids']))app(\App\Services\Signage\SignagePublisher::class)->publish($record->id,array_map('intval',$data['screen_ids']),$request->user()->id);
             return $record;
@@ -132,6 +136,12 @@ class SignageController extends Controller {
             SignageAudit::create(['actor_id'=>$request->user()->id,'action'=>'revoke','screen_id'=>$data['screen_id']]);
         });
         return $this->saved($request,'Kijelző hozzáférése visszavonva.');
+    }
+    private function requireCurrentVersion(Request $request,string $version,string $subject): void {
+        if(hash_equals($version,(string)$request->input('version')))return;
+        $message=$subject.' közben módosították. Másold ki a saját változtatásaidat, majd frissítsd az oldalt.';
+        if($request->expectsJson())abort(409,$message);
+        throw \Illuminate\Validation\ValidationException::withMessages(['version'=>$message]);
     }
     private function saved(Request $request,string $message) {
         $last=basename($request->path());

@@ -2,6 +2,8 @@
 
 A fejlesztési változat a `feature/gctv-v1-local` ágon található. Apache, MySQL és a külön signage worker szükséges; FFmpeg és ffprobe legyen a PATH-on. Nincs új npm-csomag vagy buildlépés.
 
+A később mérlegelhető Android TV-s APK és TV ki-/bekapcsolás terve: [android-tv-apk-terv.md](android-tv-apk-terv.md). Az APK és a TV-vezérlés még nincs megvalósítva.
+
 ## Megnyitás
 
 - Admin: `http://localhost/Gyros_City_Live/admin/signage`.
@@ -63,3 +65,9 @@ Hibás vagy blokkolt videó után a player másik jelenetet vagy tartalékot vá
 Teljes böngészőadat-törlés után hálózat nélküli indulás nem garantált. A valódi TV-k kodek-, tárhely-, böngésző- és automatikus indulási képessége még nincs igazolva.
 
 Keskeny adminnézetben a mentett listák a **Választott lista** legördülővel válthatók. Az asztali listaválasztó megmarad. A hibás mező kijavításakor a hozzá tartozó kliensoldali hibajelzés megszűnik.
+
+## Szerkesztés és párosítás – 2026-11-16
+
+A lista szerkesztője megmutatja, hány TV kapja meg a mentést; kijelölés nélkül a mentés vázlat marad. A lista és a jelenet szerkesztője jelzi a nem mentett változásokat, a felületen belüli elnavigálás előtt megerősítést kér, frissítéskor vagy bezáráskor pedig a böngésző figyelmeztet. A böngésző/operációs rendszer erőszakos bezárása ellen ez nem automatikus mentés. A jelenet média-, szín-, betű- és logóbeállításai összecsukhatók; médiás elrendezésnél automatikusan kinyílnak. Jelenet mentése után a szerkesztett jelenet marad nyitva. Egy másik szerkesztő által időközben módosított jelenet nevét vagy tartalmát a régi szerkesztés nem írhatja felül; a képernyőn megmaradt módosításokat frissítés előtt ki lehet másolni.
+
+Párosításkor egy átmeneti kapcsolati hiba után a lejátszó ugyanazzal a kóddal próbálkozik tovább, és egyszerre csak egy státuszkérést indít. Lejárt vagy már felhasznált kódnál új kód kell. A szerver a sikeres párosítás tokenjét továbbra is egyszer adja át: ha éppen ez a válasz vész el, új párosítás szükséges. Egyes régebbi böngészőkben a lejátszó már nem függ a `structuredClone` vagy a `crypto.randomUUID` meglététől. A tartós tárolásra vonatkozó kérés visszautasítása önmagában nem állítja le az online indulást, de a böngésző így törölheti a helyi adatokat. A tényleges eszköz és a HTTPS/tároló támogatása továbbra is külön ellenőrzendő.

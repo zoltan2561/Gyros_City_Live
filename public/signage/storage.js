@@ -12,7 +12,9 @@ function database(base){
 async function digest(bytes){const hash=await crypto.subtle.digest('SHA-256',bytes);return [...new Uint8Array(hash)].map(b=>b.toString(16).padStart(2,'0')).join('');}
 async function stageRelease(manifest,token,options){
  const store=options.store,cacheStorage=options.caches||caches,base=new URL(options.base),fetcher=options.fetch||fetch;
- const prefix='gc-signage-'+encodeURIComponent(base.pathname)+'-release-',name=prefix+manifest.layout_revision+'-'+crypto.randomUUID();
+ const random=crypto.getRandomValues(new Uint8Array(16));
+ const suffix=[...random].map(byte=>byte.toString(16).padStart(2,'0')).join('');
+ const prefix='gc-signage-'+encodeURIComponent(base.pathname)+'-release-',name=prefix+manifest.layout_revision+'-'+suffix;
  const current=await store.load('manifest');
  if(current?.layout_revision===manifest.layout_revision){
   const active=await cacheStorage.open(current.cache_name);let complete=true;

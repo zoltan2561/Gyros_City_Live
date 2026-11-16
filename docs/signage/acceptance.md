@@ -1,5 +1,12 @@
 # Helyi elfogadási eredmények
 
+## Admin- és lejátszóellenőrzés – 2026-11-16
+
+- A signage PHP-tesztek eredménye: **89 teszt / 672 állítás**; a teljes frontendteszt-készlet eredménye: **100 teszt**. Parancsok: `php -d auto_prepend_file=tests/offline-prepend.php -d error_reporting=8191 vendor/phpunit/phpunit/phpunit --filter Signage`, illetve `node --test tests/frontend/*.test.cjs`.
+- A listaváltás, a nem mentett adatok figyelmeztetése, a vázlat/TV-frissítés visszajelzése és a jelenetbeállítások helyi, adatbázis-írást nem végző böngészős mintán ellenőrizve, asztali és 390 px-es nézetben. A képek az `output/playwright/signage-admin-*` és `signage-scene-editor-*` fájlokban vannak.
+- Mind a hét műsor kezdőjelenete 1920×1080 és 1280×720 méretben, mintakatalógussal betöltődött; a vizsgált képeknél nem volt hiányzó fotó, vízszintes kilógás vagy JavaScript-oldalhiba. A `signage-tv-*` képeken szereplő árak és elérhetőségek **tesztadatok**, nem aktuális üzleti adatok.
+- Ez helyi ellenőrzés: nincs fizikai TV-s, hosszú üzemi, éles telepítési vagy tényleges TV-ki/bekapcsolási bizonyíték.
+
 ## A három rendelkezésre álló videó kioszkos változata
 
 2026-11-09, újabb kör: mindhárom helyi forrásvideó metaadata, idővonala és mintaképkockái ellenőrizve. Eredeti ételfotók/hátterek alapján újraépített 20 mp-es burgerlap, hatoldalas 96 mp-es étlap és nyitóképes pizzaműsor. A videók teljes editoranimációjának képkockánkénti azonossága nem állítható; a mozgás webes újraépítés.

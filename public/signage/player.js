@@ -5,6 +5,7 @@ const base=new URL('./',location.href),api=new URL('api/v1/',base);
 const store=GCSignageStorage.database(base.href);
 let token=null,manifest=null,catalog=null,receipt=null,clock=null,renderer=null,current=null,sceneIndex=-1,started=0,videoProgress=0,videoChecked=0;
 let syncing=false,staging=false,lastError='',urls=[],nonce=null,cycleId=0,sessionGeneration=0,changing=false,pendingManifest=null;
+let pairingGeneration=0,pairingPolling=false;
 let cachedImages=new Map();
 const failedScenes=new Map();
 function notice(message){status.textContent=message;}
@@ -19,22 +20,36 @@ async function request(path,method='GET',data,credential=token){
  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);
  try{
   const response=await fetch(new URL(path,api),{method,headers:{'Content-Type':'application/json','Accept':'application/json',...(credential?{Authorization:'Bearer '+credential}:{})},body:data===undefined?undefined:JSON.stringify(data),cache:'no-store',signal:controller.signal});
-  if(response.status===401){sessionGeneration++;token=null;receipt=null;clock=null;manifest=null;pendingManifest=null;fallback();pairPanel.hidden=false;await store.save('token',null);throw new Error('A kijelző hozzáférését visszavonták.');}
-  if(!response.ok)throw new Error('Nincs friss kapcsolat.');
+  if(response.status===401&&token&&credential===token){sessionGeneration++;pairingGeneration++;token=null;receipt=null;clock=null;manifest=null;pendingManifest=null;fallback();pairPanel.hidden=false;await store.save('token',null);throw new Error('A kijelző hozzáférését visszavonták.');}
+  if(!response.ok){const error=new Error('Nincs friss kapcsolat.');error.status=response.status;throw error;}
   return await response.json();
  }finally{clearTimeout(timer);}
 }
 async function pair(){
+ const generation=++pairingGeneration;nonce=null;
+ document.getElementById('pair-code').textContent='…';notice('Párosítási kód kérése…');
  try{
-  const p=await request('pairing/start','POST',{},null);nonce=p.nonce;
+  const p=await request('pairing/start','POST',{},null);if(generation!==pairingGeneration||token)return;nonce=p.nonce;
   document.getElementById('pair-code').textContent=p.code;notice('A párosítási kód 10 percig érvényes.');
- }catch(e){notice(e.message);}
+ }catch(e){if(generation===pairingGeneration&&!token)notice('Nem sikerült kódot kérni. Ellenőrizd a kapcsolatot, majd próbáld újra.');}
 }
 async function pairingPoll(){
- if(token||!nonce)return;
- try{const p=await request('pairing/status','POST',{},nonce);if(p.status==='paired'){
-   token=p.token;nonce=null;await store.save('token',token);pairPanel.hidden=true;await synchronize();
- }}catch(e){nonce=null;notice('A kód lejárt. Kérj új párosítási kódot.');}
+ if(token||!nonce||pairingPolling)return;
+ const generation=pairingGeneration,requestedNonce=nonce;pairingPolling=true;
+ try{
+  const p=await request('pairing/status','POST',{},requestedNonce);
+  if(generation!==pairingGeneration||nonce!==requestedNonce||token)return;
+  if(p.status==='paired'){
+   if(typeof p.token!=='string'||!p.token)throw new Error('Érvénytelen párosítás.');
+   token=p.token;nonce=null;
+   try{await store.save('token',token);}catch(e){token=null;notice('A párosítás nem menthető a készülékre. Ellenőrizd a böngésző tárhelyét, majd kérj új kódot.');return;}
+   pairPanel.hidden=true;await synchronize();
+  }else notice('Várakozás a párosításra. A kód 10 percig érvényes.');
+ }catch(e){
+  if(generation!==pairingGeneration||nonce!==requestedNonce||token)return;
+  if(e.status===404){nonce=null;notice('A kód lejárt vagy már felhasználták. Kérj új párosítási kódot.');}
+  else notice('A kapcsolat megszakadt. A párosítást automatikusan újra ellenőrizzük.');
+ }finally{pairingPolling=false;}
 }
 async function applyCatalog(){
  const sent=performance.now(),wall=Date.now();
@@ -69,7 +84,8 @@ async function synchronize(){
  finally{syncing=false;}
 }
 async function hydrate(scene){
- const result=structuredClone(scene),preparedUrls=[],images=new Map();
+ // Scenes are JSON snapshots; avoid newer clone APIs unavailable on some TV browsers.
+ const result=JSON.parse(JSON.stringify(scene)),preparedUrls=[],images=new Map();
  try{
  for(const key of ['media','background_media','logo'])if(result[key]){const u=await GCSignageStorage.blobUrl(manifest,result[key].url);preparedUrls.push(u);result[key].url=u;}
  for(const asset of Object.values(result.reference_assets||{})){const u=await GCSignageStorage.blobUrl(manifest,asset.url);preparedUrls.push(u);asset.url=u;}
@@ -137,12 +153,16 @@ setInterval(()=>{
 setInterval(synchronize,30000);setInterval(heartbeat,60000);setInterval(pairingPoll,5000);
 window.addEventListener('online',()=>{synchronize();heartbeat();});window.addEventListener('visibilitychange',()=>{if(!document.hidden)synchronize();});
 document.getElementById('new-code').addEventListener('click',pair);
-document.getElementById('player-fullscreen').addEventListener('click',()=>document.documentElement.requestFullscreen().catch(()=>notice('A böngésző nem engedélyezte a teljes képernyőt.')));
+document.getElementById('player-fullscreen').addEventListener('click',()=>{
+ const message='A böngésző nem engedélyezte a teljes képernyőt.';
+ try{const open=document.documentElement.requestFullscreen;if(typeof open!=='function'){notice(message);return;}const result=open.call(document.documentElement);if(result&&typeof result.catch==='function')result.catch(()=>notice(message));}catch(e){notice(message);}
+});
 (async()=>{
  fallback();
  try{
   if('serviceWorker'in navigator)await navigator.serviceWorker.register(new URL('sw.js',base),{scope:base.pathname});
-  await navigator.storage?.persist?.();
+  // Persistent storage is a best-effort request; IndexedDB may still work if it is denied.
+  try{await navigator.storage?.persist?.();}catch(e){}
   token=await store.load('token');manifest=await store.load('manifest');
   // A restart never trusts a saved price receipt or an uncertain device clock.
   if(token){pairPanel.hidden=true;await synchronize();}else{pairPanel.hidden=false;await pair();}

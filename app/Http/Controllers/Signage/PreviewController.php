@@ -10,7 +10,9 @@ class PreviewController extends Controller
 {
     public function demo(Request $request)
     {
-        abort_unless(app()->environment('local') && in_array($request->ip(), ['127.0.0.1', '::1'], true), 404);
+        if(!app()->environment('local') || !in_array($request->ip(), ['127.0.0.1', '::1'], true)) {
+            return response('',404)->header('Cache-Control','no-store');
+        }
         if ($request->boolean('catalog')) {
             return response()->json(app(SignageDemoPrograms::class)->build(new \DateTimeImmutable()))
                 ->header('Cache-Control','no-store');

@@ -2,6 +2,74 @@ const {test}=require('node:test');const assert=require('node:assert/strict');con
 const schedule=require('../../public/signage/schedule.js');
 const flush=async()=>{for(let i=0;i<20;i++)await new Promise(r=>setImmediate(r));};
 
+function pairingRuntime(statusResponse){
+ const timers=[],nodes=new Map(),saved={};
+ const node=id=>nodes.get(id)||nodes.set(id,{textContent:'',hidden:false,listeners:{},addEventListener(event,fn){this.listeners[event]=fn;},querySelectorAll:()=>[],querySelector:()=>null}).get(id);
+ let starts=0;
+ const context={URL,Response,AbortController,structuredClone,setTimeout,clearTimeout,performance:{now:()=>0},Date,
+  location:{href:'http://localhost/signage/'},navigator:{onLine:true},document:{getElementById:node,documentElement:{}},window:{addEventListener(){}},setInterval:(fn,ms)=>timers.push({fn,ms}),
+  GCSignage:{fallback(){},priceFresh:()=>true,cardsForScene:()=>[],render(){return{update(){}};}},GCSignageSchedule:schedule,
+  GCSignageStorage:{database:()=>({load:async()=>null,save:async(k,v)=>{saved[k]=v;}}),stageRelease:async m=>m,blobUrl:async()=>''},
+  fetch:async(url,options)=>{
+   const path=String(url);
+   if(path.endsWith('/pairing/start')){starts++;return new Response(JSON.stringify({code:String(12345677+starts),nonce:'nonce-'+starts}));}
+   if(path.endsWith('/pairing/status'))return statusResponse(options);
+   if(path.endsWith('/catalog'))return new Response(JSON.stringify({schema_version:1,server_time:'2026-11-09T12:00:00Z',valid_until:'2026-11-09T12:30:00Z',products:[]}));
+   return new Response(JSON.stringify({schema_version:1,server_time:'2026-11-09T12:00:00Z',layout_revision:'x',playback_mode:'continuous',default_release_id:null,schedules:[],releases:[]}));
+  }};
+ vm.runInNewContext(fs.readFileSync(require.resolve('../../public/signage/player.js'),'utf8'),context);
+ return {timers,node,saved};
+}
+
+test('pairing retries the same code after a temporary network failure',async()=>{
+ let attempts=0;
+ const run=pairingRuntime(async()=>{if(++attempts===1)throw new Error('offline');return new Response(JSON.stringify({status:'paired',token:'new-device'}));});
+ await flush();const poll=run.timers.find(t=>t.ms===5000).fn;
+ poll();await flush();assert.match(run.node('player-status').textContent,/kapcsolat/i);
+ poll();await flush();assert.equal(attempts,2);assert.equal(run.saved.token,'new-device');assert.equal(run.node('pair-panel').hidden,true);
+});
+
+test('pairing never runs overlapping polls for the same code',async()=>{
+ let attempts=0,finish;
+ const run=pairingRuntime(()=>{attempts++;return attempts===1?new Promise(resolve=>{finish=resolve;}):Promise.resolve(new Response(JSON.stringify({status:'waiting'})));});
+ await flush();const poll=run.timers.find(t=>t.ms===5000).fn;
+ poll();poll();await flush();assert.equal(attempts,1);
+ finish(new Response(JSON.stringify({status:'waiting'})));await flush();poll();await flush();assert.equal(attempts,2);
+});
+
+test('an old pairing response cannot invalidate a newly requested code',async()=>{
+ let finish,attempts=0;
+ const run=pairingRuntime(()=>{attempts++;return attempts===1?new Promise(resolve=>{finish=resolve;}):Promise.resolve(new Response(JSON.stringify({status:'waiting'})));});
+ await flush();const poll=run.timers.find(t=>t.ms===5000).fn;
+ poll();await flush();run.node('new-code').listeners.click();await flush();assert.equal(run.node('pair-code').textContent,'12345679');
+ finish(new Response('{}',{status:404}));await flush();poll();await flush();assert.equal(attempts,2);
+});
+
+test('a TV without structuredClone can still render a published scene',async()=>{
+ let renders=0;const node={textContent:'',hidden:false,addEventListener(){},querySelectorAll:()=>[],querySelector:()=>null};
+ const manifest={schema_version:1,server_time:'2026-11-09T12:00:00Z',layout_revision:'x',playback_mode:'continuous',default_release_id:1,releases:[{id:1,snapshot:{scenes:[{id:'food',type:'grid',duration:15}]}}]};
+ const context={URL,Response,AbortController,setTimeout,clearTimeout,performance:{now:()=>0},Date,location:{href:'http://localhost/signage/'},navigator:{onLine:true},document:{getElementById:()=>node},window:{addEventListener(){}},setInterval(){},
+  GCSignage:{fallback(){},priceFresh:()=>true,cardsForScene:()=>[{}],render(){renders++;return{update(){}};}},GCSignageSchedule:schedule,
+  GCSignageStorage:{database:()=>({load:async k=>k==='token'?'device':manifest,save:async()=>{}}),stageRelease:async()=>manifest,blobUrl:async()=>''},
+  fetch:async url=>new Response(JSON.stringify(String(url).endsWith('/catalog')?{schema_version:1,server_time:manifest.server_time,valid_until:'2026-11-09T12:30:00Z',products:[]}:manifest))};
+ vm.runInNewContext(fs.readFileSync(require.resolve('../../public/signage/player.js'),'utf8'),context);await flush();assert.equal(renders,1);
+});
+
+test('full screen control explains when the browser has no fullscreen API',async()=>{
+ const run=pairingRuntime(async()=>new Response('{}'));await flush();
+ assert.doesNotThrow(()=>run.node('player-fullscreen').listeners.click());
+ assert.match(run.node('player-status').textContent,/teljes képernyő/i);
+});
+
+test('a denied persistent-storage request does not prevent online pairing',async()=>{
+ let starts=0;const node={textContent:'',hidden:false,addEventListener(){},querySelectorAll:()=>[],querySelector:()=>null};
+ const context={URL,Response,AbortController,setTimeout,clearTimeout,performance:{now:()=>0},Date,location:{href:'http://localhost/signage/'},
+  navigator:{onLine:true,storage:{persist:async()=>{throw new Error('denied');}}},document:{getElementById:()=>node},window:{addEventListener(){}},setInterval(){},
+  GCSignage:{fallback(){}},GCSignageSchedule:schedule,GCSignageStorage:{database:()=>({load:async()=>null,save:async()=>{}})},
+  fetch:async()=>{starts++;return new Response(JSON.stringify({code:'12345678',nonce:'test'}));}};
+ vm.runInNewContext(fs.readFileSync(require.resolve('../../public/signage/player.js'),'utf8'),context);await flush();assert.equal(starts,1);
+});
+
 test('catalog polling preserves playlist position through repeated complete cycles',async()=>{
  let now=0;const timers=[],shown=[];
  const node={textContent:'',hidden:false,addEventListener(){},querySelectorAll:()=>[],querySelector:()=>null};

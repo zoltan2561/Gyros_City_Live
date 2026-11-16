@@ -25,4 +25,12 @@ class SignagePreviewTest extends \Tests\TestCase
         $this->app['env'] = 'local';
         $this->withServerVariables(['REMOTE_ADDR'=>'203.0.113.10'])->get('/signage/demo')->assertNotFound();
     }
+
+    public function test_disabled_player_returns_not_found_without_needing_the_application_database(): void
+    {
+        $this->app['env']='production';
+        config(['signage.enabled'=>false,'database.default'=>'missing_signage_database',
+            'database.connections.missing_signage_database'=>['driver'=>'sqlite','database'=>':memory:','prefix'=>'']]);
+        $this->get('/signage/')->assertNotFound();
+    }
 }

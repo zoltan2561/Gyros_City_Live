@@ -1,5 +1,6 @@
 (() => {
     'use strict';
+    let updateEditorState=()=>{},editorDirty=()=>false,navigate=(destination)=>window.location.assign(destination);
     const optionsNode=document.getElementById('signage-catalog-options');
     const data=optionsNode?JSON.parse(optionsNode.textContent):null;
     function choices(row,restore) {
@@ -20,7 +21,7 @@
         }
     }
     document.querySelectorAll('.binding-row').forEach(r=>choices(r,true));
-    function sceneType(){const slides=document.getElementById('scene-type')?.value==='slideshow';const options=document.getElementById('slide-options');if(options)options.hidden=!slides;const duration=document.getElementById('scene-duration');if(duration)duration.readOnly=slides;}
+    function sceneType(){const type=document.getElementById('scene-type')?.value,slides=type==='slideshow';const options=document.getElementById('slide-options');if(options)options.hidden=!slides;const duration=document.getElementById('scene-duration');if(duration)duration.readOnly=slides;const advanced=document.getElementById('scene-advanced');if(advanced&&['media','split'].includes(type))advanced.open=true;}
     document.getElementById('scene-type')?.addEventListener('change',sceneType);sceneType();
     const backdrop=document.getElementById('scene-backdrop');
     const backgroundOptions=JSON.parse(document.getElementById('signage-background-options')?.textContent||'{}');
@@ -65,16 +66,17 @@
     });
     const rows=document.getElementById('binding-rows');
     rows?.addEventListener('change',e=>{if(e.target.matches('.binding-item')){const row=e.target.closest('.binding-row');row.querySelector('.binding-artwork').value='';row.querySelector('input[name$="[title]"]').value='';choices(row,false);}});
-    rows?.addEventListener('click',e=>{if(e.target.matches('.remove-binding')){e.target.closest('.binding-row').remove();document.getElementById('add-binding').focus();}});
+    rows?.addEventListener('click',e=>{if(e.target.matches('.remove-binding')){e.target.closest('.binding-row').remove();document.getElementById('add-binding').focus();updateEditorState();}});
     let nextIndex=rows?Math.max(0,...[...rows.children].map(r=>Number(r.dataset.index)))+1:0;
     document.getElementById('add-binding')?.addEventListener('click',()=>{
         if(rows.children.length>=24)return;
         const source=document.getElementById('binding-template');const clone=source.content.cloneNode(true);
         clone.querySelectorAll('*').forEach(el=>{for(const attr of [...el.attributes])if(attr.value.includes('INDEX'))el.setAttribute(attr.name,attr.value.replaceAll('INDEX',String(nextIndex)));});
-        nextIndex++;rows.append(clone);rows.lastElementChild.querySelector('select').focus();
+        nextIndex++;rows.append(clone);rows.lastElementChild.querySelector('select').focus();updateEditorState();
     });
     const playlist=document.getElementById('playlist-scenes');
-    document.getElementById('playlist-switch')?.addEventListener('change',e=>{if(e.target.value)window.location.assign(e.target.value);});
+    const playlistSwitch=document.getElementById('playlist-switch'),originalPlaylist=playlistSwitch?.value;
+    playlistSwitch?.addEventListener('change',e=>{const destination=e.target.value;e.target.value=originalPlaylist;if(destination)navigate(destination,e.target);});
     const sceneOptions=JSON.parse(document.getElementById('playlist-options')?.textContent||'[]');
     function playlistState(){
         if(!playlist)return;
@@ -82,11 +84,14 @@
         document.getElementById('playlist-empty').hidden=count>0;
         document.getElementById('playlist-summary').textContent=count+' jelenet · folyamatos ismétlés';
         const save=document.getElementById('playlist-save');save.disabled=count===0;
-        save.textContent=document.querySelector('#playlist-form input[name="screen_ids[]"]:checked')?'Mentés és TV-k frissítése':'Lista mentése';
+        const selected=document.querySelectorAll('#playlist-form input[name="screen_ids[]"]:checked').length;
+        save.textContent=selected?'Mentés és TV-k frissítése':'Lista mentése';
+        document.getElementById('playlist-target-summary').textContent=selected?selected+' TV kapja meg a listát.':'A lista vázlatként lesz elmentve; a TV-k műsora nem változik.';
         [...playlist.children].forEach((row,index)=>{
             row.querySelector('[data-action="up"]').disabled=index===0;
             row.querySelector('[data-action="down"]').disabled=index===count-1;
         });
+        updateEditorState();
     }
     function addScene(scene){
         const {id,name}=scene;
@@ -117,13 +122,37 @@
     let dragged=null;playlist?.addEventListener('dragstart',e=>{dragged=e.target.closest('li');if(e.dataTransfer)e.dataTransfer.setData('text/plain',dragged?.querySelector('input').value||'');});
     playlist?.addEventListener('dragover',e=>e.preventDefault());playlist?.addEventListener('dragend',()=>{dragged=null;});
     playlist?.addEventListener('drop',e=>{e.preventDefault();const target=e.target.closest('li');if(target&&dragged&&target!==dragged){const after=e.clientY>target.getBoundingClientRect().top+target.getBoundingClientRect().height/2;if(after)target.after(dragged);else target.before(dragged);}dragged=null;playlistState();});
+    const editor=document.getElementById('playlist-form')||document.getElementById('scene-form');
+    let submittingEditor=false;
+    if(editor){
+        const snapshot=()=>JSON.stringify([...new FormData(editor).entries()]);
+        const initial=snapshot(),state=document.getElementById('editor-save-state');
+        const isNew=!editor.querySelector('input[name="id"]').value;
+        const changed=()=>editor.dataset.restored==='true'||snapshot()!==initial;
+        editorDirty=changed;
+        updateEditorState=()=>{if(state){const dirty=changed();state.textContent=dirty?'Nem mentett módosítások':(isNew?'Új vázlat · még nincs elmentve':'Mentett állapot');state.classList.toggle('is-dirty',dirty);}};
+        editor.addEventListener('input',updateEditorState);editor.addEventListener('change',updateEditorState);
+        window.addEventListener('beforeunload',event=>{if(!submittingEditor&&changed()){event.preventDefault();event.returnValue='';}});
+        updateEditorState();
+    }
     const dialog=document.createElement('dialog');dialog.className='signage-dialog';
     const title=document.createElement('h2');title.className='h5';title.id='signage-confirm-title';title.textContent='Művelet megerősítése';
     const message=document.createElement('p'),actions=document.createElement('div');actions.className='dialog-actions';
     const cancel=document.createElement('button'),accept=document.createElement('button');cancel.type=accept.type='button';cancel.className='btn btn-outline-secondary';accept.className='btn btn-primary';cancel.textContent='Mégse';accept.textContent='Megerősítés';actions.append(cancel,accept);dialog.append(title,message,actions);dialog.setAttribute('aria-labelledby',title.id);document.body.append(dialog);
-    let pending=null,trigger=null;cancel.addEventListener('click',()=>dialog.close());dialog.addEventListener('close',()=>{pending=null;trigger?.focus();});
-    accept.addEventListener('click',()=>{const form=pending;dialog.close();if(form)send(form);});
-    function send(form){form.setAttribute('aria-busy','true');form.querySelectorAll('button[type=submit],button:not([type])').forEach(b=>b.disabled=true);HTMLFormElement.prototype.submit.call(form);}
+    let pending=null,trigger=null,pendingNavigation=null;cancel.addEventListener('click',()=>dialog.close());dialog.addEventListener('close',()=>{pending=null;pendingNavigation=null;trigger?.focus();});
+    accept.addEventListener('click',()=>{const form=pending,destination=pendingNavigation;dialog.close();if(destination){submittingEditor=true;window.location.assign(destination);}else if(form)send(form);});
+    navigate=(destination,source)=>{
+        if(!editor||!editorDirty()){window.location.assign(destination);return;}
+        pending=null;pendingNavigation=destination;trigger=source;title.textContent='Nem mentett módosítások';
+        message.textContent='Ha elhagyod ezt az oldalt, a módosításaid elvesznek.';cancel.textContent='Maradok';accept.textContent='Elhagyom az oldalt';dialog.showModal();cancel.focus();
+    };
+    document.querySelectorAll('.signage-admin a[href]').forEach(link=>link.addEventListener('click',event=>{
+        if(!editor||!editorDirty()||event.defaultPrevented||event.button!==0||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey||(link.target&&link.target.toLowerCase()!=='_self')||link.hasAttribute('download'))return;
+        const destination=new URL(link.href,location.href),current=new URL(location.href);
+        if(destination.origin===current.origin&&destination.pathname===current.pathname&&destination.search===current.search)return;
+        event.preventDefault();navigate(destination.href,link);
+    }));
+    function send(form){if(form===editor)submittingEditor=true;form.setAttribute('aria-busy','true');form.querySelectorAll('button[type=submit],button:not([type])').forEach(b=>b.disabled=true);HTMLFormElement.prototype.submit.call(form);}
     document.querySelectorAll('.signage-admin form').forEach(form=>{
     form.addEventListener('input',e=>{
         if(e.target.getAttribute('aria-invalid')==='true'&&e.target.checkValidity()){
@@ -134,8 +163,8 @@
     form.addEventListener('submit',e=>{
         e.preventDefault();if(form.getAttribute('aria-busy')==='true')return;
         const invalid=[...form.elements].find(el=>el.willValidate&&!el.checkValidity());
-        if(invalid){let alert=form.querySelector('.form-validation-error');if(!alert){alert=document.createElement('p');alert.className='form-validation-error text-danger';alert.setAttribute('role','alert');form.prepend(alert);}alert.textContent='Töltsd ki vagy javítsd a megjelölt mezőt.';invalid.setAttribute('aria-invalid','true');invalid.focus();return;}
-        if(form.dataset.confirm){pending=form;trigger=e.submitter;message.textContent=form.dataset.confirm;dialog.showModal();cancel.focus();}else send(form);
+        if(invalid){let alert=form.querySelector('.form-validation-error');if(!alert){alert=document.createElement('p');alert.className='form-validation-error text-danger';alert.setAttribute('role','alert');form.prepend(alert);}alert.textContent='Töltsd ki vagy javítsd a megjelölt mezőt.';invalid.setAttribute('aria-invalid','true');const section=invalid.closest('details');if(section)section.open=true;invalid.focus();return;}
+        if(form.dataset.confirm){pending=form;pendingNavigation=null;trigger=e.submitter;title.textContent='Művelet megerősítése';message.textContent=form.dataset.confirm;cancel.textContent='Mégse';accept.textContent='Megerősítés';dialog.showModal();cancel.focus();}else send(form);
     });
     });
     document.getElementById('signage-errors')?.focus();

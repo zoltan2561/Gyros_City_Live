@@ -2,6 +2,19 @@ const {test}=require('node:test');const assert=require('node:assert/strict');
 const {selectRelease,sceneAllowed}=require('../../public/signage/schedule.js');
 const {stageRelease}=require('../../public/signage/storage.js');
 const {createHash}=require('node:crypto');
+test('release staging works without the newer randomUUID browser API',async()=>{
+ const vm=require('node:vm'),fs=require('node:fs');
+ const module={exports:{}};
+ const context={module,URL,crypto:{getRandomValues(bytes){bytes.fill(17);return bytes;}},globalThis:{}};
+ vm.runInNewContext(fs.readFileSync(require.resolve('../../public/signage/storage.js'),'utf8'),context);
+ let saved;
+ const manifest={layout_revision:'new',releases:[]};
+ await module.exports.stageRelease(manifest,'token',{
+  base:'https://example.test/signage/',store:{load:async()=>null,save:async(k,value)=>{saved=value;}},
+  caches:{open:async()=>({}),keys:async()=>[],delete:async()=>{}},fetch:async()=>{}
+ });
+ assert.equal(saved.layout_revision,'new');assert.match(saved.cache_name,/release-new-/);
+});
 test('continuous playback keeps repeating the selected release without a schedule deadline',()=>{
  const manifest={playback_mode:'continuous',default_release_id:1,schedule_valid_until:'2026-11-01T00:00:00Z',schedules:[{release_id:2,priority:1}]};
  assert.equal(selectRelease(manifest,new Date('2027-11-11T12:00:00Z')),1);

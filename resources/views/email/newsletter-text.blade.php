@@ -1,6 +1,6 @@
 {{ $letterSubject }}
 
-{{ $letterBody }}
+{!! \App\Services\NewsletterContent::text($letterBody) !!}
 
 @if ($unsubscribeUrl)
 {{ trans('newsletter.footer') }}

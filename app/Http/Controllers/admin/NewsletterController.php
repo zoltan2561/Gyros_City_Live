@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 
 class NewsletterController extends Controller
 {
@@ -67,6 +68,15 @@ class NewsletterController extends Controller
             return response()->json(['message' => trans('newsletter.mail_failed')], 422);
         }
         return response()->json(['message' => trans('newsletter.test_sent')]);
+    }
+
+    public function uploadImage(Request $request)
+    {
+        $request->validate(['image' => ['required', 'image', 'mimes:jpg,jpeg,png,gif,webp', 'max:5120',
+            'dimensions:max_width=6000,max_height=6000']], ['image.*' => trans('newsletter.image_invalid')]);
+        $path = Storage::disk('public')->putFile('newsletter', $request->file('image'));
+        abort_unless($path, 500);
+        return response()->json(['url' => route('newsletter.image', basename($path))], 201);
     }
 
     public function send(Request $request, Newsletter $newsletter, NewsletterSender $sender)

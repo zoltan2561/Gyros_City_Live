@@ -101,6 +101,8 @@ Route::prefix('barion')->group(function () {
 
 Route::get('/language-{lang}', [LangController::class, 'change'])->name('language');
 Route::get('/newsletter/unsubscribe/{token}', [NewsletterUnsubscribeController::class, 'show'])->name('newsletter.unsubscribe');
+Route::get('/newsletter/images/{image}', \App\Http\Controllers\front\NewsletterImageController::class)
+    ->withoutMiddleware('web')->where('image', '[a-zA-Z0-9]{40}\.(jpg|jpeg|png|gif|webp)')->name('newsletter.image');
 Route::post('/newsletter/unsubscribe/{token}', [NewsletterUnsubscribeController::class, 'unsubscribe'])->name('newsletter.unsubscribe.confirm');
 Route::post('add-on/session/save', [AdminController::class, 'sessionsave']);
 Route::group(['namespace' => 'front', 'middleware' => 'MaintenanceMiddleware'], function () {
@@ -261,6 +263,7 @@ Route::group(['prefix' => 'admin', 'namespace' => 'admin'], function () {
         Route::get('/newsletter/create', [NewsletterController::class, 'create'])->name('admin.newsletter.create');
         Route::post('/newsletter', [NewsletterController::class, 'store'])->name('admin.newsletter.store');
         Route::post('/newsletter/test', [NewsletterController::class, 'test'])->middleware('throttle:10,1')->name('admin.newsletter.test');
+        Route::post('/newsletter/images', [NewsletterController::class, 'uploadImage'])->middleware('throttle:20,1')->name('admin.newsletter.images');
         Route::get('/newsletter/{newsletter}/edit', [NewsletterController::class, 'edit'])->name('admin.newsletter.edit');
         Route::post('/newsletter/{newsletter}/update', [NewsletterController::class, 'update'])->name('admin.newsletter.update');
         Route::post('/newsletter/{newsletter}/send', [NewsletterController::class, 'send'])->name('admin.newsletter.send');

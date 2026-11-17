@@ -18,8 +18,10 @@ use App\Models\User;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\View;
 use Tests\TestCase;
 
@@ -64,10 +66,10 @@ class NewsletterPortTest extends TestCase
             'password' => 'unused-test-hash', 'type' => $type]);
     }
 
-    private function send(string $method, string $uri, array $data = [], ?User $user = null)
+    private function send(string $method, string $uri, array $data = [], ?User $user = null, array $files = [])
     {
         if ($method !== 'GET' && !array_key_exists('_token', $data)) $data['_token'] = $this->token;
-        $request = Request::create('http://localhost'.$uri, $method, $data, $this->cookies, [],
+        $request = Request::create('http://localhost'.$uri, $method, $data, $this->cookies, $files,
             ['HTTP_ACCEPT' => 'application/json', 'HTTP_REFERER' => 'http://localhost/admin/newsletter']);
         $this->app->instance('request', $request);
         Auth::forgetGuards();
@@ -108,7 +110,7 @@ class NewsletterPortTest extends TestCase
         $letter = $this->draft();
         $employee = $this->user(4);
         foreach ([['GET', '/admin/newsletter'], ['GET', '/admin/newsletter/create'], ['POST', '/admin/newsletter'],
-            ['POST', '/admin/newsletter/test'], ['GET', '/admin/newsletter/' . $letter->id . '/edit'],
+            ['POST', '/admin/newsletter/test'], ['POST', '/admin/newsletter/images'], ['GET', '/admin/newsletter/' . $letter->id . '/edit'],
             ['POST', '/admin/newsletter/' . $letter->id . '/update'], ['POST', '/admin/newsletter/' . $letter->id . '/send'],
             ['GET', '/admin/newsletter/' . $letter->id], ['POST', '/admin/newsletter/' . $letter->id . '/process']] as [$method, $uri]) {
             $this->assertSame(403, $this->send($method, $uri, ['subject' => 'Forbidden', 'body' => 'No', 'confirm' => 1], $employee)->getStatusCode(), $uri);
@@ -261,6 +263,108 @@ class NewsletterPortTest extends TestCase
         $this->assertStringContainsString('&lt;script&gt;', $rendered);
         $this->assertStringContainsString('Új menü', $rendered);
         $this->assertStringContainsString($mail->unsubscribeUrl, $rendered);
+    }
+
+    public function test_owner_can_upload_a_public_image_and_save_it_between_paragraphs(): void
+    {
+        $disk = Storage::fake('public');
+        $response = $this->send('POST', '/admin/newsletter/images', [], $this->owner,
+            ['image' => UploadedFile::fake()->image('offer.png', 1200, 700)]);
+        $this->assertSame(201, $response->getStatusCode(), $response->getContent());
+        $url = json_decode($response->getContent(), true)['url'];
+        $this->assertMatchesRegularExpression('~^http://localhost/newsletter/images/[a-zA-Z0-9]{40}\.png$~', $url);
+        $disk->assertExists('newsletter/' . basename($url));
+        $image = $this->send('GET', '/newsletter/images/' . basename($url));
+        $this->assertSame(200, $image->getStatusCode());
+        $this->assertSame('image/png', $image->headers->get('Content-Type'));
+        $this->assertSame('nosniff', $image->headers->get('X-Content-Type-Options'));
+        $this->assertSame([], $image->headers->getCookies(), 'Publicly cached images must not include session cookies.');
+        $this->assertSame(404, $this->send('GET', '/newsletter/images/' . str_repeat('a', 40) . '.png')->getStatusCode());
+        $body = "Kedves Vendég!\n\n![Heti ajánlat](" . $url . ")\n\nVárunk szeretettel.";
+        $this->assertSame(302, $this->send('POST', '/admin/newsletter', ['subject' => 'Ajánlat', 'body' => $body], $this->owner)->getStatusCode());
+        $letter = Newsletter::firstOrFail();
+        $this->assertSame($body, $letter->body);
+        $this->assertStringContainsString($url, $this->send('GET', '/admin/newsletter/' . $letter->id . '/edit', [], $this->owner)->getContent());
+        $this->assertSame(200, $this->send('POST', '/admin/newsletter/test', ['subject' => $letter->subject, 'body' => $body,
+            'test_email' => 'tester@example.invalid'], $this->owner)->getStatusCode());
+        Mail::assertSent(NewsletterMail::class, fn ($mail) => $mail->letterBody === $body);
+        Mail::assertSent(NewsletterMail::class, 1);
+        $this->assertSame(0, NewsletterDelivery::count());
+    }
+
+    public function test_image_upload_rejects_missing_unsafe_oversized_and_untrusted_requests(): void
+    {
+        $disk = Storage::fake('public');
+        $this->assertSame(419, $this->send('POST', '/admin/newsletter/images', ['_token' => 'invalid'], $this->owner,
+            ['image' => UploadedFile::fake()->image('offer.png')])->getStatusCode());
+        $this->assertSame(403, $this->send('POST', '/admin/newsletter/images', [], $this->user(4),
+            ['image' => UploadedFile::fake()->image('offer.png')])->getStatusCode());
+        $this->assertSame(422, $this->send('POST', '/admin/newsletter/images', [], $this->owner)->getStatusCode());
+        foreach ([UploadedFile::fake()->createWithContent('fake.png', '<?php echo "unsafe";'),
+            UploadedFile::fake()->createWithContent('image.svg', '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>'),
+            UploadedFile::fake()->image('huge.png')->size(5121),
+            UploadedFile::fake()->image('wide.png', 6001, 1)] as $file) {
+            $response = $this->send('POST', '/admin/newsletter/images', [], $this->owner, ['image' => $file]);
+            $this->assertSame(422, $response->getStatusCode(), $response->getContent());
+        }
+        $this->assertSame([], $disk->allFiles());
+        Mail::assertNothingSent();
+    }
+
+    public function test_multiple_five_megabyte_images_can_be_saved_and_rendered_in_one_newsletter(): void
+    {
+        $disk = Storage::fake('public');
+        $urls = [];
+        $body = 'Heti ajánlataink';
+        for ($number = 1; $number <= 2; $number++) {
+            $response = $this->send('POST', '/admin/newsletter/images', [], $this->owner,
+                ['image' => UploadedFile::fake()->image('offer-' . $number . '.png', 1200, 700)->size(5120)]);
+            $this->assertSame(201, $response->getStatusCode(), $response->getContent());
+            $urls[] = json_decode($response->getContent(), true)['url'];
+            $body .= "\n\n![Ajánlat " . $number . '](' . end($urls) . ')';
+        }
+        $this->assertCount(2, $disk->allFiles());
+        $this->assertSame(302, $this->send('POST', '/admin/newsletter', ['subject' => 'Képes ajánlatok', 'body' => $body], $this->owner)->getStatusCode());
+        $letter = Newsletter::firstOrFail();
+        $this->assertSame($body, $letter->body);
+        Mail::swap(new \Illuminate\Mail\MailManager($this->app));
+        $html = (new NewsletterMail($letter->subject, $letter->body))->render();
+        $document = new \DOMDocument();
+        @$document->loadHTML($html);
+        $images = $document->getElementsByTagName('img');
+        $this->assertSame(2, $images->length);
+        foreach ($urls as $index => $url) {
+            $this->assertSame($url, $images->item($index)->getAttribute('src'));
+        }
+    }
+
+    public function test_newsletter_images_render_safely_in_html_history_and_plain_text(): void
+    {
+        $url = 'https://gyroscity.example/public/admin-assets/images/newsletter/offer.png';
+        $body = "Első bekezdés\n\n![Heti \"ajánlat\" <akció>](" . $url . ")\n\nUtolsó bekezdés\n"
+            . '<img src=x onerror="alert(1)">' . "\n![Tilos](javascript:alert)\n![Tilos](data:image/png;base64,AAAA)";
+        $mail = new NewsletterMail('Ajánlat', $body);
+        Mail::swap(new \Illuminate\Mail\MailManager($this->app));
+        $html = $mail->render();
+        $document = new \DOMDocument();
+        @$document->loadHTML($html);
+        $images = $document->getElementsByTagName('img');
+        $this->assertSame(1, $images->length);
+        $this->assertSame($url, $images->item(0)->getAttribute('src'));
+        $this->assertSame('Heti "ajánlat" <akció>', $images->item(0)->getAttribute('alt'));
+        $this->assertStringContainsString('max-width:100%', $images->item(0)->getAttribute('style'));
+        $this->assertLessThan(strpos($html, '<img '), strpos($html, 'Első bekezdés'));
+        $this->assertGreaterThan(strpos($html, '<img '), strpos($html, 'Utolsó bekezdés'));
+        $this->assertStringNotContainsString('<img src=x', $html);
+        $this->assertStringContainsString('&lt;img src=x', $html);
+        $plain = view('email.newsletter-text', ['letterSubject' => 'Ajánlat', 'letterBody' => $body, 'unsubscribeUrl' => null])->render();
+        $this->assertStringContainsString('Heti "ajánlat" <akció> (' . $url . ')', $plain);
+        $this->assertStringNotContainsString('![Heti', $plain);
+        $letter = $this->draft();
+        $letter->update(['body' => $body, 'status' => 'completed']);
+        $page = $this->send('GET', '/admin/newsletter/' . $letter->id, [], $this->owner);
+        $this->assertSame(200, $page->getStatusCode());
+        $this->assertStringContainsString('src="' . $url . '"', $page->getContent());
     }
 
     public function test_public_subscribe_validates_and_deduplicates(): void

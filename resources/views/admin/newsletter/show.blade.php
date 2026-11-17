@@ -18,7 +18,7 @@
         <p id="processing-help">{{ trans('newsletter.processing_help') }}</p>
         <button type="button" class="btn btn-primary mb-4" id="continue-sending">{{ trans('newsletter.resume') }}</button>
     @endif
-    <div class="card border-0"><div class="card-body"><div style="white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.7;">{{ $letter->body }}</div></div></div>
+    <div class="card border-0"><div class="card-body"><div style="overflow-wrap:anywhere;line-height:1.7;">{!! \App\Services\NewsletterContent::html($letter->body) !!}</div></div></div>
 </div>
 @endsection
 @section('script')

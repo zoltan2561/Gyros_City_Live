@@ -63,6 +63,16 @@ class SignageDeviceTest extends \Tests\TestCase
         $this->withToken('token-a')->getJson('/signage/api/v1/manifest')->assertUnauthorized();
     }
 
+    public function test_counter_tv_grant_allows_screen_management_and_can_be_revoked(): void
+    {
+        DB::table('manage_roles')->where('id', 1)->update(['modules' => '1,35']);
+        $this->actingAs(User::find(2))->postJson('/admin/signage/screens', ['name' => 'Pult TV'])->assertOk();
+        $this->assertSame('Pult TV', DB::table('signage_screens')->value('name'));
+        DB::table('manage_roles')->where('id', 1)->update(['modules' => '1']);
+        $this->postJson('/admin/signage/screens', ['name' => 'Forbidden TV'])->assertForbidden();
+        $this->assertSame(1, DB::table('signage_screens')->count());
+    }
+
     public function test_media_is_isolated_between_real_screen_assignments_and_supports_ranges(): void
     {
         \Storage::fake('local');$path='signage/derived/test.mp4';\Storage::disk('local')->put($path,'0123456789');

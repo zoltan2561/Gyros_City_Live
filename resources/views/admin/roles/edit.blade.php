@@ -381,6 +381,14 @@
                                                 @endif
                                                 <input type="hidden" name="title[]"
                                                     value="{{ trans('labels.top_deals') }}">
+                                                <div class="col-lg-3 col-md-6 py-2">
+                                                    <label class="cursor-pointer" for="checkbox35">
+                                                        <input type="checkbox" class="me-2" id="checkbox35" name="modules[]" value="35"
+                                                            {{ in_array('35', old('modules', $modules)) ? 'checked' : '' }}>
+                                                        {{ trans('admin_ui.signage') }}
+                                                    </label>
+                                                    <input type="hidden" name="title[35]" value="{{ trans('admin_ui.signage') }}">
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

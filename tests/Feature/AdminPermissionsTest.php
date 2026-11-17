@@ -69,6 +69,33 @@ class AdminPermissionsTest extends \Tests\TestCase
         $this->postJson('/admin/item/quick-update', ['id' => 1])->assertForbidden();
     }
 
+    /** @dataProvider signageNavigationUsers */
+    public function test_tv_navigation_is_under_promotions_for_owner_and_granted_staff(int $type): void
+    {
+        config(['signage.enabled' => true]);
+        app()->setLocale('hu');
+        DB::table('manage_roles')->where('id', 1)->update(['modules' => '35']);
+        Schema::create('systemaddons', function (Blueprint $table) {
+            $table->id(); $table->string('unique_identifier'); $table->integer('activated'); $table->integer('type');
+        });
+        $user = $this->operator();
+        $user->type = $type;
+        $this->actingAs($user);
+        $document = new \DOMDocument();
+        @$document->loadHTML('<?xml encoding="UTF-8">' . view('admin.theme.sidebarcontent')->render());
+        $xpath = new \DOMXPath($document);
+        $links = $xpath->query('//a[contains(@href, "/admin/signage")]');
+        $this->assertSame(1, $links->length);
+        $heading = $xpath->query('preceding::h6[1]', $links->item(0))->item(0);
+        $this->assertNotNull($heading, 'TV navigation must follow a section heading.');
+        $this->assertSame('Akciók', trim($heading->textContent));
+    }
+
+    public static function signageNavigationUsers(): array
+    {
+        return ['owner' => [1], 'staff with only TV access' => [4]];
+    }
+
     public function test_disabled_operator_is_revoked_even_with_an_existing_login(): void
     {
         $user = $this->operator();

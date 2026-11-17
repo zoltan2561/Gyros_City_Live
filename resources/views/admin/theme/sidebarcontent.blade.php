@@ -1,8 +1,8 @@
-@php $modules = array_map('strval', \App\Support\AdminPermissions::modules(Auth::user())); @endphp
+@php
+    $modules = array_map('strval', \App\Support\AdminPermissions::modules(Auth::user()));
+    $showSignage = (config('signage.enabled') || app()->environment('local')) && \App\Support\AdminPermissions::can(Auth::user(), 35);
+@endphp
 <ul class="navbar-nav">
-    @if ((config('signage.enabled') || app()->environment('local')) && \App\Support\AdminPermissions::can(Auth::user(), 35))
-    <li class="nav-item mb-2 fs-7"><a class="nav-link rounded d-flex {{ request()->is('admin/signage*') ? 'active' : '' }}" href="{{ route('admin.signage') }}"><i class="fa-solid fa-tv"></i><span class="nav-text">TV kijelzők</span></a></li>
-    @endif
     @if (\App\Support\AdminPermissions::can(Auth::user(), 0))
     <li class="nav-item mb-2 fs-7">
         <a class="nav-link rounded d-flex {{ request()->is('admin/home*') ? 'active' : '' }}"
@@ -103,7 +103,7 @@
         </a>
     </li>
     @if (Auth::user()->type != 1)
-        @if (in_array('3', $modules) || in_array('4', $modules) || in_array('5', $modules) || in_array('6', $modules))
+        @if (in_array('3', $modules) || in_array('4', $modules) || in_array('5', $modules) || in_array('6', $modules) || $showSignage)
             <li class="nav-item mt-3">
                 <h6 class="text-muted mb-2 fs-7 text-uppercase">{{ trans('labels.promotions') }}</h6>
             </li>
@@ -111,6 +111,13 @@
     @else
         <li class="nav-item mt-3">
             <h6 class="text-muted mb-2 fs-7 text-uppercase">{{ trans('labels.promotions') }}</h6>
+        </li>
+    @endif
+    @if ($showSignage)
+        <li class="nav-item mb-2 fs-7">
+            <a class="nav-link rounded d-flex {{ request()->is('admin/signage*') ? 'active' : '' }}" href="{{ route('admin.signage') }}">
+                <i class="fa-solid fa-tv"></i><span class="nav-text">{{ trans('admin_ui.signage') }}</span>
+            </a>
         </li>
     @endif
     <li class="nav-item mb-2 fs-7 {{ Auth::user()->type != 1 ? (in_array('3', $modules) == true ? '' : 'd-none') : '' }}"

@@ -4,6 +4,8 @@ A fejlesztési változat a `feature/gctv-v1-local` ágon található. Apache, My
 
 A később mérlegelhető Android TV-s APK és TV ki-/bekapcsolás terve: [android-tv-apk-terv.md](android-tv-apk-terv.md). Az APK és a TV-vezérlés még nincs megvalósítva.
 
+Éles bevezetés: [deployment.md](deployment.md) – „Éles bevezetés lépésről lépésre”. A beépített hét műsor egy paranccsal telepíthető: `php artisan signage:install-programs` (előbb `--dry-run`).
+
 ## Megnyitás
 
 - Admin: `http://localhost/Gyros_City_Live/admin/signage`.

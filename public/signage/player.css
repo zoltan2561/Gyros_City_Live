@@ -141,6 +141,8 @@
 .reference-burger .food-caption{display:flex;justify-content:center;align-items:baseline;flex-wrap:wrap;gap:.2vw;color:#ffba00;flex-shrink:0;padding:.4vh 0;mask-image:var(--reference-grunge-mask,url('reference-assets/grunge-mask.svg'));mask-size:45vw 15vh}
 .signage-stage.reference-burger .food-name,.signage-stage.reference-burger .food-price{font:400 3.2vw/1.12 var(--reference-display-font,GCReference),Impact,sans-serif;max-height:1.12em}
 .reference-burger .food-name::after{content:' -'}.reference-burger .food-prices{flex-shrink:0}
+/* A renamed dish must wrap or shrink inside its own cell, never push the caption off the screen. */
+.reference-scene .food-caption .food-name{max-width:100%;min-width:0}
 .reference-menu{padding:4vh 4vw}.reference-menu .kiosk-atmosphere,.reference-kebab .kiosk-atmosphere{display:none}
 .reference-menu .food-grid{gap:2.3vh 2.4vw;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr))}
 .reference-menu .food-card,.reference-kebab .food-card{display:flex;flex-direction:column;align-items:stretch;padding:0;min-height:0}

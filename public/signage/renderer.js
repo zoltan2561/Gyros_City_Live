@@ -105,10 +105,12 @@
     function checkNames(stage){
         if(typeof requestAnimationFrame==='function')requestAnimationFrame(()=>{
             const elements=[...stage.querySelectorAll('.food-name')].filter(e=>e.clientHeight>0);
+            // Tall display faces overhang their line box by about a fifth of the font size; only more than that is clipping.
+            const slack=el=>typeof getComputedStyle==='function'?Math.max(4,parseFloat(getComputedStyle(el).fontSize)*.2||0):4;
             if(typeof getComputedStyle==='function')for(const name of elements){
                 name.style.fontSize='';
                 let size=parseFloat(getComputedStyle(name).fontSize),min=Math.max(18,size*.65);
-                while(name.scrollHeight>name.clientHeight+4&&size>min){size=Math.max(min,size-1);name.style.fontSize=size+'px';}
+                while(name.scrollHeight>name.clientHeight+slack(name)&&size>min){size=Math.max(min,size-1);name.style.fontSize=size+'px';}
             }
             if(typeof getComputedStyle==='function')for(const note of [...stage.querySelectorAll('.food-description')].filter(e=>e.clientHeight>0)){
                 // Ingredient lists are shown whole: shrink the text instead of cutting the last line off.
@@ -116,7 +118,7 @@
                 let size=parseFloat(getComputedStyle(note).fontSize),min=Math.max(11,size*.6);
                 while(note.scrollHeight>note.clientHeight+2&&size>min){size=Math.max(min,size-.5);note.style.fontSize=size+'px';}
             }
-            const names=elements.filter(e=>e.scrollHeight>e.clientHeight+4).map(e=>e.textContent);
+            const names=elements.filter(e=>e.scrollHeight>e.clientHeight+slack(e)).map(e=>e.textContent);
             stage.dispatchEvent(new CustomEvent('signage:overflow',{bubbles:true,detail:{names}}));
         });
     }

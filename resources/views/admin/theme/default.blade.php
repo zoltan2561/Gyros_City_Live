@@ -63,6 +63,7 @@
                         <span id="order-audio-message"></span>
                         <button type="button" id="order-audio-enable" class="btn btn-sm btn-primary mt-2">Hangjelzés bekapcsolása</button>
                     </div>
+                    <div id="order-connection-warning" class="alert alert-danger" role="alert" hidden></div>
                     @yield('content')
                 </div>
             </div>

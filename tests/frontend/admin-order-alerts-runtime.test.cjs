@@ -9,7 +9,7 @@ function setup({orders = [7], play = () => Promise.resolve(), useWorker = true, 
     let nextTimer = 0, now = 1000, fetches = 0, shows = 0;
     const buttons = {};
     const emitted = [];
-    const nodes = Object.fromEntries(['order-audio-warning','order-audio-message','order-audio-enable','order-modal','notificationcount']
+    const nodes = Object.fromEntries(['order-audio-warning','order-audio-message','order-audio-enable','order-modal','notificationcount','order-connection-warning']
         .map(id => [id, {hidden: true, textContent: '', addEventListener: (event, fn) => {buttons[id + ':' + event] = fn;}}]));
     if (inline) nodes['orders-live-results'] = {};
     const doc = {hidden: true, title: 'Admin', currentScript: {dataset: {
@@ -158,4 +158,13 @@ test('a new page primes sound silently on interaction without acknowledging pend
     assert.equal(ui.audios[0].plays, 2);
     assert.deepEqual(JSON.parse(ui.values.get('qa')), {'21':1000});
     assert.equal(ui.audios[0].playVolumes[1], 1);
+});
+
+test('lost order polling is visible and clears after the connection recovers', async () => {
+    const ui = setup({orders:[]}); await flush();
+    ui.state.fail = true; await ui.tick();
+    assert.equal(ui.nodes['order-connection-warning'].hidden, false);
+    assert.match(ui.nodes['order-connection-warning'].textContent, /Nem frissülnek/);
+    ui.state.fail = false; await ui.tick();
+    assert.equal(ui.nodes['order-connection-warning'].hidden, true);
 });

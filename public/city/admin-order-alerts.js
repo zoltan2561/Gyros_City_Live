@@ -37,6 +37,7 @@
     const message = document.getElementById('order-audio-message');
     const enable = document.getElementById('order-audio-enable');
     const modal = document.getElementById('order-modal');
+    const connectionWarning = document.getElementById('order-connection-warning');
     let audio;
     let audioUrl = '';
     let pending = [];
@@ -151,9 +152,10 @@
                 headers: {'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest'},
                 signal: controller.signal,
             });
-            if (!response.ok) throw new Error('Order polling failed');
+            if (!response.ok || response.redirected) throw new Error('Order polling failed');
             const data = await response.json();
             if (!Array.isArray(data.orders)) throw new Error('Invalid order response');
+            if (connectionWarning) connectionWarning.hidden = true;
             pending = data.orders.map(String);
             document.dispatchEvent(new host.CustomEvent('admin:orders-poll', {detail: {ids: [...pending]}}));
             const badge = document.getElementById('notificationcount');
@@ -174,7 +176,10 @@
                 void play(due);
             }
         } catch (_) {
-            // Retry after transport errors too; stale order data must not trigger a sound.
+            if (connectionWarning) {
+                connectionWarning.textContent = 'Nem frissülnek a rendelések, ezért az értesítések és a hangjelzés is szünetel. Ellenőrizd az internetkapcsolatot, vagy jelentkezz be újra.';
+                connectionWarning.hidden = false;
+            }
         } finally {
             host.clearTimeout(timeout);
             busy = false;

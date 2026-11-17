@@ -10,9 +10,7 @@ use App\Models\Category;
 use App\Models\Item;
 use App\Models\Settings;
 use App\Models\User;
-use Illuminate\Support\Facades\Cache;
-
-use Illuminate\Support\Facades\Mail;
+use App\Services\UnprocessedOrderAlerts;
 class NotificationController extends Controller
 {
     public function index()
@@ -95,44 +93,10 @@ class NotificationController extends Controller
     //Email értesítés
     public function unprocessedAlert(Request $request)
     {
-        // címek configból (string vagy vesszővel elválasztott lista)
-        $to = trim((string) config('MAIL_ADMIN_EMAIL', 'admin@gyroscity.eu,blausilverkft@gmail.com,fuleczkikinga23@gmail.com,markdemetet@gmail.com'));
-        //$to = trim((string) config('MAIL_ADMIN_EMAIL', 'pappzoltan6969@gmail.com,admin@gyroscity.eu'));
-        if ($to === '') {
-            return response()->json(['ok' => false, 'msg' => 'No admin email configured'], 200);
-        }
-        $adminName = (string) config('MAIL_ADMIN_NAME', 'Admin');
-
-        // több cím támogatása
-        $recipients = array_filter(array_map('trim', explode(',', $to)));
-
-
-
-
-        // szerver-oldali throttle: 10 percenként max 1 levél
-        // (így több megnyitott admin ablak sem spammel)
-        $cacheKey = 'unprocessed_order_alert_lock';
-
-        if (!Cache::add($cacheKey, 1, now()->addMinutes(10))) {
-            return response()->json(['ok' => true, 'throttled' => true], 200);
-        }
-
-        $count   = (int) $request->input('count', 0);
-        $subject = 'Figyelmeztetés: FÜGGŐ online rendelés';
-        $body    = "Függő rendelés található.\n"
-            . "Lehetséges, hogy van nem feldolgozott online rendelés.\n"
-            . "Időpont: " . now()->toDateTimeString() . "\n"
-            . "Admin: " . url('/admin');
-
-        // egyszerű raw levél (használja a beállított mail drivert)
-        Mail::raw($body, function ($message) use ($recipients, $subject, $adminName) {
-            foreach ($recipients as $addr) {
-                $message->to($addr, $adminName);
-            }
-            $message->subject($subject);
-        });
-
-        return response()->json(['ok' => true], 200);
+        $result = app(UnprocessedOrderAlerts::class)->send();
+        if ($result['status'] === 'throttled') $result['throttled'] = true;
+        $status = $result['ok'] ? 200 : 503;
+        return response()->json($result, $status);
     }
 
 }

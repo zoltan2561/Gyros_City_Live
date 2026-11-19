@@ -111,7 +111,7 @@ class SignageDeviceTest extends \Tests\TestCase
         $this->withToken('token-a')->getJson('/signage/api/v1/manifest')->assertOk();
         DB::table('signage_screens')->where('id',1)->update(['release_id'=>$b->id]);
         $response=$this->withToken('token-a')->getJson('/signage/api/v1/manifest')->assertOk()->json();
-        $this->assertContains($a->id,array_column($response['releases'],'id'));
+        $this->assertSame([$b->id],array_column($response['releases'],'id'));
         $this->withToken('token-a')->postJson('/signage/api/v1/heartbeat',['active_release_id'=>$a->id])->assertOk();
     }
 

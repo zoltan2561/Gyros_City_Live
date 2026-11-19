@@ -28,7 +28,7 @@ class DeviceController extends Controller {
     public function manifest(Request $request) {
         $manifest=DB::transaction(function()use($request){
             $screen=\App\Models\SignageScreen::whereKey($request->attributes->get('signage_screen')->id)->lockForUpdate()->firstOrFail();
-            $manifest=app(SignageManifest::class)->forScreen($screen->id,new \DateTimeImmutable());
+            $manifest=app(SignageManifest::class)->forScreen($screen->id,new \DateTimeImmutable(), assignedOnly: true);
             $screen->update(['delivered_release_ids'=>array_values(array_unique(array_merge($screen->delivered_release_ids??[],array_column($manifest['releases'],'id'))))]);
             return $manifest;
         });

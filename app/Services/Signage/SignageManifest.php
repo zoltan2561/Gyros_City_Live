@@ -5,9 +5,12 @@ use App\Models\SignageRelease;
 use DateTimeImmutable;
 use DateTimeZone;
 class SignageManifest {
-    public function forScreen(int $screenId, DateTimeImmutable $now): array {
+    public function forScreen(int $screenId, DateTimeImmutable $now, bool $assignedOnly = false): array {
         $screen=SignageScreen::findOrFail($screenId);
-        $ids=collect($screen->delivered_release_ids??[])->push($screen->release_id)->push($screen->active_release_id)->filter()->unique();
+        // Continuous playback needs only the assigned package. Previously delivered
+        // releases still authorize media, catalog updates and in-flight heartbeats.
+        $ids = $assignedOnly ? array_filter([$screen->release_id])
+            : collect($screen->delivered_release_ids??[])->push($screen->release_id)->push($screen->active_release_id)->filter()->unique();
         $releases=SignageRelease::whereIn('id',$ids)->get()->map(fn($r)=>['id'=>$r->id,'snapshot'=>$r->snapshot])->values()->all();
         foreach ($releases as $index => $release) {
             foreach ($release['snapshot']['files'] ?? [] as $position => $file) {

@@ -2,12 +2,12 @@ const {test}=require('node:test');const assert=require('node:assert/strict');con
 const schedule=require('../../public/signage/schedule.js');
 const flush=async()=>{for(let i=0;i<20;i++)await new Promise(r=>setImmediate(r));};
 
-function pairingRuntime(statusResponse){
+function pairingRuntime(statusResponse,navigator={onLine:true}){
  const timers=[],nodes=new Map(),saved={};
  const node=id=>nodes.get(id)||nodes.set(id,{textContent:'',hidden:false,listeners:{},addEventListener(event,fn){this.listeners[event]=fn;},querySelectorAll:()=>[],querySelector:()=>null}).get(id);
  let starts=0;
  const context={URL,Response,AbortController,structuredClone,setTimeout,clearTimeout,performance:{now:()=>0},Date,
-  location:{href:'http://localhost/signage/'},navigator:{onLine:true},document:{getElementById:node,documentElement:{}},window:{addEventListener(){}},setInterval:(fn,ms)=>timers.push({fn,ms}),
+  location:{href:'http://localhost/signage/'},navigator,document:{getElementById:node,documentElement:{}},window:{addEventListener(){}},setInterval:(fn,ms)=>timers.push({fn,ms}),
   GCSignage:{fallback(){},priceFresh:()=>true,cardsForScene:()=>[],render(){return{update(){}};}},GCSignageSchedule:schedule,
   GCSignageStorage:{database:()=>({load:async()=>null,save:async(k,v)=>{saved[k]=v;}}),stageRelease:async m=>m,blobUrl:async()=>''},
   fetch:async(url,options)=>{
@@ -20,6 +20,13 @@ function pairingRuntime(statusResponse){
  vm.runInNewContext(fs.readFileSync(require.resolve('../../public/signage/player.js'),'utf8'),context);
  return {timers,node,saved};
 }
+
+test('startup continues when the TV never resolves offline installation or storage permission',async()=>{
+ const pending=()=>new Promise(()=>{});
+ const run=pairingRuntime(async()=>new Response('{}'),{onLine:true,serviceWorker:{register:pending},storage:{persist:pending}});
+ await flush();
+ assert.equal(run.node('pair-code').textContent,'12345678');
+});
 
 test('pairing retries the same code after a temporary network failure',async()=>{
  let attempts=0;

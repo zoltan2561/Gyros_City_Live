@@ -7,6 +7,7 @@ let token=null,manifest=null,catalog=null,receipt=null,clock=null,renderer=null,
 let syncing=false,staging=false,lastError='',urls=[],nonce=null,cycleId=0,sessionGeneration=0,changing=false,pendingManifest=null;
 let pairingGeneration=0,pairingPolling=false;
 let cachedImages=new Map();
+let estimatedStorageBytes=0;
 const failedScenes=new Map();
 function notice(message){status.textContent=message;}
 function fallback(){cycleId++;urls.forEach(URL.revokeObjectURL);urls=[];cachedImages.clear();GCSignage.fallback(root);renderer=null;current=null;}
@@ -69,7 +70,7 @@ async function synchronize(){
   if(incoming.schema_version!==1||!Array.isArray(incoming.releases)||!Number.isFinite(Date.parse(incoming.server_time)))throw new Error('Nem támogatott kiadás.');
   clock={server:Date.parse(incoming.server_time),monotonic:manifestSent,wall:manifestWall};
   if(!staging){
-   staging=true;
+   staging=true;if(!current)notice('A műsor letöltése és ellenőrzése…');
    GCSignageStorage.stageRelease(incoming,token,{store,base:base.href}).then(complete=>{
     if(!token||generation!==sessionGeneration)return;
     // Retiring an old downloaded release also changes the package revision.
@@ -78,7 +79,7 @@ async function synchronize(){
     if(manifest?.layout_revision===complete.layout_revision||sameProgram){manifest=complete;pendingManifest=null;}
     else pendingManifest=complete;
     lastError='';notice('');if(!current){manifest=complete;pendingManifest=null;next();}
-   }).catch(e=>{lastError=e.message;notice('Az új műsor még nem tölthető le. A korábbi folytatódik.');}).finally(()=>{staging=false;});
+   }).catch(e=>{lastError=e.message;notice(lastError);}).finally(()=>{staging=false;});
   }
  }catch(e){lastError=e.message;notice(e.message);}
  finally{syncing=false;}
@@ -119,7 +120,7 @@ async function next(){
    const cycle=++cycleId;
    renderer=GCSignage.render(root,ready.scene,ready.products);urls.forEach(URL.revokeObjectURL);urls=ready.urls;cachedImages=ready.images;current={...scene,release_id:releaseId};
    started=performance.now();videoChecked=started;videoProgress=0;
-   heartbeat();
+   notice('');heartbeat();
    root.querySelectorAll('video').forEach(video=>{
     let observedTime=video.currentTime;
     video.addEventListener('timeupdate',()=>{if(cycle===cycleId&&video.currentTime!==observedTime){observedTime=video.currentTime;videoChecked=performance.now();}});
@@ -130,14 +131,14 @@ async function next(){
    return;
   }catch(e){lastError=e.message;}
  }
- fallback();
+ fallback();notice(lastError||'Jelenleg nincs lejátszható jelenet.');
  }finally{changing=false;}
 }
 async function heartbeat(){
  if(!token)return;
  try{
-  const usage=await navigator.storage?.estimate?.();
-  await request('heartbeat','POST',{player_version:'1',active_release_id:current?.release_id||null,catalog_revision:catalog?.catalog_revision||'',scene_id:current?.id||'',error:lastError,offline:!navigator.onLine,storage_bytes:usage?.usage||0,pending:staging?'Letöltés folyamatban':''});
+  Promise.resolve().then(()=>navigator.storage?.estimate?.()).then(usage=>{estimatedStorageBytes=usage?.usage||0;}).catch(()=>{});
+  await request('heartbeat','POST',{player_version:'2',active_release_id:current?.release_id||null,catalog_revision:catalog?.catalog_revision||'',scene_id:current?.id||'',error:lastError,offline:!navigator.onLine,storage_bytes:estimatedStorageBytes,pending:staging?'Letöltés folyamatban':''});
  }catch(e){/* A failed heartbeat never renews price freshness. */}
 }
 setInterval(()=>{
@@ -160,12 +161,13 @@ document.getElementById('player-fullscreen').addEventListener('click',()=>{
 (async()=>{
  fallback();
  try{
-  if('serviceWorker'in navigator)await navigator.serviceWorker.register(new URL('sw.js',base),{scope:base.pathname});
-  // Persistent storage is a best-effort request; IndexedDB may still work if it is denied.
-  try{await navigator.storage?.persist?.();}catch(e){}
+  // Some TV browsers leave offline setup promises pending indefinitely.
+  Promise.resolve().then(()=>navigator.serviceWorker?.register(new URL('sw.js',base),{scope:base.pathname})).catch(()=>{});
+  Promise.resolve().then(()=>navigator.storage?.persist?.()).catch(()=>{});
+  notice('Mentett TV-párosítás betöltése…');
   token=await store.load('token');manifest=await store.load('manifest');
   // A restart never trusts a saved price receipt or an uncertain device clock.
-  if(token){pairPanel.hidden=true;await synchronize();}else{pairPanel.hidden=false;await pair();}
+  if(token){pairPanel.hidden=true;notice('Kapcsolódás a műsorhoz…');heartbeat();await synchronize();}else{pairPanel.hidden=false;await pair();}
  }catch(e){notice('A helyi tároló nem használható. Ellenőrizd a böngésző beállításait.');}
 })();
 })();

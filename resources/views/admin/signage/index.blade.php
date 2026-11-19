@@ -13,7 +13,7 @@
 <section class="signage-tv-strip mb-4" aria-label="Kijelzők állapota">
 @forelse($screens as $screen)
 @php $online=$screen->last_seen_at&&$screen->last_seen_at->gt(now()->subSeconds(180)); $listName=isset($screenPlaylists[$screen->id])?$playlists->firstWhere('id',$screenPlaylists[$screen->id])?->name:null; @endphp
-<a class="signage-tv-chip {{ $online?'is-online':'is-offline' }}" href="{{ route('admin.signage',['tab'=>'screens']) }}"><span class="signage-dot" aria-hidden="true"></span><span><strong class="d-block">{{ $screen->name }}</strong><small>{{ $online?'Kapcsolódva':'Nincs friss kapcsolat' }} · {{ $listName?:'Nincs kiadott lista' }}</small></span></a>
+<a class="signage-tv-chip {{ $online?'is-online':'is-offline' }}" href="{{ route('admin.signage',['tab'=>'screens']) }}#tv-{{ $screen->id }}"><span class="signage-dot" aria-hidden="true"></span><span><strong class="d-block">{{ $screen->name }}</strong><small>{{ $online?'Kapcsolódva':'Nincs friss kapcsolat' }} · {{ $listName?:'Nincs kiadott lista' }}</small></span></a>
 @empty
 <a class="signage-tv-chip is-empty" href="{{ route('admin.signage',['tab'=>'screens']) }}"><span class="signage-dot" aria-hidden="true"></span><span><strong class="d-block">Még nincs TV</strong><small>Kijelző létrehozása és párosítása</small></span></a>
 @endforelse

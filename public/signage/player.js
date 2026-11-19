@@ -71,7 +71,7 @@ async function synchronize(){
   if(!current||manifest?.default_release_id===incoming.default_release_id){
    manifest=incoming;pendingManifest=null;
   }else pendingManifest=incoming;
-  lastError='';notice('');if(!current)next();
+  lastError='';notice('');if(!current||pendingManifest)next();
  }catch(e){lastError=e.message;notice(e.message);}
  finally{syncing=false;}
 }
@@ -89,9 +89,13 @@ async function next(){
   if((failedScenes.get(scene.id)||0)>performance.now())continue;
   if(!GCSignageSchedule.sceneAllowed(scene,state))continue;
   if(scene.type!=='media'&&!GCSignage.cardsForScene(scene,catalog?.products||[]).length)continue;
+  // An immutable, single-grid release can stay mounted while prices refresh.
+  if(scenes.length===1 && scene.type==='grid' && !scene.background_media && current?.release_id===releaseId && current.id===scene.id){
+   started=performance.now();return;
+  }
   try{
    const cycle=++cycleId;
-   renderer=GCSignage.render(root,scene,catalog?.products||[]);
+   renderer=GCSignage.render(root,scene,catalog?.products||[],{tv:true});
    current={...scene,release_id:releaseId};
    started=performance.now();videoChecked=started;videoProgress=0;
    notice('');heartbeat();

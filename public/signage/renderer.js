@@ -88,10 +88,11 @@
         });
         if (!cards.length&&!container.querySelector('.empty-scene'))container.append(element('p','empty-scene','Gyros City · Frissen készítjük.'));
     }
-    function atmosphere(reference=false,modern=false){
+    function atmosphere(reference=false,modern=false,tv=false){
         const layer=element('div','kiosk-atmosphere');layer.setAttribute('aria-hidden','true');
         layer.append(element('span','kiosk-glow kiosk-glow-warm'),element('span','kiosk-glow kiosk-glow-accent'));
-        for(let i=0;i<(reference?64:(modern?26:12));i++){
+        const count=tv?6:(reference?64:(modern?26:12));
+        for(let i=0;i<count;i++){
             const spark=element('span','kiosk-ember');
             spark.style.setProperty('--spark-x',String((i*37+11)%100));
             spark.style.setProperty('--spark-drift',String((i*19)%90-45));
@@ -138,13 +139,14 @@
         }
         return Promise.allSettled(pending);
     }
-    function render(stage, scene, products) {
+    function render(stage, scene, products, options={}) {
         views.get(stage)?.dispose();
         stage.replaceChildren(); stage.className='signage-stage theme-'+(scene.theme==='light'?'light':'dark')+' scene-'+scene.type;
         const reference=['reference-burger','reference-menu','reference-pizza','reference-intro','reference-kebab'].includes(scene.design);
         const modern=['modern-burger','modern-menu','modern-pizza'].includes(scene.design);
         if(reference)stage.classList.add('reference-scene',scene.design);
         if(modern)stage.classList.add('modern-scene',scene.design);
+        if(options.tv)stage.classList.add('tv-playback');
         delete stage.dataset.signageBackdrop;
         if(!reference&&!modern&&['graphite','embers','wood','wine','cream','solid'].includes(scene.backdrop))stage.dataset.signageBackdrop=scene.backdrop;
         stage.style.setProperty('--scene-bg', /^#[0-9a-f]{6}$/i.test(scene.background || '')?scene.background:'');
@@ -158,7 +160,7 @@
         const fontsReady=referenceAssets(stage,scene);
         if(scene.media_side==='right')stage.classList.add('media-right');
         if (scene.background_media) { const bg=mediaElement(scene.background_media,true); if(bg) stage.append(bg); }
-        stage.append(atmosphere(reference,modern));
+        stage.append(atmosphere(reference,modern,options.tv));
         if(scene.type!=='media')stage.append(element('div','scene-word',scene.title||'GYROS CITY'));
         const header=element('header','scene-heading');
         header.append(element('div','scene-brand','GYROS CITY'),element('h1','scene-title',scene.title || 'Frissen készítjük.'));
@@ -202,7 +204,7 @@
                 next.textContent=cards.length>1?'Következik: '+cards[(index+1)%cards.length].querySelector('.food-name').textContent:'';
                 if(changed)progress.replaceChildren(element('span','slide-progress-fill'));
             }
-            checkNames(stage);
+            if(!advance||slideshow)checkNames(stage);
         }
         function start(){if(!disposed&&!paused&&scene.type!=='media'&&typeof setInterval==='function'){
             deadline=now()+remaining;
@@ -216,7 +218,6 @@
         };
         views.set(stage,view);select();start();
         fontsReady.then(()=>{if(views.get(stage)===view)checkNames(stage);});
-        checkNames(stage);
         return view;
     }
     function fallback(stage) {

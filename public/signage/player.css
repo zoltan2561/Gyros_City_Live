@@ -193,3 +193,8 @@
 @keyframes reference-intro-breathe{from{transform:rotate(-3deg) scale(.95)}to{transform:rotate(6deg) scale(1.04)}}
 @keyframes reference-dessert-arrive{from{opacity:0;transform:translate3d(0,30vh,0) rotate(-30deg)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){.reference-scene *,.reference-scene *::before,.reference-scene *::after{animation:none!important;transition:none!important;transform:none!important}.reference-scene .kiosk-ember{display:none}.reference-pizza .food-prices{opacity:1}}
+
+/* Keep the artwork and the smaller sparks without continuously repainting full-screen glows. */
+.tv-playback .kiosk-glow{animation:none}
+.tv-playback .kiosk-ember{filter:none;box-shadow:none}
+.tv-playback.reference-burger .food-photo{animation:none}

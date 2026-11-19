@@ -19,6 +19,11 @@ class SignageController extends Controller {
         $playlists=\App\Models\SignagePlaylist::orderBy('name')->get();
         $releases=\App\Models\SignageRelease::latest()->limit(100)->get();
         $assignedPlaylists=\App\Models\SignageRelease::whereIn('id',$screens->pluck('release_id')->filter())->pluck('playlist_id','id');
+        $releaseNames=[];
+        if($tab==='screens'){
+            $ids=$screens->pluck('release_id')->merge($screens->map(fn($screen)=>$screen->status['active_release_id']??null))->filter()->unique();
+            $releaseNames=\App\Models\SignageRelease::whereIn('id',$ids)->get(['id','snapshot'])->mapWithKeys(fn($release)=>[$release->id=>$release->snapshot['name']??'Kiadás #'.$release->id])->all();
+        }
         $screenPlaylists=$screens->mapWithKeys(fn($screen)=>[$screen->id=>$assignedPlaylists[$screen->release_id]??null])->all();
         $items=\App\Models\Item::visibleOnMenu()->orderBy('item_name')->get(['id','item_name','addons_id','item_status','today_unavailable']);
         $groups=\App\Models\AddonsGroup::where('is_available',1)->where('is_deleted',2)->get();
@@ -26,7 +31,7 @@ class SignageController extends Controller {
         $extras=\App\Models\Extra::get(['id','name','item_id','price']);
         $editing=$request->filled('edit_scene')?\App\Models\SignageScene::findOrFail($request->integer('edit_scene')):null;
         $editingPlaylist=$request->filled('edit_playlist')?\App\Models\SignagePlaylist::findOrFail($request->integer('edit_playlist')):($request->boolean('new_playlist')?null:$playlists->first());
-        return view('admin.signage.index',compact('ready','tab','screens','media','readyMedia','scenes','playlists','releases','screenPlaylists','items','groups','addons','extras','editing','editingPlaylist'));
+        return view('admin.signage.index',compact('ready','tab','screens','media','readyMedia','scenes','playlists','releases','releaseNames','screenPlaylists','items','groups','addons','extras','editing','editingPlaylist'));
     }
 
     public function scene(Request $request) {
@@ -72,6 +77,10 @@ class SignageController extends Controller {
     public function publish(Request $request) {
         $data=$request->validate(['playlist_id'=>'required|integer|exists:signage_playlists,id','screen_ids'=>'required|array|min:1','screen_ids.*'=>'integer|exists:signage_screens,id']);
         app(\App\Services\Signage\SignagePublisher::class)->publish($data['playlist_id'],$data['screen_ids'],$request->user()->id);
+        if(!$request->expectsJson() && $request->input('return_tab')==='screens' && count($data['screen_ids'])===1){
+            return redirect()->to(route('admin.signage',['tab'=>'screens']).'#tv-'.(int)$data['screen_ids'][0])
+                ->with('success','Lista kiküldve. A TV a következő frissítéskor átveszi.');
+        }
         return $this->saved($request,'Kiadás publikálva a kiválasztott kijelzőkre.');
     }
 

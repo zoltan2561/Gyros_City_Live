@@ -382,11 +382,12 @@ window.GCSignageStorage = {
     });
     if (!cards.length && !container.querySelector('.empty-scene')) container.append(element('p', 'empty-scene', 'Gyros City · Frissen készítjük.'));
   }
-  function atmosphere(reference = false, modern = false) {
+  function atmosphere(reference = false, modern = false, tv = false) {
     var layer = element('div', 'kiosk-atmosphere');
     layer.setAttribute('aria-hidden', 'true');
     layer.append(element('span', 'kiosk-glow kiosk-glow-warm'), element('span', 'kiosk-glow kiosk-glow-accent'));
-    for (var i = 0; i < (reference ? 64 : modern ? 26 : 12); i++) {
+    var count = tv ? 6 : reference ? 64 : modern ? 26 : 12;
+    for (var i = 0; i < count; i++) {
       var spark = element('span', 'kiosk-ember');
       spark.style.setProperty('--spark-x', String((i * 37 + 11) % 100));
       spark.style.setProperty('--spark-drift', String(i * 19 % 90 - 45));
@@ -492,7 +493,7 @@ window.GCSignageStorage = {
     }
     return Promise.allSettled(pending);
   }
-  function render(stage, scene, products) {
+  function render(stage, scene, products, options = {}) {
     var _views$get;
     (_views$get = views.get(stage)) === null || _views$get === void 0 || _views$get.dispose();
     stage.replaceChildren();
@@ -501,6 +502,7 @@ window.GCSignageStorage = {
     var modern = ['modern-burger', 'modern-menu', 'modern-pizza'].includes(scene.design);
     if (reference) stage.classList.add('reference-scene', scene.design);
     if (modern) stage.classList.add('modern-scene', scene.design);
+    if (options.tv) stage.classList.add('tv-playback');
     delete stage.dataset.signageBackdrop;
     if (!reference && !modern && ['graphite', 'embers', 'wood', 'wine', 'cream', 'solid'].includes(scene.backdrop)) stage.dataset.signageBackdrop = scene.backdrop;
     stage.style.setProperty('--scene-bg', /^#[0-9a-f]{6}$/i.test(scene.background || '') ? scene.background : '');
@@ -517,7 +519,7 @@ window.GCSignageStorage = {
       var bg = mediaElement(scene.background_media, true);
       if (bg) stage.append(bg);
     }
-    stage.append(atmosphere(reference, modern));
+    stage.append(atmosphere(reference, modern, options.tv));
     if (scene.type !== 'media') stage.append(element('div', 'scene-word', scene.title || 'GYROS CITY'));
     var header = element('header', 'scene-heading');
     header.append(element('div', 'scene-brand', 'GYROS CITY'), element('h1', 'scene-title', scene.title || 'Frissen készítjük.'));
@@ -593,7 +595,7 @@ window.GCSignageStorage = {
         next.textContent = cards.length > 1 ? 'Következik: ' + cards[(index + 1) % cards.length].querySelector('.food-name').textContent : '';
         if (changed) progress.replaceChildren(element('span', 'slide-progress-fill'));
       }
-      checkNames(stage);
+      if (!advance || slideshow) checkNames(stage);
     }
     function start() {
       if (!disposed && !paused && scene.type !== 'media' && typeof setInterval === 'function') {
@@ -640,7 +642,6 @@ window.GCSignageStorage = {
     fontsReady.then(() => {
       if (views.get(stage) === view) checkNames(stage);
     });
-    checkNames(stage);
     return view;
   }
   function fallback(stage) {
@@ -1072,7 +1073,7 @@ window.GCSignageStorage = {
             } else pendingManifest = incoming;
             lastError = '';
             notice('');
-            if (!current) next();
+            if (!current || pendingManifest) next();
             _context9.n = 8;
             break;
           case 7:
@@ -1135,7 +1136,7 @@ window.GCSignageStorage = {
               invalid_media: ((_catalog2 = catalog) === null || _catalog2 === void 0 ? void 0 : _catalog2.invalid_media) || []
             };
             _loop2 = /*#__PURE__*/_regenerator().m(function _loop2() {
-              var _catalog3;
+              var _catalog3, _current;
               var scene, _catalog4, cycle, _t0;
               return _regenerator().w(function (_context0) {
                 while (1) switch (_context0.p = _context0.n) {
@@ -1160,9 +1161,20 @@ window.GCSignageStorage = {
                     }
                     return _context0.a(2, 0);
                   case 3:
-                    _context0.p = 3;
+                    if (!(scenes.length === 1 && scene.type === 'grid' && !scene.background_media && ((_current = current) === null || _current === void 0 ? void 0 : _current.release_id) === releaseId && current.id === scene.id)) {
+                      _context0.n = 4;
+                      break;
+                    }
+                    started = performance.now();
+                    return _context0.a(2, {
+                      v: void 0
+                    });
+                  case 4:
+                    _context0.p = 4;
                     cycle = ++cycleId;
-                    renderer = GCSignage.render(root, scene, ((_catalog4 = catalog) === null || _catalog4 === void 0 ? void 0 : _catalog4.products) || []);
+                    renderer = GCSignage.render(root, scene, ((_catalog4 = catalog) === null || _catalog4 === void 0 ? void 0 : _catalog4.products) || [], {
+                      tv: true
+                    });
                     current = _objectSpread(_objectSpread({}, scene), {}, {
                       release_id: releaseId
                     });
@@ -1190,14 +1202,14 @@ window.GCSignageStorage = {
                     return _context0.a(2, {
                       v: void 0
                     });
-                  case 4:
-                    _context0.p = 4;
+                  case 5:
+                    _context0.p = 5;
                     _t0 = _context0.v;
                     lastError = _t0.message;
-                  case 5:
+                  case 6:
                     return _context0.a(2);
                 }
-              }, _loop2, null, [[3, 4]]);
+              }, _loop2, null, [[4, 5]]);
             });
             n = 0;
           case 5:
@@ -1242,7 +1254,7 @@ window.GCSignageStorage = {
   }
   function _heartbeat() {
     _heartbeat = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee1() {
-      var _current, _catalog5, _current2, _t1;
+      var _current2, _catalog5, _current3, _t1;
       return _regenerator().w(function (_context10) {
         while (1) switch (_context10.p = _context10.n) {
           case 0:
@@ -1256,9 +1268,9 @@ window.GCSignageStorage = {
             _context10.n = 2;
             return request('heartbeat', 'POST', {
               player_version: 'online-1',
-              active_release_id: ((_current = current) === null || _current === void 0 ? void 0 : _current.release_id) || null,
+              active_release_id: ((_current2 = current) === null || _current2 === void 0 ? void 0 : _current2.release_id) || null,
               catalog_revision: ((_catalog5 = catalog) === null || _catalog5 === void 0 ? void 0 : _catalog5.catalog_revision) || '',
-              scene_id: ((_current2 = current) === null || _current2 === void 0 ? void 0 : _current2.id) || '',
+              scene_id: ((_current3 = current) === null || _current3 === void 0 ? void 0 : _current3.id) || '',
               error: lastError,
               offline: !navigator.onLine
             });

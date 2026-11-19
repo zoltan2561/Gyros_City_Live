@@ -30,6 +30,20 @@ class SignagePublishTest extends SignageCatalogTest {
         $snapshot=app(\App\Services\Signage\SignageCatalog::class)->snapshot($bindings,new \DateTimeImmutable());
         $this->assertSame('3000.00',$snapshot['products'][0]['price']);
     }
+    public function test_screen_card_switches_one_playlist_and_preserves_the_existing_pairing(): void {
+        $playlist=$this->playlist();
+        $first=SignageScreen::create(['name'=>'Bal','token_hash'=>hash('sha256','first')]);
+        $middle=SignageScreen::create(['name'=>'Közép','token_hash'=>hash('sha256','middle')]);
+        $request=\Illuminate\Http\Request::create('/admin/signage/publish','POST',[
+            'playlist_id'=>$playlist->id,'screen_ids'=>[(string)$middle->id],'return_tab'=>'screens',
+        ]);
+        $request->setUserResolver(fn()=>(object)['id'=>1]);
+        $response=app(\App\Http\Controllers\admin\SignageController::class)->publish($request);
+        $this->assertSame(route('admin.signage',['tab'=>'screens']).'#tv-'.$middle->id,$response->getTargetUrl());
+        $this->assertNotNull($middle->fresh()->release_id);
+        $this->assertSame($middle->token_hash,$middle->fresh()->token_hash);
+        $this->assertNull($first->fresh()->release_id);
+    }
     public function test_missing_required_choice_and_unprocessed_media_block_publish(): void {
         $list=$this->playlist();$a=SignageScreen::create(['name'=>'A']);
         $media=SignageMedia::create(['name'=>'Pending','mime'=>'video/quicktime','original_path'=>'signage/file.mov']);

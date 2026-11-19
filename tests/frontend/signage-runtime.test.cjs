@@ -106,7 +106,7 @@ test('retiring a previous downloaded release does not restart the current playli
  assert.deepEqual(shown,['a','b','c']);
  incoming={...incoming,default_release_id:3,layout_revision:'new-playlist',releases:[current,{id:3,snapshot:{scenes:[{id:'new',type:'grid',duration:20}]}}]};
  now=50000;timers.find(t=>t.ms===30000).fn();await flush();
- assert.deepEqual(shown,['a','b','c']);
+ assert.deepEqual(shown,['a','b','c','new']);
  now=60000;timers.find(t=>t.ms===1000).fn();await flush();
  assert.deepEqual(shown,['a','b','c','new']);
 });

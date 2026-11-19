@@ -4,13 +4,11 @@ const root=document.getElementById('signage-stage'),pairPanel=document.getElemen
 const base=new URL('./',location.href),api=new URL('api/v1/',base);
 const store=GCSignageStorage.database(base.href);
 let token=null,manifest=null,catalog=null,receipt=null,clock=null,renderer=null,current=null,sceneIndex=-1,started=0,videoProgress=0,videoChecked=0;
-let syncing=false,staging=false,lastError='',urls=[],nonce=null,cycleId=0,sessionGeneration=0,changing=false,pendingManifest=null;
+let syncing=false,lastError='',nonce=null,cycleId=0,sessionGeneration=0,changing=false,pendingManifest=null;
 let pairingGeneration=0,pairingPolling=false;
-let cachedImages=new Map();
-let estimatedStorageBytes=0;
 const failedScenes=new Map();
 function notice(message){status.textContent=message;}
-function fallback(){cycleId++;urls.forEach(URL.revokeObjectURL);urls=[];cachedImages.clear();GCSignage.fallback(root);renderer=null;current=null;}
+function fallback(){cycleId++;GCSignage.fallback(root);renderer=null;current=null;}
 function mediaFailed(scene,message,cycle){
  if(!token||cycle!==cycleId)return;
  lastError=message;failedScenes.set(scene.id,performance.now()+60000);notice(message);fallback();next();
@@ -18,9 +16,9 @@ function mediaFailed(scene,message,cycle){
 function fresh(){return GCSignage.priceFresh(receipt,performance.now(),Date.now());}
 function serverNow(){if(!clock||Date.now()<clock.wall)return null;return new Date(clock.server+performance.now()-clock.monotonic);}
 async function request(path,method='GET',data,credential=token){
- const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);
+ const controller=typeof AbortController==='function'?new AbortController():null,timer=setTimeout(()=>controller?.abort(),15000);
  try{
-  const response=await fetch(new URL(path,api),{method,headers:{'Content-Type':'application/json','Accept':'application/json',...(credential?{Authorization:'Bearer '+credential}:{})},body:data===undefined?undefined:JSON.stringify(data),cache:'no-store',signal:controller.signal});
+  const response=await fetch(new URL(path,api),{method,headers:{'X-Signage-Playback':'online','Content-Type':'application/json','Accept':'application/json',...(credential?{Authorization:'Bearer '+credential}:{})},body:data===undefined?undefined:JSON.stringify(data),cache:'no-store',signal:controller?.signal});
   if(response.status===401&&token&&credential===token){sessionGeneration++;pairingGeneration++;token=null;receipt=null;clock=null;manifest=null;pendingManifest=null;fallback();pairPanel.hidden=false;await store.save('token',null);throw new Error('A kijelző hozzáférését visszavonták.');}
   if(!response.ok){const error=new Error('Nincs friss kapcsolat.');error.status=response.status;throw error;}
   return await response.json();
@@ -59,7 +57,7 @@ async function applyCatalog(){
  catalog=data;receipt={ttl:Math.max(0,ttl),monotonic:sent,wall};
  clock={server:Date.parse(data.server_time),monotonic:sent,wall};
  if(current&&!GCSignageSchedule.sceneAllowed(current,{fresh:fresh(),invalid_media:data.invalid_media})){fallback();}
- else if(renderer)renderer.update(data.products.map(p=>({...p,image:cachedImages.get(p.image)||p.image})));
+ else if(renderer)renderer.update(data.products);
 }
 async function synchronize(){
  if(!token||syncing)return;syncing=true;
@@ -69,35 +67,13 @@ async function synchronize(){
   const manifestSent=performance.now(),manifestWall=Date.now(),incoming=await request('manifest');
   if(incoming.schema_version!==1||!Array.isArray(incoming.releases)||!Number.isFinite(Date.parse(incoming.server_time)))throw new Error('Nem támogatott kiadás.');
   clock={server:Date.parse(incoming.server_time),monotonic:manifestSent,wall:manifestWall};
-  if(!staging){
-   staging=true;if(!current)notice('A műsor letöltése és ellenőrzése…');
-   GCSignageStorage.stageRelease(incoming,token,{store,base:base.href}).then(complete=>{
-    if(!token||generation!==sessionGeneration)return;
-    // Retiring an old downloaded release also changes the package revision.
-    // The current immutable release still has the same scene order.
-    const sameProgram=manifest?.playback_mode==='continuous'&&complete.playback_mode==='continuous'&&manifest.default_release_id===complete.default_release_id;
-    if(manifest?.layout_revision===complete.layout_revision||sameProgram){manifest=complete;pendingManifest=null;}
-    else pendingManifest=complete;
-    lastError='';notice('');if(!current){manifest=complete;pendingManifest=null;next();}
-   }).catch(e=>{lastError=e.message;notice(lastError);}).finally(()=>{staging=false;});
-  }
+  if(!token||generation!==sessionGeneration)return;
+  if(!current||manifest?.default_release_id===incoming.default_release_id){
+   manifest=incoming;pendingManifest=null;
+  }else pendingManifest=incoming;
+  lastError='';notice('');if(!current)next();
  }catch(e){lastError=e.message;notice(e.message);}
  finally{syncing=false;}
-}
-async function hydrate(scene){
- // Scenes are JSON snapshots; avoid newer clone APIs unavailable on some TV browsers.
- const result=JSON.parse(JSON.stringify(scene)),preparedUrls=[],images=new Map();
- try{
- for(const key of ['media','background_media','logo'])if(result[key]){const u=await GCSignageStorage.blobUrl(manifest,result[key].url);preparedUrls.push(u);result[key].url=u;}
- for(const asset of Object.values(result.reference_assets||{})){const u=await GCSignageStorage.blobUrl(manifest,asset.url);preparedUrls.push(u);asset.url=u;}
- const products=[];
- for(const p of catalog?.products||[]){
-  let image=p.image;
-  if(image)try{const source=image;image=await GCSignageStorage.blobUrl(manifest,image);preparedUrls.push(image);images.set(source,image);}catch(e){image=null;}
-  products.push({...p,image});
- }
- return {scene:result,products,urls:preparedUrls,images};
- }catch(e){preparedUrls.forEach(URL.revokeObjectURL);throw e;}
 }
 async function next(){
  if(!token||changing)return;changing=true;
@@ -113,19 +89,17 @@ async function next(){
   if((failedScenes.get(scene.id)||0)>performance.now())continue;
   if(!GCSignageSchedule.sceneAllowed(scene,state))continue;
   if(scene.type!=='media'&&!GCSignage.cardsForScene(scene,catalog?.products||[]).length)continue;
-  const preparationCycle=cycleId;
   try{
-   const ready=await hydrate(scene);if(preparationCycle!==cycleId||!token){ready.urls.forEach(URL.revokeObjectURL);return;}
-   if(!GCSignageSchedule.sceneAllowed(scene,{fresh:fresh(),invalid_media:catalog?.invalid_media||[]})){ready.urls.forEach(URL.revokeObjectURL);fallback();return;}
    const cycle=++cycleId;
-   renderer=GCSignage.render(root,ready.scene,ready.products);urls.forEach(URL.revokeObjectURL);urls=ready.urls;cachedImages=ready.images;current={...scene,release_id:releaseId};
+   renderer=GCSignage.render(root,scene,catalog?.products||[]);
+   current={...scene,release_id:releaseId};
    started=performance.now();videoChecked=started;videoProgress=0;
    notice('');heartbeat();
    root.querySelectorAll('video').forEach(video=>{
     let observedTime=video.currentTime;
     video.addEventListener('timeupdate',()=>{if(cycle===cycleId&&video.currentTime!==observedTime){observedTime=video.currentTime;videoChecked=performance.now();}});
     video.addEventListener('error',()=>mediaFailed(scene,'Videóhiba',cycle),{once:true});
-    video.play().catch(()=>mediaFailed(scene,'A videó lejátszása nem indult el.',cycle));
+    Promise.resolve(video.play()).catch(()=>mediaFailed(scene,'A videó lejátszása nem indult el.',cycle));
     if(video.classList.contains('scene-media')&&scene.play_to_end)video.addEventListener('ended',()=>next(),{once:true});
    });
    return;
@@ -137,8 +111,7 @@ async function next(){
 async function heartbeat(){
  if(!token)return;
  try{
-  Promise.resolve().then(()=>navigator.storage?.estimate?.()).then(usage=>{estimatedStorageBytes=usage?.usage||0;}).catch(()=>{});
-  await request('heartbeat','POST',{player_version:'2',active_release_id:current?.release_id||null,catalog_revision:catalog?.catalog_revision||'',scene_id:current?.id||'',error:lastError,offline:!navigator.onLine,storage_bytes:estimatedStorageBytes,pending:staging?'Letöltés folyamatban':''});
+  await request('heartbeat','POST',{player_version:'online-1',active_release_id:current?.release_id||null,catalog_revision:catalog?.catalog_revision||'',scene_id:current?.id||'',error:lastError,offline:!navigator.onLine});
  }catch(e){/* A failed heartbeat never renews price freshness. */}
 }
 setInterval(()=>{
@@ -161,11 +134,8 @@ document.getElementById('player-fullscreen').addEventListener('click',()=>{
 (async()=>{
  fallback();
  try{
-  // Some TV browsers leave offline setup promises pending indefinitely.
-  Promise.resolve().then(()=>navigator.serviceWorker?.register(new URL('sw.js',base),{scope:base.pathname})).catch(()=>{});
-  Promise.resolve().then(()=>navigator.storage?.persist?.()).catch(()=>{});
   notice('Mentett TV-párosítás betöltése…');
-  token=await store.load('token');manifest=await store.load('manifest');
+  token=await store.load('token');
   // A restart never trusts a saved price receipt or an uncertain device clock.
   if(token){pairPanel.hidden=true;notice('Kapcsolódás a műsorhoz…');heartbeat();await synchronize();}else{pairPanel.hidden=false;await pair();}
  }catch(e){notice('A helyi tároló nem használható. Ellenőrizd a böngésző beállításait.');}

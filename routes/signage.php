@@ -15,7 +15,7 @@ Route::prefix('signage/api/v1')->middleware([\Illuminate\Routing\Middleware\Subs
     Route::middleware([SignageDeviceAuth::class,'throttle:signage-device'])->group(function(){
         Route::get('manifest',[DeviceController::class,'manifest']);
         Route::get('catalog',[DeviceController::class,'catalog']);
-        Route::get('media/{hash}',[DeviceController::class,'media']);
+        Route::get('media/{hash}',[DeviceController::class,'media'])->name('signage.stream');
         Route::post('heartbeat',[DeviceController::class,'heartbeat']);
     });
 });

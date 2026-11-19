@@ -5,6 +5,7 @@ use App\Models\SignageMedia;
 use App\Models\SignagePairing;
 use App\Services\Signage\SignageCatalog;
 use App\Services\Signage\SignageCatalogPhoto;
+use App\Services\Signage\SignageStreamAccess;
 use App\Services\Signage\SignageManifest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
@@ -32,7 +33,13 @@ class DeviceController extends Controller {
             $screen->update(['delivered_release_ids'=>array_values(array_unique(array_merge($screen->delivered_release_ids??[],array_column($manifest['releases'],'id'))))]);
             return $manifest;
         });
-        return response()->json($manifest)->header('Cache-Control','no-store');
+        $response=response()->json($manifest)->header('Cache-Control','no-store');
+        if ($request->header('X-Signage-Playback')==='online') {
+            $screen=$request->attributes->get('signage_screen');
+            $path=parse_url(url('signage/api/v1/media'),PHP_URL_PATH).'/';
+            $response->cookie(SignageStreamAccess::COOKIE,SignageStreamAccess::issue($screen),15,$path,null,$request->isSecure(),true,false,'strict');
+        }
+        return $response;
     }
     public function catalog(Request $request) {
         $service=app(SignageManifest::class);$now=new \DateTimeImmutable();
@@ -40,7 +47,9 @@ class DeviceController extends Controller {
         $snapshot=app(SignageCatalog::class)->snapshot($service->bindings($manifest),$now,$request->attributes->get('signage_screen')->offline_price_seconds);
         $snapshot['invalid_media']=[];
         foreach ($snapshot['products'] as $index => $product) {
-            $snapshot['products'][$index]['image'] = SignageCatalogPhoto::downloadUrl($product['image']);
+            $image = SignageCatalogPhoto::downloadUrl($product['image']);
+            $snapshot['products'][$index]['image'] = $image !== $product['image'] && $request->header('X-Signage-Playback')==='online'
+                ? $image.'?display=1' : $image;
         }
         foreach($service->media($manifest) as $m){
             if(empty($m['baked_prices']))continue;
@@ -57,7 +66,7 @@ class DeviceController extends Controller {
 
         // The player verifies the original bytes, then restores the MIME type from its manifest.
         return response()->file($path, [
-            'Content-Type' => 'application/octet-stream',
+            'Content-Type' => request()->query('display')==='1' ? mime_content_type($path) : 'application/octet-stream',
             'Cache-Control' => 'private, no-store, no-transform',
             'X-Content-Type-Options' => 'nosniff',
         ]);

@@ -101,6 +101,15 @@ class SignageDeviceTest extends \Tests\TestCase
         DB::table('signage_screens')->insert([['id'=>1,'name'=>'A','token_hash'=>hash('sha256','a'),'release_id'=>null],['id'=>2,'name'=>'B','token_hash'=>hash('sha256','b'),'release_id'=>$release->id]]);
         $this->withToken('a')->getJson('/signage/api/v1/media/'.$hash)->assertNotFound();
         $this->withToken('b')->withHeader('Range','bytes=2-5')->getJson('/signage/api/v1/media/'.$hash)->assertStatus(206)->assertHeader('Content-Range','bytes 2-5/10');
+        $response=$this->withToken('b')->withHeader('X-Signage-Playback','online')->getJson('/signage/api/v1/manifest')->assertOk();
+        $cookie=collect($response->headers->getCookies())->firstWhere(fn($cookie)=>$cookie->getName()==='gc_signage_stream');
+        $this->assertTrue($cookie->isHttpOnly());
+        $this->assertSame('/signage/api/v1/media/',$cookie->getPath());
+        $this->withHeader('Authorization','')->withUnencryptedCookie($cookie->getName(),$cookie->getValue());
+        $this->get('/signage/api/v1/media/'.$hash)->assertStatus(206);
+        $this->get('/signage/api/v1/manifest')->assertUnauthorized();
+        DB::table('signage_screens')->where('id',2)->update(['token_hash'=>null]);
+        $this->get('/signage/api/v1/media/'.$hash)->assertUnauthorized();
     }
 
     public function test_delivered_release_remains_allowed_before_first_activation_heartbeat(): void

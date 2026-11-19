@@ -211,7 +211,7 @@ class RouteServiceProvider extends ServiceProvider
             Limit::perMinute(240)->by('signage-status-ip:'.$request->ip()),
         ]);
         RateLimiter::for('signage-device',fn(Request $request)=>[
-            Limit::perMinute(240)->by('signage-device:'.hash('sha256',(string)$request->bearerToken())),
+            Limit::perMinute(240)->by('signage-device:'.($request->attributes->get('signage_screen')?->id ?? hash('sha256',(string)$request->bearerToken()))),
             Limit::perMinute(2000)->by('signage-device-ip:'.$request->ip()),
         ]);
         RateLimiter::for('signage-pair',fn(Request $request)=>Limit::perMinute(5)->by('signage-pair:'.($request->user()?->id??$request->ip())));

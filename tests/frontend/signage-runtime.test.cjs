@@ -136,8 +136,8 @@ test('normal video loops are not mistaken for a stalled player during price poll
  for(const [time,position] of [[10000,4],[20000,2],[30000,0.2]]){now=time;video.currentTime=position;listeners.timeupdate?.();timers.find(t=>t.ms===1000).fn();await flush();}
  assert.equal(renders,1);
 });
-test('revocation prevents a pending release callback and timers from restarting cached media',async()=>{
- let finishStage,revoked=false,renders=0,falls=0;const events={},timers=[];
+test('revocation prevents an in-flight online manifest from restarting playback',async()=>{
+ let finishManifest,revoked=false,renders=0,falls=0;const events={},timers=[];
  const nodes=new Map();const node=id=>nodes.get(id)||nodes.set(id,{textContent:'',hidden:false,addEventListener(){},querySelectorAll(){return[];},querySelector(){return null;}}).get(id);
  const manifest={schema_version:1,server_time:'2026-11-09T12:00:00Z',layout_revision:'new',default_release_id:1,schedule_valid_until:'2026-11-16T12:00:00Z',schedules:[],releases:[{id:1,snapshot:{scenes:[{id:'ad',type:'media',duration:15,bindings:[]}],files:[]}}]};
  const stored={token:'test-device',manifest};
@@ -150,12 +150,13 @@ test('revocation prevents a pending release callback and timers from restarting 
   fetch:async url=>{
    if(revoked)return new Response('{}',{status:401});
    if(String(url).endsWith('/catalog'))return new Response(JSON.stringify({schema_version:1,server_time:'2026-11-09T12:00:00Z',valid_until:'2026-11-09T12:30:00Z',products:[],invalid_media:[]}));
-   return new Response(JSON.stringify(manifest));
+   if(String(url).endsWith('/manifest'))return new Promise(resolve=>{finishManifest=()=>resolve(new Response(JSON.stringify(manifest)));});
+   return new Response('{}');
   },
  };
  vm.runInNewContext(fs.readFileSync(require.resolve('../../public/signage/player.js'),'utf8'),context);
- await flush();assert.equal(typeof finishStage,'function',node('player-status').textContent);
- revoked=true;events.online();await flush();finishStage(manifest);await flush();
+ await flush();assert.equal(typeof finishManifest,'function',node('player-status').textContent);
+ revoked=true;await timers.find(t=>t.ms===60000).fn();await flush();finishManifest();await flush();
  for(const timer of timers.filter(t=>t.ms===1000))timer.fn();await flush();
  assert.equal(stored.token,null);assert.equal(renders,0);assert(falls>=2);
 });

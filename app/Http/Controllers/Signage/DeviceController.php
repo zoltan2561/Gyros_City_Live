@@ -36,7 +36,10 @@ class DeviceController extends Controller {
         if ($request->header('X-Signage-Include')==='catalog') {
             $manifest['catalog']=$this->catalogSnapshot($request,$manifest,new \DateTimeImmutable());
         }
-        $response=response()->json($manifest)->header('Cache-Control','no-store');
+        if($request->header('X-Signage-Photos')==='preview' && (string)$request->header('X-Signage-Release')!==(string)$manifest['default_release_id']){
+            $manifest['photo_previews']=SignageCatalogPhoto::previews($manifest['catalog']['products']??[]);
+        }
+        $response=response()->json($manifest)->header('Cache-Control','private, no-store, no-transform');
         if ($request->header('X-Signage-Playback')==='online') {
             $screen=$request->attributes->get('signage_screen');
             $path=parse_url(url('signage/api/v1/media'),PHP_URL_PATH).'/';
@@ -83,7 +86,7 @@ class DeviceController extends Controller {
             'catalog_revision'=>'nullable|string|max:64','scene_id'=>'nullable|string|max:80','error'=>'nullable|string|max:240',
             'offline'=>'nullable|boolean','storage_bytes'=>'nullable|integer|min:0','pending'=>'nullable|string|max:80']);
         $authenticated=$request->attributes->get('signage_screen');
-        DB::transaction(function()use($authenticated,$data){
+        $assigned=DB::transaction(function()use($authenticated,$data){
             $screen=\App\Models\SignageScreen::whereKey($authenticated->id)->lockForUpdate()->firstOrFail();
             abort_unless($screen->token_hash===$authenticated->token_hash,401);
             if(isset($data['active_release_id'])){
@@ -95,8 +98,9 @@ class DeviceController extends Controller {
                 $screen->active_release_id=$active;
             }
             $screen->last_seen_at=now();$screen->status=$data;$screen->save();
+            return $screen->release_id;
         });
-        return response()->json(['ok'=>true])->header('Cache-Control','no-store');
+        return response()->json(['ok'=>true,'assigned_release_id'=>$assigned])->header('Cache-Control','private, no-store, no-transform');
     }
     public function media(Request $request,string $hash) {
         abort_unless(preg_match('/^[a-f0-9]{64}$/D',$hash),404);

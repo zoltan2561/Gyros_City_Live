@@ -18,4 +18,9 @@ class PlayerController extends Controller {
     public function worker() {
         return response()->file(public_path('signage/sw.js'),['Content-Type'=>'application/javascript','Cache-Control'=>'no-cache']);
     }
+    public function connectionCheck() {
+        return response(base64_decode('R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=='),200,[
+            'Content-Type'=>'image/gif','Cache-Control'=>'private, no-store, no-transform',
+        ]);
+    }
 }

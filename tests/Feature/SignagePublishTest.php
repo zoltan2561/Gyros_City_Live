@@ -37,10 +37,12 @@ class SignagePublishTest extends SignageCatalogTest {
         $list=$this->playlist();
         $release=app(SignagePublisher::class)->publish($list->id,[$screen->id],1);
         $data=$this->withToken('test-tv')->withHeader('X-Signage-Include','catalog')
-            ->getJson('/signage/api/v1/manifest')->assertOk()->json();
+            ->postJson('/signage/api/v1/manifest')->assertOk()->json();
         $this->assertSame($release['id'],$data['default_release_id']);
         $this->assertSame(array_column($data['releases'][0]['snapshot']['bindings'],'id'),array_column($data['catalog']['products'],'id'));
         $this->assertTrue($data['catalog']['products'][0]['available']);
+        $this->withToken('test-tv')->postJson('/signage/api/v1/heartbeat',['player_version'=>'online-3'])
+            ->assertOk()->assertJsonPath('assigned_release_id',$release['id']);
     }
     public function test_screen_card_switches_one_playlist_and_preserves_the_existing_pairing(): void {
         $playlist=$this->playlist();

@@ -264,12 +264,18 @@ window.GCSignageStorage = {
     el.style.objectPosition = Number((_media$focus_x = media.focus_x) !== null && _media$focus_x !== void 0 ? _media$focus_x : 50) + '% ' + Number((_media$focus_y = media.focus_y) !== null && _media$focus_y !== void 0 ? _media$focus_y : 50) + '%';
     return el;
   }
-  function loadPhoto(state, source) {
+  function loadPhoto(state, source, preview) {
     var _state$cancelPhoto;
     (_state$cancelPhoto = state.cancelPhoto) === null || _state$cancelPhoto === void 0 || _state$cancelPhoto.call(state);
     state.visual.replaceChildren();
     state.imageSrc = source || null;
     if (!source) return;
+    if (preview) {
+      var small = element('img', 'food-photo');
+      small.alt = '';
+      small.src = preview;
+      state.visual.append(small);
+    }
     var attempt = 0,
       timer = null,
       img = null;
@@ -290,15 +296,18 @@ window.GCSignageStorage = {
       img = element('img', 'food-photo');
       img.alt = '';
       img.onerror = failed;
-      img.onload = cancel;
+      img.onload = () => {
+        cancel();
+        if (preview) state.visual.replaceChildren(img);
+      };
       timer = setTimeout(failed, 8000);
-      state.visual.append(img);
+      if (!preview) state.visual.append(img);
       img.src = source;
     }
     state.cancelPhoto = cancel;
     load();
   }
-  function updateCards(container, scene, products) {
+  function updateCards(container, scene, products, previews = {}) {
     var _container$querySelec;
     var cards = cardsForScene(scene, products),
       states = grids.get(container) || new Map();
@@ -365,7 +374,7 @@ window.GCSignageStorage = {
       }
       state.description.textContent = card.description;
       if (state.imageSrc !== (card.image || null)) {
-        loadPhoto(state, card.image);
+        loadPhoto(state, card.image, previews[card.image]);
       }
       var signature = JSON.stringify(card.rows.map(row => [row.id, row.label, row.price, row.formatted_reference_price, row.formatted_price]));
       if (state.priceSignature !== signature) {
@@ -563,7 +572,7 @@ window.GCSignageStorage = {
     if (foregroundVideo) foregroundVideo.loop = !scene.play_to_end;
     var grid = element('div', 'food-grid');
     if (scene.type !== 'media') {
-      updateCards(grid, scene, products);
+      updateCards(grid, scene, products, options.previews);
       body.append(grid);
     }
     var footer = element('footer', 'scene-footer');
@@ -627,7 +636,7 @@ window.GCSignageStorage = {
     var view = {
       update(products) {
         if (!disposed && scene.type !== 'media') {
-          updateCards(grid, scene, products);
+          updateCards(grid, scene, products, options.previews);
           select();
         }
       },
@@ -782,6 +791,11 @@ window.GCSignageStorage = {
   var pairingGeneration = 0,
     pairingPolling = false;
   var retrySync = null;
+  var previews = {},
+    previewRelease = null,
+    checking = false,
+    lastSync = Date.now(),
+    recovering = false;
   var failedScenes = new Map();
   function notice(message) {
     status.textContent = message;
@@ -807,12 +821,41 @@ window.GCSignageStorage = {
     if (!clock || Date.now() < clock.wall) return null;
     return new Date(clock.server + performance.now() - clock.monotonic);
   }
+  function nativeRequest(url, method, headers, body, signal) {
+    return new Promise((resolve, reject) => {
+      var xhr = new XMLHttpRequest();
+      xhr.open(method, url, true);
+      xhr.timeout = 15000;
+      for (var _i3 = 0, _Object$keys = Object.keys(headers); _i3 < _Object$keys.length; _i3++) {
+        var key = _Object$keys[_i3];
+        xhr.setRequestHeader(key, headers[key]);
+      }
+      var abort = () => xhr.abort();
+      signal === null || signal === void 0 || signal.addEventListener('abort', abort);
+      xhr.onloadend = () => signal === null || signal === void 0 ? void 0 : signal.removeEventListener('abort', abort);
+      xhr.onerror = xhr.onabort = xhr.ontimeout = () => reject(new Error('A TV hálózati kérése megszakadt.'));
+      xhr.onload = () => {
+        try {
+          resolve({
+            response: {
+              ok: xhr.status >= 200 && xhr.status < 300,
+              status: xhr.status
+            },
+            json: xhr.status === 200 || xhr.status === 201 ? JSON.parse(xhr.responseText) : null
+          });
+        } catch (e) {
+          reject(e);
+        }
+      };
+      xhr.send(body);
+    });
+  }
   function request(_x) {
     return _request.apply(this, arguments);
   }
   function _request() {
     _request = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee6(path, method = 'GET', data, credential = token) {
-      var controller, timer, headers, download, timeout, _yield$Promise$race, response, json, error;
+      var controller, timer, headers, url, body, download, timeout, _yield$Promise$race, response, json, error;
       return _regenerator().w(function (_context6) {
         while (1) switch (_context6.p = _context6.n) {
           case 0:
@@ -824,11 +867,16 @@ window.GCSignageStorage = {
               'Accept': 'application/json'
             };
             if (credential) headers.Authorization = 'Bearer ' + credential;
-            if (path === 'manifest') headers['X-Signage-Include'] = 'catalog';
-            download = fetch(new URL(path, api), {
+            if (path === 'manifest') {
+              headers['X-Signage-Include'] = 'catalog';
+              headers['X-Signage-Photos'] = 'preview';
+              if (previewRelease != null) headers['X-Signage-Release'] = String(previewRelease);
+            }
+            url = new URL(path, api), body = data === undefined ? undefined : JSON.stringify(data);
+            download = typeof XMLHttpRequest === 'function' ? nativeRequest(url.href, method, headers, body, controller === null || controller === void 0 ? void 0 : controller.signal) : fetch(url, {
               method,
               headers,
-              body: data === undefined ? undefined : JSON.stringify(data),
+              body,
               cache: 'no-store',
               signal: controller === null || controller === void 0 ? void 0 : controller.signal
             }).then(/*#__PURE__*/function () {
@@ -1085,7 +1133,7 @@ window.GCSignageStorage = {
             manifestSent = performance.now();
             manifestWall = Date.now();
             _context9.n = 3;
-            return request('manifest');
+            return request('manifest', 'POST');
           case 3:
             incoming = _context9.v;
             if (!(incoming.schema_version !== 1 || !Array.isArray(incoming.releases) || !Number.isFinite(Date.parse(incoming.server_time)))) {
@@ -1112,6 +1160,11 @@ window.GCSignageStorage = {
             return _context9.a(2);
           case 7:
             applyCatalog(data, manifestSent, manifestWall, ((_current = current) === null || _current === void 0 ? void 0 : _current.release_id) === incoming.default_release_id);
+            if (incoming.photo_previews || previewRelease !== incoming.default_release_id) {
+              previews = incoming.photo_previews || {};
+              previewRelease = incoming.default_release_id;
+            }
+            lastSync = Date.now();
             if (!current || ((_manifest = manifest) === null || _manifest === void 0 ? void 0 : _manifest.default_release_id) === incoming.default_release_id) {
               manifest = incoming;
               pendingManifest = null;
@@ -1219,7 +1272,8 @@ window.GCSignageStorage = {
                     _context0.p = 4;
                     cycle = ++cycleId;
                     renderer = GCSignage.render(root, scene, ((_catalog4 = catalog) === null || _catalog4 === void 0 ? void 0 : _catalog4.products) || [], {
-                      tv: true
+                      tv: true,
+                      previews
                     });
                     current = _objectSpread(_objectSpread({}, scene), {}, {
                       release_id: releaseId
@@ -1300,38 +1354,106 @@ window.GCSignageStorage = {
   }
   function _heartbeat() {
     _heartbeat = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee1() {
-      var _current3, _catalog5, _current4, _t12;
+      var _current3, _catalog5, _current4, _manifest2, reply, _t12;
       return _regenerator().w(function (_context10) {
         while (1) switch (_context10.p = _context10.n) {
           case 0:
-            if (token) {
+            if (!(!token || checking)) {
               _context10.n = 1;
               break;
             }
             return _context10.a(2);
           case 1:
-            _context10.p = 1;
-            _context10.n = 2;
+            checking = true;
+            _context10.p = 2;
+            _context10.n = 3;
             return request('heartbeat', 'POST', {
-              player_version: 'online-2',
+              player_version: 'online-3',
               active_release_id: ((_current3 = current) === null || _current3 === void 0 ? void 0 : _current3.release_id) || null,
               catalog_revision: ((_catalog5 = catalog) === null || _catalog5 === void 0 ? void 0 : _catalog5.catalog_revision) || '',
               scene_id: ((_current4 = current) === null || _current4 === void 0 ? void 0 : _current4.id) || '',
               error: lastError,
               offline: !navigator.onLine
             });
-          case 2:
-            _context10.n = 4;
-            break;
           case 3:
-            _context10.p = 3;
-            _t12 = _context10.v;
+            reply = _context10.v;
+            if (token && 'assigned_release_id' in reply && reply.assigned_release_id !== ((_manifest2 = manifest) === null || _manifest2 === void 0 ? void 0 : _manifest2.default_release_id)) synchronize();
+            _context10.n = 5;
+            break;
           case 4:
+            _context10.p = 4;
+            _t12 = _context10.v;
+          case 5:
+            _context10.p = 5;
+            checking = false;
+            if (token && Date.now() - lastSync > 120000) recoverConnection();
+            return _context10.f(5);
+          case 6:
             return _context10.a(2);
         }
-      }, _callee1, null, [[1, 3]]);
+      }, _callee1, null, [[2, 4, 5, 6]]);
     }));
     return _heartbeat.apply(this, arguments);
+  }
+  function recoverConnection() {
+    return _recoverConnection.apply(this, arguments);
+  }
+  function _recoverConnection() {
+    _recoverConnection = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee10() {
+      var key, now, reachable, _t13;
+      return _regenerator().w(function (_context11) {
+        while (1) switch (_context11.p = _context11.n) {
+          case 0:
+            if (!recovering) {
+              _context11.n = 1;
+              break;
+            }
+            return _context11.a(2);
+          case 1:
+            recovering = true;
+            _context11.p = 2;
+            // Check the application through the browser's image loader, independently of API requests.
+            key = 'gc-signage-last-reconnect-' + base.pathname, now = Date.now();
+            if (!(now - Number(sessionStorage.getItem(key) || 0) < 300000)) {
+              _context11.n = 3;
+              break;
+            }
+            return _context11.a(2);
+          case 3:
+            _context11.n = 4;
+            return new Promise(resolve => {
+              var probe = new Image(),
+                timer = setTimeout(() => finish(false), 8000);
+              function finish(ok) {
+                clearTimeout(timer);
+                probe.onload = probe.onerror = null;
+                resolve(ok);
+              }
+              probe.onload = () => finish(true);
+              probe.onerror = () => finish(false);
+              probe.src = new URL('connection.gif?t=' + now, base).href;
+            });
+          case 4:
+            reachable = _context11.v;
+            if (reachable && token && Date.now() - lastSync > 120000) {
+              sessionStorage.setItem(key, String(now));
+              location.reload();
+            }
+            _context11.n = 6;
+            break;
+          case 5:
+            _context11.p = 5;
+            _t13 = _context11.v;
+          case 6:
+            _context11.p = 6;
+            recovering = false;
+            return _context11.f(6);
+          case 7:
+            return _context11.a(2);
+        }
+      }, _callee10, null, [[2, 5, 6, 7]]);
+    }));
+    return _recoverConnection.apply(this, arguments);
   }
   setInterval(() => {
     var _catalog, _current$media;
@@ -1362,7 +1484,7 @@ window.GCSignageStorage = {
     if (video && !video.ended && performance.now() - videoChecked >= 10000) mediaFailed(current, 'A videó elakadt.', cycleId);
   }, 1000);
   setInterval(synchronize, 30000);
-  setInterval(heartbeat, 60000);
+  setInterval(heartbeat, 10000);
   setInterval(pairingPoll, 5000);
   window.addEventListener('online', () => {
     synchronize();
@@ -1370,6 +1492,9 @@ window.GCSignageStorage = {
   });
   window.addEventListener('visibilitychange', () => {
     if (!document.hidden) synchronize();
+  });
+  window.addEventListener('pageshow', () => {
+    if (token) synchronize();
   });
   document.getElementById('new-code').addEventListener('click', pair);
   document.getElementById('player-fullscreen').addEventListener('click', () => {

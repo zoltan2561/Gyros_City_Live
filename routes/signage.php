@@ -6,6 +6,7 @@ use App\Http\Middleware\SignageEnabled;
 Route::middleware(SignageEnabled::class)->group(function(){
     Route::get('/signage',[\App\Http\Controllers\Signage\PlayerController::class,'index']);
     Route::get('/signage/sw.js',[\App\Http\Controllers\Signage\PlayerController::class,'worker']);
+    Route::get('/signage/connection.gif',[\App\Http\Controllers\Signage\PlayerController::class,'connectionCheck']);
     Route::get('/signage/catalog-photo/{filename}.bin',[DeviceController::class,'catalogPhoto'])
         ->where('filename', \App\Services\Signage\SignageCatalogPhoto::FILENAME);
 });
@@ -13,7 +14,7 @@ Route::prefix('signage/api/v1')->middleware([\Illuminate\Routing\Middleware\Subs
     Route::post('pairing/start',[DeviceController::class,'start'])->middleware('throttle:signage-start');
     Route::post('pairing/status',[DeviceController::class,'pairingStatus'])->middleware('throttle:signage-status');
     Route::middleware([SignageDeviceAuth::class,'throttle:signage-device'])->group(function(){
-        Route::get('manifest',[DeviceController::class,'manifest']);
+        Route::match(['get','post'],'manifest',[DeviceController::class,'manifest']);
         Route::get('catalog',[DeviceController::class,'catalog']);
         Route::get('media/{hash}',[DeviceController::class,'media'])->name('signage.stream');
         Route::post('heartbeat',[DeviceController::class,'heartbeat']);

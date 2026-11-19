@@ -145,7 +145,9 @@ test('retiring a previous downloaded release does not restart the current playli
  now=40000;timers.find(t=>t.ms===1000).fn();await flush();
  assert.deepEqual(shown,['a','b','c']);
  incoming={...incoming,default_release_id:3,layout_revision:'new-playlist',releases:[current,{id:3,snapshot:{scenes:[{id:'new',type:'grid',duration:20}]}}]};
- now=50000;timers.find(t=>t.ms===30000).fn();await flush();
+ const serve=context.fetch;
+ context.fetch=async url=>String(url).endsWith('/heartbeat')?new Response(JSON.stringify({assigned_release_id:3})):serve(url);
+ now=50000;timers.find(t=>t.ms===10000).fn();await flush();
  assert.deepEqual(shown,['a','b','c','new']);
  now=60000;timers.find(t=>t.ms===1000).fn();await flush();
  assert.deepEqual(shown,['a','b','c','new']);
@@ -196,7 +198,7 @@ test('revocation prevents an in-flight online manifest from restarting playback'
  };
  vm.runInNewContext(fs.readFileSync(require.resolve('../../public/signage/player.js'),'utf8'),context);
  await flush();assert.equal(typeof finishManifest,'function',node('player-status').textContent);
- revoked=true;await timers.find(t=>t.ms===60000).fn();await flush();finishManifest();await flush();
+ revoked=true;await timers.find(t=>t.ms===10000).fn();await flush();finishManifest();await flush();
  for(const timer of timers.filter(t=>t.ms===1000))timer.fn();await flush();
  assert.equal(stored.token,null);assert.equal(renders,0);assert(falls>=2);
 });

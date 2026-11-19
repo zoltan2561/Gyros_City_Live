@@ -82,6 +82,15 @@ test('a failed photo retries within the scene without replacing its card or vide
 });
 
 const slideshow={...scene,type:'slideshow',slide_seconds:7};
+test('an embedded photo remains visible when its full-size download fails',()=>{
+  const {api,stage,timeouts}=setup();
+  const preview='data:image/png;base64,preview';
+  const view=api.render(stage,scene,products,{previews:{'/burger.jpg':preview}});
+  assert.equal(stage.querySelector('.food-photo').src,preview);
+  const timeout=[...timeouts.values()].find(t=>t.ms===8000);
+  timeout.fn();assert.equal(stage.querySelector('.food-photo').src,preview);
+  view.dispose();assert.equal(timeouts.size,0);
+});
 const visible=stage=>stage.querySelectorAll('.food-card').filter(e=>!e.hidden);
 test('slideshow advances one product at a time and wraps without rebuilding photos',()=>{
   const {api,stage,timers,tick}=setup();api.render(stage,slideshow,products);

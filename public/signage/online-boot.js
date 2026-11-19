@@ -40,13 +40,12 @@ window.GCSignageStorage={database(base){
 
 // Only the former signage worker and its dedicated caches belong to this player.
 (async function retireOfflinePlayer(){
- const base=new URL('./',location.href);
+ const base=new URL('./',document.baseURI||location.href);
  const prefix='gc-signage-'+encodeURIComponent(base.pathname)+'-';
  try{
   const registration=await navigator.serviceWorker?.getRegistration(base.href);
   if(registration?.scope===base.href && registration.active?.scriptURL===new URL('sw.js',base).href){
-   const controlled=navigator.serviceWorker.controller?.scriptURL===registration.active.scriptURL;
-   if(await registration.unregister() && controlled){location.reload();return;}
+   await registration.unregister();
   }
   if(window.caches)for(const name of await caches.keys())if(name.startsWith(prefix))await caches.delete(name);
  }catch(error){/* Online playback is independent of offline storage access. */}

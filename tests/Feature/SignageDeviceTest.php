@@ -9,6 +9,16 @@ use App\Models\User;
 
 class SignageDeviceTest extends \Tests\TestCase
 {
+    public function test_both_tv_addresses_boot_from_one_document_and_keep_the_same_pairing_namespace(): void
+    {
+        foreach (['/signage','/signage/'] as $path) {
+            $response=$this->get($path)->assertOk()->assertSee('<base href="'.url('signage').'/',false)
+                ->assertDontSee('<script src=',false)->assertDontSee('rel="stylesheet"',false);
+            $this->assertMatchesRegularExpression('/<script nonce="([^"]+)">/',$response->getContent());
+            preg_match('/<script nonce="([^"]+)">/',$response->getContent(),$match);
+            $this->assertStringContainsString("'nonce-".$match[1]."'",$response->headers->get('Content-Security-Policy'));
+        }
+    }
     public function test_catalog_photo_download_serves_original_bytes_for_image_accept_headers(): void
     {
         $path = tempnam(storage_path('app/public/admin-assets/images/item'), 'signage-test-');

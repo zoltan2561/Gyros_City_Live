@@ -1,7 +1,7 @@
 (() => {
 'use strict';
 const root=document.getElementById('signage-stage'),pairPanel=document.getElementById('pair-panel'),status=document.getElementById('player-status');
-const base=new URL('./',location.href),api=new URL('api/v1/',base);
+const base=new URL('./',document.baseURI||location.href),api=new URL('api/v1/',base);
 const store=GCSignageStorage.database(base.href);
 let token=null,manifest=null,catalog=null,receipt=null,clock=null,renderer=null,current=null,sceneIndex=-1,started=0,videoProgress=0,videoChecked=0;
 let syncing=false,lastError='',nonce=null,cycleId=0,sessionGeneration=0,changing=false,pendingManifest=null;

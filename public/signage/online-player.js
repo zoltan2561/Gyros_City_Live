@@ -118,11 +118,11 @@ window.GCSignageStorage = {
 // Only the former signage worker and its dedicated caches belong to this player.
 (function () {
   var _retireOfflinePlayer = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee3() {
-    var base, prefix, _navigator$serviceWor, _registration$active, registration, _navigator$serviceWor2, controlled, _iterator, _step, name, _t, _t2, _t3, _t4;
+    var base, prefix, _navigator$serviceWor, _registration$active, registration, _iterator, _step, name, _t, _t2, _t3;
     return _regenerator().w(function (_context3) {
       while (1) switch (_context3.p = _context3.n) {
         case 0:
-          base = new URL('./', location.href);
+          base = new URL('./', document.baseURI || location.href);
           prefix = 'gc-signage-' + encodeURIComponent(base.pathname) + '-';
           _context3.p = 1;
           _context3.n = 2;
@@ -130,74 +130,59 @@ window.GCSignageStorage = {
         case 2:
           registration = _context3.v;
           if (!((registration === null || registration === void 0 ? void 0 : registration.scope) === base.href && ((_registration$active = registration.active) === null || _registration$active === void 0 ? void 0 : _registration$active.scriptURL) === new URL('sw.js', base).href)) {
-            _context3.n = 5;
+            _context3.n = 3;
             break;
           }
-          controlled = ((_navigator$serviceWor2 = navigator.serviceWorker.controller) === null || _navigator$serviceWor2 === void 0 ? void 0 : _navigator$serviceWor2.scriptURL) === registration.active.scriptURL;
           _context3.n = 3;
           return registration.unregister();
         case 3:
-          _t = _context3.v;
-          if (!_t) {
-            _context3.n = 4;
-            break;
-          }
-          _t = controlled;
-        case 4:
-          if (!_t) {
-            _context3.n = 5;
-            break;
-          }
-          location.reload();
-          return _context3.a(2);
-        case 5:
           if (!window.caches) {
-            _context3.n = 13;
+            _context3.n = 11;
             break;
           }
-          _t2 = _createForOfIteratorHelper;
-          _context3.n = 6;
+          _t = _createForOfIteratorHelper;
+          _context3.n = 4;
           return caches.keys();
-        case 6:
-          _iterator = _t2(_context3.v);
-          _context3.p = 7;
+        case 4:
+          _iterator = _t(_context3.v);
+          _context3.p = 5;
           _iterator.s();
-        case 8:
+        case 6:
           if ((_step = _iterator.n()).done) {
-            _context3.n = 10;
+            _context3.n = 8;
             break;
           }
           name = _step.value;
           if (!name.startsWith(prefix)) {
-            _context3.n = 9;
+            _context3.n = 7;
             break;
           }
-          _context3.n = 9;
+          _context3.n = 7;
           return caches.delete(name);
+        case 7:
+          _context3.n = 6;
+          break;
+        case 8:
+          _context3.n = 10;
+          break;
         case 9:
-          _context3.n = 8;
-          break;
+          _context3.p = 9;
+          _t2 = _context3.v;
+          _iterator.e(_t2);
         case 10:
-          _context3.n = 12;
-          break;
+          _context3.p = 10;
+          _iterator.f();
+          return _context3.f(10);
         case 11:
-          _context3.p = 11;
-          _t3 = _context3.v;
-          _iterator.e(_t3);
+          _context3.n = 13;
+          break;
         case 12:
           _context3.p = 12;
-          _iterator.f();
-          return _context3.f(12);
+          _t3 = _context3.v;
         case 13:
-          _context3.n = 15;
-          break;
-        case 14:
-          _context3.p = 14;
-          _t4 = _context3.v;
-        case 15:
           return _context3.a(2);
       }
-    }, _callee3, null, [[7, 11, 12, 13], [1, 14]]);
+    }, _callee3, null, [[5, 9, 10, 11], [1, 12]]);
   }));
   function retireOfflinePlayer() {
     return _retireOfflinePlayer.apply(this, arguments);
@@ -734,7 +719,7 @@ window.GCSignageStorage = {
   var root = document.getElementById('signage-stage'),
     pairPanel = document.getElementById('pair-panel'),
     status = document.getElementById('player-status');
-  var base = new URL('./', location.href),
+  var base = new URL('./', document.baseURI || location.href),
     api = new URL('api/v1/', base);
   var store = GCSignageStorage.database(base.href);
   var token = null,
@@ -855,7 +840,7 @@ window.GCSignageStorage = {
   }
   function _pair() {
     _pair = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee6() {
-      var generation, p, _t6;
+      var generation, p, _t5;
       return _regenerator().w(function (_context6) {
         while (1) switch (_context6.p = _context6.n) {
           case 0:
@@ -881,7 +866,7 @@ window.GCSignageStorage = {
             break;
           case 4:
             _context6.p = 4;
-            _t6 = _context6.v;
+            _t5 = _context6.v;
             if (generation === pairingGeneration && !token) notice('Nem sikerült kódot kérni. Ellenőrizd a kapcsolatot, majd próbáld újra.');
           case 5:
             return _context6.a(2);
@@ -895,7 +880,7 @@ window.GCSignageStorage = {
   }
   function _pairingPoll() {
     _pairingPoll = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee7() {
-      var generation, requestedNonce, p, _t7, _t8;
+      var generation, requestedNonce, p, _t6, _t7;
       return _regenerator().w(function (_context7) {
         while (1) switch (_context7.p = _context7.n) {
           case 0:
@@ -938,7 +923,7 @@ window.GCSignageStorage = {
             break;
           case 8:
             _context7.p = 8;
-            _t7 = _context7.v;
+            _t6 = _context7.v;
             token = null;
             notice('A párosítás nem menthető a készülékre. Ellenőrizd a böngésző tárhelyét, majd kérj új kódot.');
             return _context7.a(2);
@@ -956,14 +941,14 @@ window.GCSignageStorage = {
             break;
           case 13:
             _context7.p = 13;
-            _t8 = _context7.v;
+            _t7 = _context7.v;
             if (!(generation !== pairingGeneration || nonce !== requestedNonce || token)) {
               _context7.n = 14;
               break;
             }
             return _context7.a(2);
           case 14:
-            if (_t8.status === 404) {
+            if (_t7.status === 404) {
               nonce = null;
               notice('A kód lejárt vagy már felhasználták. Kérj új párosítási kódot.');
             } else notice('A kapcsolat megszakadt. A párosítást automatikusan újra ellenőrizzük.');
@@ -1028,7 +1013,7 @@ window.GCSignageStorage = {
   }
   function _synchronize() {
     _synchronize = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee9() {
-      var generation, _manifest, manifestSent, manifestWall, incoming, _t9;
+      var generation, _manifest, manifestSent, manifestWall, incoming, _t8;
       return _regenerator().w(function (_context9) {
         while (1) switch (_context9.p = _context9.n) {
           case 0:
@@ -1078,9 +1063,9 @@ window.GCSignageStorage = {
             break;
           case 7:
             _context9.p = 7;
-            _t9 = _context9.v;
-            lastError = _t9.message;
-            notice(_t9.message);
+            _t8 = _context9.v;
+            lastError = _t8.message;
+            notice(_t8.message);
           case 8:
             _context9.p = 8;
             syncing = false;
@@ -1137,7 +1122,7 @@ window.GCSignageStorage = {
             };
             _loop2 = /*#__PURE__*/_regenerator().m(function _loop2() {
               var _catalog3, _current;
-              var scene, _catalog4, cycle, _t0;
+              var scene, _catalog4, cycle, _t9;
               return _regenerator().w(function (_context0) {
                 while (1) switch (_context0.p = _context0.n) {
                   case 0:
@@ -1204,8 +1189,8 @@ window.GCSignageStorage = {
                     });
                   case 5:
                     _context0.p = 5;
-                    _t0 = _context0.v;
-                    lastError = _t0.message;
+                    _t9 = _context0.v;
+                    lastError = _t9.message;
                   case 6:
                     return _context0.a(2);
                 }
@@ -1254,7 +1239,7 @@ window.GCSignageStorage = {
   }
   function _heartbeat() {
     _heartbeat = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee1() {
-      var _current2, _catalog5, _current3, _t1;
+      var _current2, _catalog5, _current3, _t0;
       return _regenerator().w(function (_context10) {
         while (1) switch (_context10.p = _context10.n) {
           case 0:
@@ -1279,7 +1264,7 @@ window.GCSignageStorage = {
             break;
           case 3:
             _context10.p = 3;
-            _t1 = _context10.v;
+            _t0 = _context10.v;
           case 4:
             return _context10.a(2);
         }
@@ -1341,7 +1326,7 @@ window.GCSignageStorage = {
     }
   });
   _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee4() {
-    var _t5;
+    var _t4;
     return _regenerator().w(function (_context4) {
       while (1) switch (_context4.p = _context4.n) {
         case 0:
@@ -1373,7 +1358,7 @@ window.GCSignageStorage = {
           break;
         case 6:
           _context4.p = 6;
-          _t5 = _context4.v;
+          _t4 = _context4.v;
           notice('A helyi tároló nem használható. Ellenőrizd a böngésző beállításait.');
         case 7:
           return _context4.a(2);

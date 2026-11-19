@@ -8,6 +8,7 @@ let syncing=false,lastError='',nonce=null,cycleId=0,sessionGeneration=0,changing
 let pairingGeneration=0,pairingPolling=false;
 let retrySync=null;
 let previews={},previewRelease=null,checking=false,lastSync=Date.now(),recovering=false;
+let controlEnabled=false,controlFrame=null,controlSequence=0,controlSent=0,controlWall=0,lastControl=0,acceptedAt=-1;
 const failedScenes=new Map();
 function notice(message){status.textContent=message;}
 function fallback(){cycleId++;GCSignage.fallback(root);renderer=null;current=null;}
@@ -37,6 +38,7 @@ async function request(path,method='GET',data,credential=token){
   if(credential)headers.Authorization='Bearer '+credential;
   if(path==='manifest'){
    headers['X-Signage-Include']='catalog';headers['X-Signage-Photos']='preview';
+   headers['X-Signage-Control']='frame';
    if(previewRelease!=null)headers['X-Signage-Release']=String(previewRelease);
   }
   const url=new URL(path,api),body=data===undefined?undefined:JSON.stringify(data);
@@ -44,7 +46,7 @@ async function request(path,method='GET',data,credential=token){
    .then(async response=>({response,json:response.ok?await response.json():null}));
   const timeout=new Promise((resolve,reject)=>{timer=setTimeout(()=>{reject(new Error('A TV-kérés túllépte a 15 másodpercet.'));controller?.abort();},15000);});
   const {response,json}=await Promise.race([download,timeout]);
-  if(response.status===401&&token&&credential===token){sessionGeneration++;pairingGeneration++;token=null;receipt=null;clock=null;manifest=null;pendingManifest=null;fallback();pairPanel.hidden=false;await store.save('token',null);throw new Error('A kijelző hozzáférését visszavonták.');}
+  if(response.status===401&&token&&credential===token){sessionGeneration++;pairingGeneration++;token=null;receipt=null;clock=null;manifest=null;pendingManifest=null;controlEnabled=false;controlFrame?.remove();controlFrame=null;lastControl=0;acceptedAt=-1;previewRelease=null;previews={};clearTimeout(retrySync);fallback();pairPanel.hidden=false;await store.save('token',null);throw new Error('A kijelző hozzáférését visszavonták.');}
   if(!response.ok){const error=new Error('TV-kérés: '+path+' (HTTP '+response.status+').');error.status=response.status;throw error;}
   return json;
  }finally{clearTimeout(timer);}
@@ -83,16 +85,11 @@ function applyCatalog(data,sent,wall,sameRelease){
  if(current&&!GCSignageSchedule.sceneAllowed(current,{fresh:fresh(),invalid_media:data.invalid_media})){fallback();}
  else if(renderer&&sameRelease)renderer.update(data.products);
 }
-async function synchronize(){
- if(!token||syncing)return;syncing=true;
- clearTimeout(retrySync);retrySync=null;
- const generation=sessionGeneration;
- try{
-  const manifestSent=performance.now(),manifestWall=Date.now(),incoming=await request('manifest','POST');
+function acceptManifest(incoming,data,manifestSent,manifestWall){
+  if(manifestSent<acceptedAt)return;
   if(incoming.schema_version!==1||!Array.isArray(incoming.releases)||!Number.isFinite(Date.parse(incoming.server_time)))throw new Error('Nem támogatott kiadás.');
-  const data=incoming.catalog||await request('catalog');
-  if(!token||generation!==sessionGeneration)return;
   applyCatalog(data,manifestSent,manifestWall,current?.release_id===incoming.default_release_id);
+  acceptedAt=manifestSent;controlEnabled=incoming.control_frame===true;
   if(incoming.photo_previews||previewRelease!==incoming.default_release_id){
    previews=incoming.photo_previews||{};previewRelease=incoming.default_release_id;
   }
@@ -101,6 +98,16 @@ async function synchronize(){
    manifest=incoming;pendingManifest=null;
   }else pendingManifest=incoming;
   lastError='';notice('');if(!current||pendingManifest)next();
+}
+async function synchronize(){
+ if(!token||syncing||controlHealthy())return;syncing=true;
+ clearTimeout(retrySync);retrySync=null;
+ const generation=sessionGeneration;
+ try{
+  const manifestSent=performance.now(),manifestWall=Date.now(),incoming=await request('manifest','POST');
+  const data=incoming.catalog||await request('catalog');
+  if(!token||generation!==sessionGeneration)return;
+  acceptManifest(incoming,data,manifestSent,manifestWall);
  }catch(e){
   lastError=e.message;if(!current)notice(e.message);
   if(token&&generation===sessionGeneration)retrySync=setTimeout(synchronize,5000);
@@ -127,7 +134,7 @@ async function next(){
   }
   try{
    const cycle=++cycleId;
-   renderer=GCSignage.render(root,scene,catalog?.products||[],{tv:true,previews});
+   renderer=GCSignage.render(root,scene,catalog?.products||[],{tv:true,previews,embedded:controlEnabled});
    current={...scene,release_id:releaseId};
    started=performance.now();videoChecked=started;videoProgress=0;
    notice('');heartbeat();
@@ -144,11 +151,38 @@ async function next(){
  fallback();notice(lastError||'Jelenleg nincs lejátszható jelenet.');
  }finally{changing=false;}
 }
+function playbackStatus(){
+ return {player_version:'online-4',active_release_id:current?.release_id||null,catalog_revision:catalog?.catalog_revision||'',scene_id:current?.id||'',error:lastError,offline:navigator.onLine===false?1:0};
+}
+function controlHealthy(){return controlEnabled&&lastControl>0&&Date.now()-lastControl<12000&&Date.now()-lastSync<60000;}
+function pollControl(){
+ if(!token||!controlEnabled)return;
+ if(controlFrame && Date.now()-controlWall<12000)return;
+ controlFrame?.remove();
+ const frame=document.createElement('iframe'),form=document.createElement('form');
+ frame.hidden=true;frame.title='TV műsorfrissítés';frame.name='gc-control-'+(++controlSequence);
+ form.hidden=true;form.method='POST';form.action=new URL('control',api).href;form.target=frame.name;
+ const fields={...playbackStatus(),known:manifest?.default_release_id,refresh:Date.now()-lastSync>=28000?1:0,sequence:controlSequence};
+ for(const key of Object.keys(fields)){
+  if(fields[key]==null)continue;
+  const input=document.createElement('input');input.type='hidden';input.name=key;input.value=String(fields[key]);form.appendChild(input);
+ }
+ controlFrame=frame;controlSent=performance.now();controlWall=Date.now();
+ document.body.appendChild(frame);document.body.appendChild(form);form.submit();form.remove();
+}
+window.addEventListener('message',event=>{
+ if(!token||!controlFrame||event.source!==controlFrame.contentWindow||event.origin!==base.origin||event.data?.sequence!==controlSequence)return;
+ controlFrame.remove();controlFrame=null;
+ try{
+  if(event.data.manifest)acceptManifest(event.data.manifest,event.data.manifest.catalog,controlSent,controlWall);
+  lastControl=Date.now();
+ }catch(e){lastError=e.message;lastControl=0;synchronize();}
+});
 async function heartbeat(){
- if(!token||checking)return;
+ if(!token||checking||controlHealthy())return;
  checking=true;
  try{
-  const reply=await request('heartbeat','POST',{player_version:'online-3',active_release_id:current?.release_id||null,catalog_revision:catalog?.catalog_revision||'',scene_id:current?.id||'',error:lastError,offline:!navigator.onLine});
+  const reply=await request('heartbeat','POST',playbackStatus());
   if(token && 'assigned_release_id' in reply && reply.assigned_release_id!==manifest?.default_release_id)synchronize();
  }catch(e){/* A failed heartbeat never renews price freshness. */}
  finally{checking=false;if(token&&Date.now()-lastSync>120000)recoverConnection();}
@@ -179,6 +213,7 @@ setInterval(()=>{
  if(video&&!video.ended&&performance.now()-videoChecked>=10000)mediaFailed(current,'A videó elakadt.',cycleId);
 },1000);
 setInterval(synchronize,30000);setInterval(heartbeat,10000);setInterval(pairingPoll,5000);
+setInterval(pollControl,4000);
 window.addEventListener('online',()=>{synchronize();heartbeat();});window.addEventListener('visibilitychange',()=>{if(!document.hidden)synchronize();});
 window.addEventListener('pageshow',()=>{if(token)synchronize();});
 document.getElementById('new-code').addEventListener('click',pair);

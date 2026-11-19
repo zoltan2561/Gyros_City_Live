@@ -27,6 +27,11 @@ class DeviceController extends Controller {
         });
     }
     public function manifest(Request $request) {
+        $manifest=$this->package($request);
+        $response=response()->json($manifest)->header('Cache-Control','private, no-store, no-transform');
+        return $this->playbackCookies($response,$request);
+    }
+    private function package(Request $request): array {
         $manifest=DB::transaction(function()use($request){
             $screen=\App\Models\SignageScreen::whereKey($request->attributes->get('signage_screen')->id)->lockForUpdate()->firstOrFail();
             $manifest=app(SignageManifest::class)->forScreen($screen->id,new \DateTimeImmutable(), assignedOnly: true);
@@ -39,11 +44,18 @@ class DeviceController extends Controller {
         if($request->header('X-Signage-Photos')==='preview' && (string)$request->header('X-Signage-Release')!==(string)$manifest['default_release_id']){
             $manifest['photo_previews']=SignageCatalogPhoto::previews($manifest['catalog']['products']??[]);
         }
-        $response=response()->json($manifest)->header('Cache-Control','private, no-store, no-transform');
+        if($request->header('X-Signage-Control')==='frame')$manifest['control_frame']=true;
+        return $manifest;
+    }
+    private function playbackCookies($response, Request $request) {
         if ($request->header('X-Signage-Playback')==='online') {
             $screen=$request->attributes->get('signage_screen');
             $path=parse_url(url('signage/api/v1/media'),PHP_URL_PATH).'/';
             $response->cookie(SignageStreamAccess::COOKIE,SignageStreamAccess::issue($screen),15,$path,null,$request->isSecure(),true,false,'strict');
+            if($request->header('X-Signage-Control')==='frame'){
+                $path=parse_url(url('signage/api/v1/control'),PHP_URL_PATH);
+                $response->cookie(SignageStreamAccess::CONTROL_COOKIE,SignageStreamAccess::issue($screen,'control:'),15,$path,null,$request->isSecure(),true,false,'strict');
+            }
         }
         return $response;
     }
@@ -82,6 +94,10 @@ class DeviceController extends Controller {
         ]);
     }
     public function heartbeat(Request $request) {
+        $assigned=$this->recordStatus($request);
+        return response()->json(['ok'=>true,'assigned_release_id'=>$assigned])->header('Cache-Control','private, no-store, no-transform');
+    }
+    private function recordStatus(Request $request): ?int {
         $data=$request->validate(['player_version'=>'nullable|string|max:20','active_release_id'=>'nullable|integer',
             'catalog_revision'=>'nullable|string|max:64','scene_id'=>'nullable|string|max:80','error'=>'nullable|string|max:240',
             'offline'=>'nullable|boolean','storage_bytes'=>'nullable|integer|min:0','pending'=>'nullable|string|max:80']);
@@ -100,7 +116,27 @@ class DeviceController extends Controller {
             $screen->last_seen_at=now();$screen->status=$data;$screen->save();
             return $screen->release_id;
         });
-        return response()->json(['ok'=>true,'assigned_release_id'=>$assigned])->header('Cache-Control','private, no-store, no-transform');
+        return $assigned;
+    }
+    public function control(Request $request) {
+        $request->validate(['sequence'=>'required|integer|min:1','known'=>'nullable|integer','refresh'=>'required|boolean']);
+        $assigned=$this->recordStatus($request);
+        $packet=['sequence'=>$request->integer('sequence'),'assigned'=>$assigned];
+        $changed=(string)$assigned!==(string)$request->input('known');
+        if($changed||$request->boolean('refresh')){
+            $request->headers->set('X-Signage-Control','frame');
+            $request->headers->set('X-Signage-Playback','online');
+            $request->headers->set('X-Signage-Include','catalog');
+            $request->headers->set('X-Signage-Photos','preview');
+            $request->headers->set('X-Signage-Release',(string)$request->input('known'));
+            $packet['manifest']=$this->package($request);
+        }
+        $nonce=base64_encode(random_bytes(18));
+        $json=json_encode($packet,JSON_HEX_TAG|JSON_HEX_AMP|JSON_THROW_ON_ERROR);
+        $response=response('<!doctype html><meta charset="utf-8"><script nonce="'.$nonce.'">parent.postMessage('.$json.',location.origin);</script>')
+            ->header('Cache-Control','private, no-store, no-transform')->header('Referrer-Policy','no-referrer')
+            ->header('Content-Security-Policy',"default-src 'none'; script-src 'nonce-".$nonce."'; frame-ancestors 'self'");
+        return $this->playbackCookies($response,$request);
     }
     public function media(Request $request,string $hash) {
         abort_unless(preg_match('/^[a-f0-9]{64}$/D',$hash),404);

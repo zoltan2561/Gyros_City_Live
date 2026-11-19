@@ -47,7 +47,15 @@ class SignageCatalog
                         $photo=\App\Models\SignageMedia::where('status','ready')->where('mime','like','image/%')->find($binding['photo_media_id']);
                         $row['image']=$photo?url('signage/api/v1/media/'.$photo->checksum):null;
                     }
-                    if(empty($binding['photo_media_id'])&&!empty($binding['artwork']))$row['image']=app(SignageReferenceAssets::class)->image($binding['artwork'],(int)$item->id,$binding['artwork_file']??null);
+                    if(empty($binding['photo_media_id'])&&!empty($binding['artwork'])){
+                        $art=app(SignageReferenceAssets::class)->image($binding['artwork'],(int)$item->id,$binding['artwork_file']??null);
+                        // Both historical Diavola cutouts show the Hawaii pizza. Use the catalog image
+                        // for these versions, including already-published releases.
+                        if($art && !in_array(basename($art),[
+                            'pizza-333-823f5830da407ed5239f2b1abce8b0ef6e9d8ce27f5d8709746d803a27772687.webp',
+                            'pizza-333-f22a2cb48d3cea74967593cccd0ecc6e63fe5f48b1aec7e357e1c992a55110dc.webp',
+                        ],true))$row['image']=$art;
+                    }
                 } catch (ValidationException $e) {
                     $row['reason'] = 'configuration_required';
                 }

@@ -264,7 +264,7 @@ window.GCSignageStorage = {
     el.style.objectPosition = Number((_media$focus_x = media.focus_x) !== null && _media$focus_x !== void 0 ? _media$focus_x : 50) + '% ' + Number((_media$focus_y = media.focus_y) !== null && _media$focus_y !== void 0 ? _media$focus_y : 50) + '%';
     return el;
   }
-  function loadPhoto(state, source, preview) {
+  function loadPhoto(state, source, preview, embedded) {
     var _state$cancelPhoto;
     (_state$cancelPhoto = state.cancelPhoto) === null || _state$cancelPhoto === void 0 || _state$cancelPhoto.call(state);
     state.visual.replaceChildren();
@@ -273,8 +273,15 @@ window.GCSignageStorage = {
     if (preview) {
       var small = element('img', 'food-photo');
       small.alt = '';
+      if (embedded) small.onerror = () => loadPhoto(state, source, null, false);
       small.src = preview;
       state.visual.append(small);
+      if (embedded) {
+        state.cancelPhoto = () => {
+          small.onerror = null;
+        };
+        return;
+      }
     }
     var attempt = 0,
       timer = null,
@@ -307,7 +314,7 @@ window.GCSignageStorage = {
     state.cancelPhoto = cancel;
     load();
   }
-  function updateCards(container, scene, products, previews = {}) {
+  function updateCards(container, scene, products, previews = {}, embedded = false) {
     var _container$querySelec;
     var cards = cardsForScene(scene, products),
       states = grids.get(container) || new Map();
@@ -374,7 +381,7 @@ window.GCSignageStorage = {
       }
       state.description.textContent = card.description;
       if (state.imageSrc !== (card.image || null)) {
-        loadPhoto(state, card.image, previews[card.image]);
+        loadPhoto(state, card.image, previews[card.image], embedded);
       }
       var signature = JSON.stringify(card.rows.map(row => [row.id, row.label, row.price, row.formatted_reference_price, row.formatted_price]));
       if (state.priceSignature !== signature) {
@@ -572,7 +579,7 @@ window.GCSignageStorage = {
     if (foregroundVideo) foregroundVideo.loop = !scene.play_to_end;
     var grid = element('div', 'food-grid');
     if (scene.type !== 'media') {
-      updateCards(grid, scene, products, options.previews);
+      updateCards(grid, scene, products, options.previews, options.embedded);
       body.append(grid);
     }
     var footer = element('footer', 'scene-footer');
@@ -636,7 +643,7 @@ window.GCSignageStorage = {
     var view = {
       update(products) {
         if (!disposed && scene.type !== 'media') {
-          updateCards(grid, scene, products, options.previews);
+          updateCards(grid, scene, products, options.previews, options.embedded);
           select();
         }
       },
@@ -796,6 +803,13 @@ window.GCSignageStorage = {
     checking = false,
     lastSync = Date.now(),
     recovering = false;
+  var controlEnabled = false,
+    controlFrame = null,
+    controlSequence = 0,
+    controlSent = 0,
+    controlWall = 0,
+    lastControl = 0,
+    acceptedAt = -1;
   var failedScenes = new Map();
   function notice(message) {
     status.textContent = message;
@@ -855,7 +869,7 @@ window.GCSignageStorage = {
   }
   function _request() {
     _request = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee6(path, method = 'GET', data, credential = token) {
-      var controller, timer, headers, url, body, download, timeout, _yield$Promise$race, response, json, error;
+      var controller, timer, headers, url, body, download, timeout, _yield$Promise$race, response, json, _controlFrame2, error;
       return _regenerator().w(function (_context6) {
         while (1) switch (_context6.p = _context6.n) {
           case 0:
@@ -870,6 +884,7 @@ window.GCSignageStorage = {
             if (path === 'manifest') {
               headers['X-Signage-Include'] = 'catalog';
               headers['X-Signage-Photos'] = 'preview';
+              headers['X-Signage-Control'] = 'frame';
               if (previewRelease != null) headers['X-Signage-Release'] = String(previewRelease);
             }
             url = new URL(path, api), body = data === undefined ? undefined : JSON.stringify(data);
@@ -934,6 +949,14 @@ window.GCSignageStorage = {
             clock = null;
             manifest = null;
             pendingManifest = null;
+            controlEnabled = false;
+            (_controlFrame2 = controlFrame) === null || _controlFrame2 === void 0 || _controlFrame2.remove();
+            controlFrame = null;
+            lastControl = 0;
+            acceptedAt = -1;
+            previewRelease = null;
+            previews = {};
+            clearTimeout(retrySync);
             fallback();
             pairPanel.hidden = false;
             _context6.n = 3;
@@ -1110,16 +1133,36 @@ window.GCSignageStorage = {
       fallback();
     } else if (renderer && sameRelease) renderer.update(data.products);
   }
+  function acceptManifest(incoming, data, manifestSent, manifestWall) {
+    var _current, _manifest;
+    if (manifestSent < acceptedAt) return;
+    if (incoming.schema_version !== 1 || !Array.isArray(incoming.releases) || !Number.isFinite(Date.parse(incoming.server_time))) throw new Error('Nem támogatott kiadás.');
+    applyCatalog(data, manifestSent, manifestWall, ((_current = current) === null || _current === void 0 ? void 0 : _current.release_id) === incoming.default_release_id);
+    acceptedAt = manifestSent;
+    controlEnabled = incoming.control_frame === true;
+    if (incoming.photo_previews || previewRelease !== incoming.default_release_id) {
+      previews = incoming.photo_previews || {};
+      previewRelease = incoming.default_release_id;
+    }
+    lastSync = Date.now();
+    if (!current || ((_manifest = manifest) === null || _manifest === void 0 ? void 0 : _manifest.default_release_id) === incoming.default_release_id) {
+      manifest = incoming;
+      pendingManifest = null;
+    } else pendingManifest = incoming;
+    lastError = '';
+    notice('');
+    if (!current || pendingManifest) next();
+  }
   function synchronize() {
     return _synchronize.apply(this, arguments);
   }
   function _synchronize() {
     _synchronize = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee9() {
-      var generation, _current, _manifest, manifestSent, manifestWall, incoming, data, _t1, _t10;
+      var generation, manifestSent, manifestWall, incoming, data, _t1, _t10;
       return _regenerator().w(function (_context9) {
         while (1) switch (_context9.p = _context9.n) {
           case 0:
-            if (!(!token || syncing)) {
+            if (!(!token || syncing || controlHealthy())) {
               _context9.n = 1;
               break;
             }
@@ -1136,58 +1179,40 @@ window.GCSignageStorage = {
             return request('manifest', 'POST');
           case 3:
             incoming = _context9.v;
-            if (!(incoming.schema_version !== 1 || !Array.isArray(incoming.releases) || !Number.isFinite(Date.parse(incoming.server_time)))) {
-              _context9.n = 4;
-              break;
-            }
-            throw new Error('Nem támogatott kiadás.');
-          case 4:
             _t1 = incoming.catalog;
             if (_t1) {
+              _context9.n = 5;
+              break;
+            }
+            _context9.n = 4;
+            return request('catalog');
+          case 4:
+            _t1 = _context9.v;
+          case 5:
+            data = _t1;
+            if (!(!token || generation !== sessionGeneration)) {
               _context9.n = 6;
               break;
             }
-            _context9.n = 5;
-            return request('catalog');
-          case 5:
-            _t1 = _context9.v;
-          case 6:
-            data = _t1;
-            if (!(!token || generation !== sessionGeneration)) {
-              _context9.n = 7;
-              break;
-            }
             return _context9.a(2);
-          case 7:
-            applyCatalog(data, manifestSent, manifestWall, ((_current = current) === null || _current === void 0 ? void 0 : _current.release_id) === incoming.default_release_id);
-            if (incoming.photo_previews || previewRelease !== incoming.default_release_id) {
-              previews = incoming.photo_previews || {};
-              previewRelease = incoming.default_release_id;
-            }
-            lastSync = Date.now();
-            if (!current || ((_manifest = manifest) === null || _manifest === void 0 ? void 0 : _manifest.default_release_id) === incoming.default_release_id) {
-              manifest = incoming;
-              pendingManifest = null;
-            } else pendingManifest = incoming;
-            lastError = '';
-            notice('');
-            if (!current || pendingManifest) next();
-            _context9.n = 9;
+          case 6:
+            acceptManifest(incoming, data, manifestSent, manifestWall);
+            _context9.n = 8;
             break;
-          case 8:
-            _context9.p = 8;
+          case 7:
+            _context9.p = 7;
             _t10 = _context9.v;
             lastError = _t10.message;
             if (!current) notice(_t10.message);
             if (token && generation === sessionGeneration) retrySync = setTimeout(synchronize, 5000);
-          case 9:
-            _context9.p = 9;
+          case 8:
+            _context9.p = 8;
             syncing = false;
-            return _context9.f(9);
-          case 10:
+            return _context9.f(8);
+          case 9:
             return _context9.a(2);
         }
-      }, _callee9, null, [[2, 8, 9, 10]]);
+      }, _callee9, null, [[2, 7, 8, 9]]);
     }));
     return _synchronize.apply(this, arguments);
   }
@@ -1196,7 +1221,7 @@ window.GCSignageStorage = {
   }
   function _next2() {
     _next2 = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee0() {
-      var _catalog2, now, releaseId, release, scenes, state, _loop2, _ret, n;
+      var _catalog3, now, releaseId, release, scenes, state, _loop2, _ret, n;
       return _regenerator().w(function (_context1) {
         while (1) switch (_context1.p = _context1.n) {
           case 0:
@@ -1232,11 +1257,11 @@ window.GCSignageStorage = {
             scenes = release.snapshot.scenes || [];
             state = {
               fresh: fresh(),
-              invalid_media: ((_catalog2 = catalog) === null || _catalog2 === void 0 ? void 0 : _catalog2.invalid_media) || []
+              invalid_media: ((_catalog3 = catalog) === null || _catalog3 === void 0 ? void 0 : _catalog3.invalid_media) || []
             };
             _loop2 = /*#__PURE__*/_regenerator().m(function _loop2() {
-              var _catalog3, _current2;
-              var scene, _catalog4, cycle, _t11;
+              var _catalog4, _current4;
+              var scene, _catalog5, cycle, _t11;
               return _regenerator().w(function (_context0) {
                 while (1) switch (_context0.p = _context0.n) {
                   case 0:
@@ -1254,13 +1279,13 @@ window.GCSignageStorage = {
                     }
                     return _context0.a(2, 0);
                   case 2:
-                    if (!(scene.type !== 'media' && !GCSignage.cardsForScene(scene, ((_catalog3 = catalog) === null || _catalog3 === void 0 ? void 0 : _catalog3.products) || []).length)) {
+                    if (!(scene.type !== 'media' && !GCSignage.cardsForScene(scene, ((_catalog4 = catalog) === null || _catalog4 === void 0 ? void 0 : _catalog4.products) || []).length)) {
                       _context0.n = 3;
                       break;
                     }
                     return _context0.a(2, 0);
                   case 3:
-                    if (!(scenes.length === 1 && scene.type === 'grid' && !scene.background_media && ((_current2 = current) === null || _current2 === void 0 ? void 0 : _current2.release_id) === releaseId && current.id === scene.id)) {
+                    if (!(scenes.length === 1 && scene.type === 'grid' && !scene.background_media && ((_current4 = current) === null || _current4 === void 0 ? void 0 : _current4.release_id) === releaseId && current.id === scene.id)) {
                       _context0.n = 4;
                       break;
                     }
@@ -1271,9 +1296,10 @@ window.GCSignageStorage = {
                   case 4:
                     _context0.p = 4;
                     cycle = ++cycleId;
-                    renderer = GCSignage.render(root, scene, ((_catalog4 = catalog) === null || _catalog4 === void 0 ? void 0 : _catalog4.products) || [], {
+                    renderer = GCSignage.render(root, scene, ((_catalog5 = catalog) === null || _catalog5 === void 0 ? void 0 : _catalog5.products) || [], {
                       tv: true,
-                      previews
+                      previews,
+                      embedded: controlEnabled
                     });
                     current = _objectSpread(_objectSpread({}, scene), {}, {
                       release_id: releaseId
@@ -1349,16 +1375,80 @@ window.GCSignageStorage = {
     }));
     return _next2.apply(this, arguments);
   }
+  function playbackStatus() {
+    var _current2, _catalog, _current3;
+    return {
+      player_version: 'online-4',
+      active_release_id: ((_current2 = current) === null || _current2 === void 0 ? void 0 : _current2.release_id) || null,
+      catalog_revision: ((_catalog = catalog) === null || _catalog === void 0 ? void 0 : _catalog.catalog_revision) || '',
+      scene_id: ((_current3 = current) === null || _current3 === void 0 ? void 0 : _current3.id) || '',
+      error: lastError,
+      offline: navigator.onLine === false ? 1 : 0
+    };
+  }
+  function controlHealthy() {
+    return controlEnabled && lastControl > 0 && Date.now() - lastControl < 12000 && Date.now() - lastSync < 60000;
+  }
+  function pollControl() {
+    var _controlFrame, _manifest2;
+    if (!token || !controlEnabled) return;
+    if (controlFrame && Date.now() - controlWall < 12000) return;
+    (_controlFrame = controlFrame) === null || _controlFrame === void 0 || _controlFrame.remove();
+    var frame = document.createElement('iframe'),
+      form = document.createElement('form');
+    frame.hidden = true;
+    frame.title = 'TV műsorfrissítés';
+    frame.name = 'gc-control-' + ++controlSequence;
+    form.hidden = true;
+    form.method = 'POST';
+    form.action = new URL('control', api).href;
+    form.target = frame.name;
+    var fields = _objectSpread(_objectSpread({}, playbackStatus()), {}, {
+      known: (_manifest2 = manifest) === null || _manifest2 === void 0 ? void 0 : _manifest2.default_release_id,
+      refresh: Date.now() - lastSync >= 28000 ? 1 : 0,
+      sequence: controlSequence
+    });
+    for (var _i4 = 0, _Object$keys2 = Object.keys(fields); _i4 < _Object$keys2.length; _i4++) {
+      var key = _Object$keys2[_i4];
+      if (fields[key] == null) continue;
+      var input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = key;
+      input.value = String(fields[key]);
+      form.appendChild(input);
+    }
+    controlFrame = frame;
+    controlSent = performance.now();
+    controlWall = Date.now();
+    document.body.appendChild(frame);
+    document.body.appendChild(form);
+    form.submit();
+    form.remove();
+  }
+  window.addEventListener('message', event => {
+    var _event$data;
+    if (!token || !controlFrame || event.source !== controlFrame.contentWindow || event.origin !== base.origin || ((_event$data = event.data) === null || _event$data === void 0 ? void 0 : _event$data.sequence) !== controlSequence) return;
+    controlFrame.remove();
+    controlFrame = null;
+    try {
+      if (event.data.manifest) acceptManifest(event.data.manifest, event.data.manifest.catalog, controlSent, controlWall);
+      lastControl = Date.now();
+    } catch (e) {
+      lastError = e.message;
+      lastControl = 0;
+      synchronize();
+    }
+  });
   function heartbeat() {
     return _heartbeat.apply(this, arguments);
   }
   function _heartbeat() {
     _heartbeat = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee1() {
-      var _current3, _catalog5, _current4, _manifest2, reply, _t12;
+      var _manifest3, reply, _t12;
       return _regenerator().w(function (_context10) {
         while (1) switch (_context10.p = _context10.n) {
           case 0:
-            if (!(!token || checking)) {
+            if (!(!token || checking || controlHealthy())) {
               _context10.n = 1;
               break;
             }
@@ -1367,17 +1457,10 @@ window.GCSignageStorage = {
             checking = true;
             _context10.p = 2;
             _context10.n = 3;
-            return request('heartbeat', 'POST', {
-              player_version: 'online-3',
-              active_release_id: ((_current3 = current) === null || _current3 === void 0 ? void 0 : _current3.release_id) || null,
-              catalog_revision: ((_catalog5 = catalog) === null || _catalog5 === void 0 ? void 0 : _catalog5.catalog_revision) || '',
-              scene_id: ((_current4 = current) === null || _current4 === void 0 ? void 0 : _current4.id) || '',
-              error: lastError,
-              offline: !navigator.onLine
-            });
+            return request('heartbeat', 'POST', playbackStatus());
           case 3:
             reply = _context10.v;
-            if (token && 'assigned_release_id' in reply && reply.assigned_release_id !== ((_manifest2 = manifest) === null || _manifest2 === void 0 ? void 0 : _manifest2.default_release_id)) synchronize();
+            if (token && 'assigned_release_id' in reply && reply.assigned_release_id !== ((_manifest3 = manifest) === null || _manifest3 === void 0 ? void 0 : _manifest3.default_release_id)) synchronize();
             _context10.n = 5;
             break;
           case 4:
@@ -1456,7 +1539,7 @@ window.GCSignageStorage = {
     return _recoverConnection.apply(this, arguments);
   }
   setInterval(() => {
-    var _catalog, _current$media;
+    var _catalog2, _current$media;
     if (!token || !manifest) return;
     var now = serverNow();
     if (!now) {
@@ -1465,7 +1548,7 @@ window.GCSignageStorage = {
     }
     if (current && (!GCSignageSchedule.sceneAllowed(current, {
       fresh: fresh(),
-      invalid_media: ((_catalog = catalog) === null || _catalog === void 0 ? void 0 : _catalog.invalid_media) || []
+      invalid_media: ((_catalog2 = catalog) === null || _catalog2 === void 0 ? void 0 : _catalog2.invalid_media) || []
     }) || GCSignageSchedule.selectRelease(manifest, now) !== current.release_id)) {
       fallback();
       next();
@@ -1486,6 +1569,7 @@ window.GCSignageStorage = {
   setInterval(synchronize, 30000);
   setInterval(heartbeat, 10000);
   setInterval(pairingPoll, 5000);
+  setInterval(pollControl, 4000);
   window.addEventListener('online', () => {
     synchronize();
     heartbeat();

@@ -18,6 +18,7 @@ Route::prefix('signage/api/v1')->middleware([\Illuminate\Routing\Middleware\Subs
         Route::get('catalog',[DeviceController::class,'catalog']);
         Route::get('media/{hash}',[DeviceController::class,'media'])->name('signage.stream');
         Route::post('heartbeat',[DeviceController::class,'heartbeat']);
+        Route::post('control',[DeviceController::class,'control'])->name('signage.control');
     });
 });
 Route::prefix('admin/signage')->middleware(['web',SignageEnabled::class])->group(function(){

@@ -46,11 +46,14 @@
         el.style.objectPosition=Number(media.focus_x??50)+'% '+Number(media.focus_y??50)+'%';
         return el;
     }
-    function loadPhoto(state,source,preview){
+    function loadPhoto(state,source,preview,embedded){
         state.cancelPhoto?.();state.visual.replaceChildren();state.imageSrc=source||null;
         if(!source)return;
         if(preview){
-            const small=element('img','food-photo');small.alt='';small.src=preview;state.visual.append(small);
+            const small=element('img','food-photo');small.alt='';
+            if(embedded)small.onerror=()=>loadPhoto(state,source,null,false);
+            small.src=preview;state.visual.append(small);
+            if(embedded){state.cancelPhoto=()=>{small.onerror=null;};return;}
         }
         let attempt=0,timer=null,img=null;
         function cancel(){
@@ -71,7 +74,7 @@
         }
         state.cancelPhoto=cancel;load();
     }
-    function updateCards(container, scene, products, previews={}) {
+    function updateCards(container, scene, products, previews={}, embedded=false) {
         const cards=cardsForScene(scene,products), states=grids.get(container)||new Map();
         grids.set(container,states); container.dataset.count=String(cards.length);
         const active=new Set(cards.map(card=>card.id));
@@ -96,7 +99,7 @@
             }
             state.description.textContent=card.description;
             if(state.imageSrc!==(card.image||null)){
-                loadPhoto(state,card.image,previews[card.image]);
+                loadPhoto(state,card.image,previews[card.image],embedded);
             }
             const signature=JSON.stringify(card.rows.map(row=>[row.id,row.label,row.price,row.formatted_reference_price,row.formatted_price]));
             if(state.priceSignature!==signature){
@@ -198,7 +201,7 @@
         if (['media','split'].includes(scene.type)) { const media=mediaElement(scene.media,false); if(media) body.append(media); }
         const foregroundVideo=body.querySelector('video');if(foregroundVideo)foregroundVideo.loop=!scene.play_to_end;
         const grid=element('div','food-grid');
-        if (scene.type !== 'media') { updateCards(grid,scene,products,options.previews); body.append(grid); }
+        if (scene.type !== 'media') { updateCards(grid,scene,products,options.previews,options.embedded); body.append(grid); }
         const footer=element('footer','scene-footer');
         const ticker=element('div','scene-ticker');ticker.setAttribute('aria-hidden','true');
         for(let i=0;i<4;i++)ticker.append(element('span','','GYROS CITY  /  HELYBEN KÉSZÍTVE. NEKED.  /  '));
@@ -236,7 +239,7 @@
         }}
         function stop(){if(timer!==null){clearInterval(timer);timer=null;}}
         const view={
-            update(products){if(!disposed&&scene.type!=='media'){updateCards(grid,scene,products,options.previews);select();}},
+            update(products){if(!disposed&&scene.type!=='media'){updateCards(grid,scene,products,options.previews,options.embedded);select();}},
             pause(value){if(disposed||paused===!!value)return;paused=!!value;stage.dataset.paused=String(paused);if(paused)remaining=Math.max(1,deadline-now());stop();if(!paused)start();},
             dispose(){if(disposed)return;disposed=true;stop();for(const state of grids.get(grid)?.values()||[])state.cancelPhoto?.();if(views.get(stage)===view)views.delete(stage);}
         };

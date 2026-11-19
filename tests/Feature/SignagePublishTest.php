@@ -44,6 +44,28 @@ class SignagePublishTest extends SignageCatalogTest {
         $this->withToken('test-tv')->postJson('/signage/api/v1/heartbeat',['player_version'=>'online-3'])
             ->assertOk()->assertJsonPath('assigned_release_id',$release['id']);
     }
+    public function test_control_navigation_delivers_the_switch_and_records_actual_playback(): void {
+        config(['signage.enabled'=>true]);
+        (require base_path('database/migrations/2026_11_09_000002_add_signage_delivery_tracking.php'))->up();
+        $screen=SignageScreen::create(['name'=>'TV','token_hash'=>hash('sha256','test-tv')]);
+        $list=$this->playlist();
+        $first=app(SignagePublisher::class)->publish($list->id,[$screen->id],1)['id'];
+        $response=$this->withToken('test-tv')->withHeaders(['X-Signage-Playback'=>'online','X-Signage-Control'=>'frame'])
+            ->postJson('/signage/api/v1/manifest')->assertOk()->assertJsonPath('control_frame',true);
+        $cookie=$response->getCookie(\App\Services\Signage\SignageStreamAccess::CONTROL_COOKIE,false);
+        $this->assertSame('/signage/api/v1/control',$cookie->getPath());
+        $this->assertTrue($cookie->isHttpOnly());
+        $second=app(SignagePublisher::class)->publish($list->id,[$screen->id],1)['id'];
+        $this->flushHeaders();
+        $this->withUnencryptedCookie($cookie->getName(),$cookie->getValue());
+        $this->post('/signage/api/v1/control',['sequence'=>1,'known'=>$first,'refresh'=>0,'active_release_id'=>$first])
+            ->assertOk()->assertSee('"default_release_id":'.$second,false);
+        $this->assertEquals($first,$screen->fresh()->active_release_id);
+        $this->post('/signage/api/v1/control',['sequence'=>2,'known'=>$second,'refresh'=>0,'active_release_id'=>$second])
+            ->assertOk()->assertDontSee('"manifest"',false);
+        $this->assertEquals($second,$screen->fresh()->active_release_id);
+        $this->post('/signage/api/v1/manifest')->assertUnauthorized();
+    }
     public function test_screen_card_switches_one_playlist_and_preserves_the_existing_pairing(): void {
         $playlist=$this->playlist();
         $first=SignageScreen::create(['name'=>'Bal','token_hash'=>hash('sha256','first')]);

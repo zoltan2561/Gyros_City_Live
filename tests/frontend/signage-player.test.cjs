@@ -69,3 +69,19 @@ test('a real quota failure preserves the previous active pointer and cache',asyn
  await assert.rejects(stageRelease(manifest,'token',{store,caches,base:'http://localhost/signage/',fetch:async()=>new Response(bytes)}));
  assert.equal(active,current);assert(!deleted.includes('old-cache'));
 });
+
+test('a TV with a full cache plays verified session bytes and reuses them on the next poll',async()=>{
+ const {blobUrl}=require('../../public/signage/storage.js');
+ const bytes=new TextEncoder().encode('menu'),url='https://example.test/menu.png';
+ const file={url,bytes:bytes.length,mime:'image/png',checksum:createHash('sha256').update(bytes).digest('hex')};
+ const manifest={layout_revision:'menu',releases:[{snapshot:{files:[file]}}]};
+ const store={load:async()=>null,save:async()=>assert.fail('persisted a RAM-only package')};
+ const caches={open:async()=>({put:async()=>{throw new DOMException('Quota exceeded.','QuotaExceededError');}}),delete:async()=>true};
+ let downloads=0;
+ const options={store,caches,base:'https://example.test/signage/',fetch:async()=>{downloads++;return new Response(bytes);}};
+ const ready=await stageRelease(manifest,'token',options);
+ const objectUrl=await blobUrl(ready,url,caches);
+ try{assert.equal(await (await fetch(objectUrl)).text(),'menu');}finally{URL.revokeObjectURL(objectUrl);}
+ await stageRelease(manifest,'token',options);
+ assert.equal(downloads,2);
+});

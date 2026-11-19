@@ -16,9 +16,11 @@ class Element {
 }
 function setup(){
   const timers=new Map();let timerId=0,time=0;
-  const context={document:{createElement:tag=>new Element(tag)},performance:{now:()=>time},setInterval:(fn,ms)=>{timers.set(++timerId,{fn,ms});return timerId;},clearInterval:id=>timers.delete(id)};
+  const timeouts=new Map();
+  const context={document:{createElement:tag=>new Element(tag)},performance:{now:()=>time},setInterval:(fn,ms)=>{timers.set(++timerId,{fn,ms});return timerId;},clearInterval:id=>timers.delete(id),
+    setTimeout:(fn,ms)=>{timeouts.set(++timerId,{fn,ms});return timerId;},clearTimeout:id=>timeouts.delete(id)};
   vm.runInNewContext(fs.readFileSync(require.resolve('../../public/signage/renderer.js'),'utf8'),context);
-  return {api:context.GCSignage,stage:new Element('main'),timers,advance:ms=>time+=ms,tick:()=>[...timers.values()].forEach(t=>{time+=t.ms;t.fn();})};
+  return {api:context.GCSignage,stage:new Element('main'),timers,timeouts,advance:ms=>time+=ms,tick:()=>[...timers.values()].forEach(t=>{time+=t.ms;t.fn();})};
 }
 const scene={type:'split',theme:'dark',title:'Burgerek',bindings:[{id:'a'},{id:'b'}],media:{url:'/video.mp4',mime:'video/mp4'}};
 const products=[{id:'a',name:'Burger',image:'/burger.jpg',available:true,formatted_price:'2 000 Ft'}, {id:'b',name:'Fishburger',available:true,formatted_price:'1 790 Ft'}];
@@ -66,15 +68,17 @@ test('availability changes remove only the unavailable card and keep the survivi
   assert.equal(stage.querySelectorAll('.food-card')[1],survivor);
 });
 
-test('a failed photo retries on the next refresh without replacing its card or video',()=>{
-  const {api,stage}=setup();const renderer=api.render(stage,scene,products);
+test('a failed photo retries within the scene without replacing its card or video',()=>{
+  const {api,stage,timeouts}=setup();const renderer=api.render(stage,scene,products);
   const card=stage.querySelector('.food-card'),video=stage.querySelector('video');
   stage.querySelector('.food-photo').onerror();
   assert.equal(stage.querySelector('.food-photo'),null);
-  renderer.update(products);
+  const retry=[...timeouts.entries()].find(([,t])=>t.ms===1000);
+  timeouts.delete(retry[0]);retry[1].fn();
   assert.equal(stage.querySelector('.food-photo')?.src,'/burger.jpg');
   assert.equal(stage.querySelector('.food-card'),card);
   assert.equal(stage.querySelector('video'),video);
+  renderer.dispose();assert.equal(timeouts.size,0);
 });
 
 const slideshow={...scene,type:'slideshow',slide_seconds:7};

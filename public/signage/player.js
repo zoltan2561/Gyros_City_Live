@@ -6,6 +6,7 @@ const store=GCSignageStorage.database(base.href);
 let token=null,manifest=null,catalog=null,receipt=null,clock=null,renderer=null,current=null,sceneIndex=-1,started=0,videoProgress=0,videoChecked=0;
 let syncing=false,lastError='',nonce=null,cycleId=0,sessionGeneration=0,changing=false,pendingManifest=null;
 let pairingGeneration=0,pairingPolling=false;
+let retrySync=null;
 const failedScenes=new Map();
 function notice(message){status.textContent=message;}
 function fallback(){cycleId++;GCSignage.fallback(root);renderer=null;current=null;}
@@ -16,12 +17,19 @@ function mediaFailed(scene,message,cycle){
 function fresh(){return GCSignage.priceFresh(receipt,performance.now(),Date.now());}
 function serverNow(){if(!clock||Date.now()<clock.wall)return null;return new Date(clock.server+performance.now()-clock.monotonic);}
 async function request(path,method='GET',data,credential=token){
- const controller=typeof AbortController==='function'?new AbortController():null,timer=setTimeout(()=>controller?.abort(),15000);
+ const controller=typeof AbortController==='function'?new AbortController():null;
+ let timer;
  try{
-  const response=await fetch(new URL(path,api),{method,headers:{'X-Signage-Playback':'online','Content-Type':'application/json','Accept':'application/json',...(credential?{Authorization:'Bearer '+credential}:{})},body:data===undefined?undefined:JSON.stringify(data),cache:'no-store',signal:controller?.signal});
+  const headers={'X-Signage-Playback':'online','Content-Type':'application/json','Accept':'application/json'};
+  if(credential)headers.Authorization='Bearer '+credential;
+  if(path==='manifest')headers['X-Signage-Include']='catalog';
+  const download=fetch(new URL(path,api),{method,headers,body:data===undefined?undefined:JSON.stringify(data),cache:'no-store',signal:controller?.signal})
+   .then(async response=>({response,json:response.ok?await response.json():null}));
+  const timeout=new Promise((resolve,reject)=>{timer=setTimeout(()=>{reject(new Error('A TV-kérés túllépte a 15 másodpercet.'));controller?.abort();},15000);});
+  const {response,json}=await Promise.race([download,timeout]);
   if(response.status===401&&token&&credential===token){sessionGeneration++;pairingGeneration++;token=null;receipt=null;clock=null;manifest=null;pendingManifest=null;fallback();pairPanel.hidden=false;await store.save('token',null);throw new Error('A kijelző hozzáférését visszavonták.');}
-  if(!response.ok){const error=new Error('Nincs friss kapcsolat.');error.status=response.status;throw error;}
-  return await response.json();
+  if(!response.ok){const error=new Error('TV-kérés: '+path+' (HTTP '+response.status+').');error.status=response.status;throw error;}
+  return json;
  }finally{clearTimeout(timer);}
 }
 async function pair(){
@@ -50,29 +58,32 @@ async function pairingPoll(){
   else notice('A kapcsolat megszakadt. A párosítást automatikusan újra ellenőrizzük.');
  }finally{pairingPolling=false;}
 }
-async function applyCatalog(){
- const sent=performance.now(),wall=Date.now();
- const data=await request('catalog');const ttl=Date.parse(data.valid_until)-Date.parse(data.server_time);
+function applyCatalog(data,sent,wall,sameRelease){
+ const ttl=Date.parse(data.valid_until)-Date.parse(data.server_time);
  if(data.schema_version!==1||!Array.isArray(data.products)||!Number.isFinite(ttl))throw new Error('Érvénytelen katalógus.');
  catalog=data;receipt={ttl:Math.max(0,ttl),monotonic:sent,wall};
  clock={server:Date.parse(data.server_time),monotonic:sent,wall};
  if(current&&!GCSignageSchedule.sceneAllowed(current,{fresh:fresh(),invalid_media:data.invalid_media})){fallback();}
- else if(renderer)renderer.update(data.products);
+ else if(renderer&&sameRelease)renderer.update(data.products);
 }
 async function synchronize(){
  if(!token||syncing)return;syncing=true;
+ clearTimeout(retrySync);retrySync=null;
  const generation=sessionGeneration;
  try{
-  await applyCatalog(); // Always independent of large media downloads.
   const manifestSent=performance.now(),manifestWall=Date.now(),incoming=await request('manifest');
   if(incoming.schema_version!==1||!Array.isArray(incoming.releases)||!Number.isFinite(Date.parse(incoming.server_time)))throw new Error('Nem támogatott kiadás.');
-  clock={server:Date.parse(incoming.server_time),monotonic:manifestSent,wall:manifestWall};
+  const data=incoming.catalog||await request('catalog');
   if(!token||generation!==sessionGeneration)return;
+  applyCatalog(data,manifestSent,manifestWall,current?.release_id===incoming.default_release_id);
   if(!current||manifest?.default_release_id===incoming.default_release_id){
    manifest=incoming;pendingManifest=null;
   }else pendingManifest=incoming;
   lastError='';notice('');if(!current||pendingManifest)next();
- }catch(e){lastError=e.message;notice(e.message);}
+ }catch(e){
+  lastError=e.message;if(!current)notice(e.message);
+  if(token&&generation===sessionGeneration)retrySync=setTimeout(synchronize,5000);
+ }
  finally{syncing=false;}
 }
 async function next(){
@@ -115,7 +126,7 @@ async function next(){
 async function heartbeat(){
  if(!token)return;
  try{
-  await request('heartbeat','POST',{player_version:'online-1',active_release_id:current?.release_id||null,catalog_revision:catalog?.catalog_revision||'',scene_id:current?.id||'',error:lastError,offline:!navigator.onLine});
+  await request('heartbeat','POST',{player_version:'online-2',active_release_id:current?.release_id||null,catalog_revision:catalog?.catalog_revision||'',scene_id:current?.id||'',error:lastError,offline:!navigator.onLine});
  }catch(e){/* A failed heartbeat never renews price freshness. */}
 }
 setInterval(()=>{

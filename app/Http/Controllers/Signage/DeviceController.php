@@ -33,6 +33,9 @@ class DeviceController extends Controller {
             $screen->update(['delivered_release_ids'=>array_values(array_unique(array_merge($screen->delivered_release_ids??[],array_column($manifest['releases'],'id'))))]);
             return $manifest;
         });
+        if ($request->header('X-Signage-Include')==='catalog') {
+            $manifest['catalog']=$this->catalogSnapshot($request,$manifest,new \DateTimeImmutable());
+        }
         $response=response()->json($manifest)->header('Cache-Control','no-store');
         if ($request->header('X-Signage-Playback')==='online') {
             $screen=$request->attributes->get('signage_screen');
@@ -44,6 +47,10 @@ class DeviceController extends Controller {
     public function catalog(Request $request) {
         $service=app(SignageManifest::class);$now=new \DateTimeImmutable();
         $manifest=$service->forScreen($request->attributes->get('signage_screen')->id,$now);
+        return response()->json($this->catalogSnapshot($request,$manifest,$now))->header('Cache-Control','no-store');
+    }
+    private function catalogSnapshot(Request $request,array $manifest,\DateTimeImmutable $now): array {
+        $service=app(SignageManifest::class);
         $snapshot=app(SignageCatalog::class)->snapshot($service->bindings($manifest),$now,$request->attributes->get('signage_screen')->offline_price_seconds);
         $snapshot['invalid_media']=[];
         foreach ($snapshot['products'] as $index => $product) {
@@ -58,7 +65,7 @@ class DeviceController extends Controller {
             if(!$valid)$snapshot['invalid_media'][]=$m['checksum'];
             if($valid&&$record->price_valid_until&&$record->price_valid_until->getTimestamp()<strtotime($snapshot['valid_until']))$snapshot['valid_until']=$record->price_valid_until->toIso8601String();
         }
-        return response()->json($snapshot)->header('Cache-Control','no-store');
+        return $snapshot;
     }
     public function catalogPhoto(string $filename) {
         $path = storage_path('app/public/admin-assets/images/item/'.$filename);
@@ -75,15 +82,20 @@ class DeviceController extends Controller {
         $data=$request->validate(['player_version'=>'nullable|string|max:20','active_release_id'=>'nullable|integer',
             'catalog_revision'=>'nullable|string|max:64','scene_id'=>'nullable|string|max:80','error'=>'nullable|string|max:240',
             'offline'=>'nullable|boolean','storage_bytes'=>'nullable|integer|min:0','pending'=>'nullable|string|max:80']);
-        $screen=$request->attributes->get('signage_screen');
-        if(isset($data['active_release_id'])){
-            $manifest=app(SignageManifest::class)->forScreen($screen->id,new \DateTimeImmutable());
-            abort_unless(in_array($data['active_release_id'],array_column($manifest['releases'],'id'),true),422);
-            $screen->active_release_id=$data['active_release_id'];
-            $delivered=$screen->delivered_release_ids??[];$position=array_search($data['active_release_id'],$delivered,true);
-            if($position!==false)$screen->delivered_release_ids=array_slice($delivered,$position);
-        }
-        $screen->last_seen_at=now();$screen->status=$data;$screen->save();
+        $authenticated=$request->attributes->get('signage_screen');
+        DB::transaction(function()use($authenticated,$data){
+            $screen=\App\Models\SignageScreen::whereKey($authenticated->id)->lockForUpdate()->firstOrFail();
+            abort_unless($screen->token_hash===$authenticated->token_hash,401);
+            if(isset($data['active_release_id'])){
+                $active=(int)$data['active_release_id'];
+                $delivered=$screen->delivered_release_ids??[];
+                abort_unless(in_array($active,array_merge($delivered,[$screen->release_id,$screen->active_release_id]),true),422);
+                $position=array_search($active,$delivered,true);
+                if($position!==false)$screen->delivered_release_ids=array_slice($delivered,$position);
+                $screen->active_release_id=$active;
+            }
+            $screen->last_seen_at=now();$screen->status=$data;$screen->save();
+        });
         return response()->json(['ok'=>true])->header('Cache-Control','no-store');
     }
     public function media(Request $request,string $hash) {

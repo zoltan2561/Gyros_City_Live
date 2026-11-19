@@ -30,6 +30,18 @@ class SignagePublishTest extends SignageCatalogTest {
         $snapshot=app(\App\Services\Signage\SignageCatalog::class)->snapshot($bindings,new \DateTimeImmutable());
         $this->assertSame('3000.00',$snapshot['products'][0]['price']);
     }
+    public function test_online_switch_returns_prices_and_bindings_for_the_requested_release_together(): void {
+        config(['signage.enabled'=>true]);
+        (require base_path('database/migrations/2026_11_09_000002_add_signage_delivery_tracking.php'))->up();
+        $screen=SignageScreen::create(['name'=>'TV','token_hash'=>hash('sha256','test-tv')]);
+        $list=$this->playlist();
+        $release=app(SignagePublisher::class)->publish($list->id,[$screen->id],1);
+        $data=$this->withToken('test-tv')->withHeader('X-Signage-Include','catalog')
+            ->getJson('/signage/api/v1/manifest')->assertOk()->json();
+        $this->assertSame($release['id'],$data['default_release_id']);
+        $this->assertSame(array_column($data['releases'][0]['snapshot']['bindings'],'id'),array_column($data['catalog']['products'],'id'));
+        $this->assertTrue($data['catalog']['products'][0]['available']);
+    }
     public function test_screen_card_switches_one_playlist_and_preserves_the_existing_pairing(): void {
         $playlist=$this->playlist();
         $first=SignageScreen::create(['name'=>'Bal','token_hash'=>hash('sha256','first')]);

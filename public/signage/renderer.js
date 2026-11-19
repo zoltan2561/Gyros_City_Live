@@ -46,11 +46,32 @@
         el.style.objectPosition=Number(media.focus_x??50)+'% '+Number(media.focus_y??50)+'%';
         return el;
     }
+    function loadPhoto(state,source){
+        state.cancelPhoto?.();state.visual.replaceChildren();state.imageSrc=source||null;
+        if(!source)return;
+        let attempt=0,timer=null,img=null;
+        function cancel(){
+            clearTimeout(timer);
+            if(img){img.onload=null;img.onerror=null;}
+        }
+        function failed(){
+            cancel();img.remove();
+            if(attempt<3)timer=setTimeout(load,attempt*1000);
+            else state.imageSrc=null; // A later catalog refresh can try again.
+        }
+        function load(){
+            attempt++;img=element('img','food-photo');img.alt='';
+            img.onerror=failed;img.onload=cancel;
+            timer=setTimeout(failed,8000);
+            state.visual.append(img);img.src=source;
+        }
+        state.cancelPhoto=cancel;load();
+    }
     function updateCards(container, scene, products) {
         const cards=cardsForScene(scene,products), states=grids.get(container)||new Map();
         grids.set(container,states); container.dataset.count=String(cards.length);
         const active=new Set(cards.map(card=>card.id));
-        for (const [id,state] of states) if(!active.has(id)){state.article.remove();states.delete(id);}
+        for (const [id,state] of states) if(!active.has(id)){state.cancelPhoto?.();state.article.remove();states.delete(id);}
         if(cards.length)container.querySelector('.empty-scene')?.remove();
         cards.forEach((card,index)=>{
             let state=states.get(card.id);
@@ -71,8 +92,7 @@
             }
             state.description.textContent=card.description;
             if(state.imageSrc!==(card.image||null)){
-                state.visual.replaceChildren(); state.imageSrc=card.image||null;
-                if(card.image){const img=element('img','food-photo');img.src=card.image;img.alt='';img.onerror=()=>{if(state.visual.firstElementChild===img)state.imageSrc=null;img.remove();};state.visual.append(img);}
+                loadPhoto(state,card.image);
             }
             const signature=JSON.stringify(card.rows.map(row=>[row.id,row.label,row.price,row.formatted_reference_price,row.formatted_price]));
             if(state.priceSignature!==signature){
@@ -214,7 +234,7 @@
         const view={
             update(products){if(!disposed&&scene.type!=='media'){updateCards(grid,scene,products);select();}},
             pause(value){if(disposed||paused===!!value)return;paused=!!value;stage.dataset.paused=String(paused);if(paused)remaining=Math.max(1,deadline-now());stop();if(!paused)start();},
-            dispose(){if(disposed)return;disposed=true;stop();if(views.get(stage)===view)views.delete(stage);}
+            dispose(){if(disposed)return;disposed=true;stop();for(const state of grids.get(grid)?.values()||[])state.cancelPhoto?.();if(views.get(stage)===view)views.delete(stage);}
         };
         views.set(stage,view);select();start();
         fontsReady.then(()=>{if(views.get(stage)===view)checkNames(stage);});

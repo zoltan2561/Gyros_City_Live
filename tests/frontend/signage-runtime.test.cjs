@@ -2,6 +2,46 @@ const {test}=require('node:test');const assert=require('node:assert/strict');con
 const schedule=require('../../public/signage/schedule.js');
 const flush=async()=>{for(let i=0;i<20;i++)await new Promise(r=>setImmediate(r));};
 
+test('24 simulated hours of switches recover from a stalled fetch on a TV without AbortController',async()=>{
+ const intervals=new Map(),delays=new Map(),renders=[];
+ let now=0,seq=0,assigned=1,stall=false,requests=0;
+ const node={textContent:'',hidden:false,addEventListener(){},querySelectorAll:()=>[],querySelector:()=>null};
+ const turn=()=>new Promise(resolve=>setImmediate(resolve));
+ const context={URL,Date,performance:{now:()=>now},navigator:{onLine:true},location:{href:'http://localhost/signage/'},
+  document:{getElementById:()=>node},window:{addEventListener(){}},setInterval:(fn,ms)=>intervals.set(ms,fn),
+  setTimeout:(fn,ms)=>{delays.set(++seq,{fn,ms});return seq;},clearTimeout:id=>delays.delete(id),
+  GCSignageStorage:{database:()=>({load:async()=>'device'})},GCSignageSchedule:schedule,
+  GCSignage:{fallback(){},priceFresh:()=>true,cardsForScene:()=>[{}],render(stage,scene,products){
+   assert.equal(scene.id,products[0].id);renders.push(scene.id);return {update(){}};
+  }},
+  fetch:async url=>{
+   if(String(url).endsWith('/heartbeat'))return new Response('{}');
+   assert.match(String(url),/\/manifest$/);requests++;
+   if(stall)return new Promise(()=>{});
+   const time=new Date(Date.UTC(2026,10,19)+now),id='scene-'+assigned;
+   const catalog={schema_version:1,server_time:time.toISOString(),valid_until:new Date(+time+60000).toISOString(),products:[{id}]};
+   return new Response(JSON.stringify({schema_version:1,server_time:time.toISOString(),playback_mode:'continuous',
+    default_release_id:assigned,releases:[{id:assigned,snapshot:{scenes:[{type:'grid',id,duration:15}]}}],catalog}));
+  }
+ };
+ vm.runInNewContext(fs.readFileSync(require.resolve('../../public/signage/player.js'),'utf8'),context);
+ await turn();
+ for(let poll=1;poll<=2880;poll++){
+  now=poll*30000;assigned=Math.floor(poll/120)+1;
+  if(poll===120)stall=true;
+  const sync=intervals.get(30000)();
+  if(stall){
+   await turn();assert.equal(renders.at(-1),'scene-1');
+   const timeout=[...delays.values()].find(entry=>entry.ms===15000);timeout.fn();await sync;
+   const retry=[...delays.values()].find(entry=>entry.ms===5000);assert.ok(retry);
+   stall=false;await retry.fn();
+  }else await sync;
+  intervals.get(1000)();await turn();
+  assert.equal(renders.at(-1),'scene-'+assigned);
+ }
+ assert.equal(requests,2882);assert.equal(renders.length,25);assert.equal(delays.size,0);
+});
+
 function pairingRuntime(statusResponse,navigator={onLine:true}){
  const timers=[],nodes=new Map(),saved={};
  const node=id=>nodes.get(id)||nodes.set(id,{textContent:'',hidden:false,listeners:{},addEventListener(event,fn){this.listeners[event]=fn;},querySelectorAll:()=>[],querySelector:()=>null}).get(id);

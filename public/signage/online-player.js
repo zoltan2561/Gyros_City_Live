@@ -264,6 +264,40 @@ window.GCSignageStorage = {
     el.style.objectPosition = Number((_media$focus_x = media.focus_x) !== null && _media$focus_x !== void 0 ? _media$focus_x : 50) + '% ' + Number((_media$focus_y = media.focus_y) !== null && _media$focus_y !== void 0 ? _media$focus_y : 50) + '%';
     return el;
   }
+  function loadPhoto(state, source) {
+    var _state$cancelPhoto;
+    (_state$cancelPhoto = state.cancelPhoto) === null || _state$cancelPhoto === void 0 || _state$cancelPhoto.call(state);
+    state.visual.replaceChildren();
+    state.imageSrc = source || null;
+    if (!source) return;
+    var attempt = 0,
+      timer = null,
+      img = null;
+    function cancel() {
+      clearTimeout(timer);
+      if (img) {
+        img.onload = null;
+        img.onerror = null;
+      }
+    }
+    function failed() {
+      cancel();
+      img.remove();
+      if (attempt < 3) timer = setTimeout(load, attempt * 1000);else state.imageSrc = null; // A later catalog refresh can try again.
+    }
+    function load() {
+      attempt++;
+      img = element('img', 'food-photo');
+      img.alt = '';
+      img.onerror = failed;
+      img.onload = cancel;
+      timer = setTimeout(failed, 8000);
+      state.visual.append(img);
+      img.src = source;
+    }
+    state.cancelPhoto = cancel;
+    load();
+  }
   function updateCards(container, scene, products) {
     var _container$querySelec;
     var cards = cardsForScene(scene, products),
@@ -279,6 +313,8 @@ window.GCSignageStorage = {
           id = _step3$value[0],
           state = _step3$value[1];
         if (!active.has(id)) {
+          var _state$cancelPhoto2;
+          (_state$cancelPhoto2 = state.cancelPhoto) === null || _state$cancelPhoto2 === void 0 || _state$cancelPhoto2.call(state);
           state.article.remove();
           states.delete(id);
         }
@@ -329,18 +365,7 @@ window.GCSignageStorage = {
       }
       state.description.textContent = card.description;
       if (state.imageSrc !== (card.image || null)) {
-        state.visual.replaceChildren();
-        state.imageSrc = card.image || null;
-        if (card.image) {
-          var img = element('img', 'food-photo');
-          img.src = card.image;
-          img.alt = '';
-          img.onerror = () => {
-            if (state.visual.firstElementChild === img) state.imageSrc = null;
-            img.remove();
-          };
-          state.visual.append(img);
-        }
+        loadPhoto(state, card.image);
       }
       var signature = JSON.stringify(card.rows.map(row => [row.id, row.label, row.price, row.formatted_reference_price, row.formatted_price]));
       if (state.priceSignature !== signature) {
@@ -615,9 +640,23 @@ window.GCSignageStorage = {
         if (!paused) start();
       },
       dispose() {
+        var _grids$get;
         if (disposed) return;
         disposed = true;
         stop();
+        var _iterator7 = _createForOfIteratorHelper(((_grids$get = grids.get(grid)) === null || _grids$get === void 0 ? void 0 : _grids$get.values()) || []),
+          _step7;
+        try {
+          for (_iterator7.s(); !(_step7 = _iterator7.n()).done;) {
+            var _state$cancelPhoto3;
+            var state = _step7.value;
+            (_state$cancelPhoto3 = state.cancelPhoto) === null || _state$cancelPhoto3 === void 0 || _state$cancelPhoto3.call(state);
+          }
+        } catch (err) {
+          _iterator7.e(err);
+        } finally {
+          _iterator7.f();
+        }
         if (views.get(stage) === view) views.delete(stage);
       }
     };
@@ -678,11 +717,11 @@ window.GCSignageStorage = {
     prior.setUTCDate(prior.getUTCDate() - 1);
     var previous = prior.toISOString().slice(0, 10),
       previousDay = prior.getUTCDay() || 7;
-    var _iterator7 = _createForOfIteratorHelper([...manifest.schedules].sort((a, b) => b.priority - a.priority)),
-      _step7;
+    var _iterator8 = _createForOfIteratorHelper([...manifest.schedules].sort((a, b) => b.priority - a.priority)),
+      _step8;
     try {
-      for (_iterator7.s(); !(_step7 = _iterator7.n()).done;) {
-        var r = _step7.value;
+      for (_iterator8.s(); !(_step8 = _iterator8.n()).done;) {
+        var r = _step8.value;
         var overnight = r.end_time <= r.start_time;
         var date = p.date,
           day = p.day,
@@ -695,9 +734,9 @@ window.GCSignageStorage = {
         if (active && date >= r.starts_on && date <= r.ends_on && r.days.map(Number).includes(day)) return Number(r.release_id);
       }
     } catch (err) {
-      _iterator7.e(err);
+      _iterator8.e(err);
     } finally {
-      _iterator7.f();
+      _iterator8.f();
     }
     return manifest.default_release_id;
   }
@@ -742,6 +781,7 @@ window.GCSignageStorage = {
     pendingManifest = null;
   var pairingGeneration = 0,
     pairingPolling = false;
+  var retrySync = null;
   var failedScenes = new Map();
   function notice(message) {
     status.textContent = message;
@@ -771,31 +811,72 @@ window.GCSignageStorage = {
     return _request.apply(this, arguments);
   }
   function _request() {
-    _request = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee5(path, method = 'GET', data, credential = token) {
-      var controller, timer, response, error;
-      return _regenerator().w(function (_context5) {
-        while (1) switch (_context5.p = _context5.n) {
+    _request = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee6(path, method = 'GET', data, credential = token) {
+      var controller, timer, headers, download, timeout, _yield$Promise$race, response, json, error;
+      return _regenerator().w(function (_context6) {
+        while (1) switch (_context6.p = _context6.n) {
           case 0:
-            controller = typeof AbortController === 'function' ? new AbortController() : null, timer = setTimeout(() => controller === null || controller === void 0 ? void 0 : controller.abort(), 15000);
-            _context5.p = 1;
-            _context5.n = 2;
-            return fetch(new URL(path, api), {
+            controller = typeof AbortController === 'function' ? new AbortController() : null;
+            _context6.p = 1;
+            headers = {
+              'X-Signage-Playback': 'online',
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            };
+            if (credential) headers.Authorization = 'Bearer ' + credential;
+            if (path === 'manifest') headers['X-Signage-Include'] = 'catalog';
+            download = fetch(new URL(path, api), {
               method,
-              headers: _objectSpread({
-                'X-Signage-Playback': 'online',
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-              }, credential ? {
-                Authorization: 'Bearer ' + credential
-              } : {}),
+              headers,
               body: data === undefined ? undefined : JSON.stringify(data),
               cache: 'no-store',
               signal: controller === null || controller === void 0 ? void 0 : controller.signal
+            }).then(/*#__PURE__*/function () {
+              var _ref2 = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee5(response) {
+                var _t5, _t6, _t7;
+                return _regenerator().w(function (_context5) {
+                  while (1) switch (_context5.n) {
+                    case 0:
+                      _t5 = response;
+                      if (!response.ok) {
+                        _context5.n = 2;
+                        break;
+                      }
+                      _context5.n = 1;
+                      return response.json();
+                    case 1:
+                      _t6 = _context5.v;
+                      _context5.n = 3;
+                      break;
+                    case 2:
+                      _t6 = null;
+                    case 3:
+                      _t7 = _t6;
+                      return _context5.a(2, {
+                        response: _t5,
+                        json: _t7
+                      });
+                  }
+                }, _callee5);
+              }));
+              return function (_x2) {
+                return _ref2.apply(this, arguments);
+              };
+            }());
+            timeout = new Promise((resolve, reject) => {
+              timer = setTimeout(() => {
+                reject(new Error('A TV-kérés túllépte a 15 másodpercet.'));
+                controller === null || controller === void 0 || controller.abort();
+              }, 15000);
             });
+            _context6.n = 2;
+            return Promise.race([download, timeout]);
           case 2:
-            response = _context5.v;
+            _yield$Promise$race = _context6.v;
+            response = _yield$Promise$race.response;
+            json = _yield$Promise$race.json;
             if (!(response.status === 401 && token && credential === token)) {
-              _context5.n = 4;
+              _context6.n = 4;
               break;
             }
             sessionGeneration++;
@@ -807,31 +888,28 @@ window.GCSignageStorage = {
             pendingManifest = null;
             fallback();
             pairPanel.hidden = false;
-            _context5.n = 3;
+            _context6.n = 3;
             return store.save('token', null);
           case 3:
             throw new Error('A kijelző hozzáférését visszavonták.');
           case 4:
             if (response.ok) {
-              _context5.n = 5;
+              _context6.n = 5;
               break;
             }
-            error = new Error('Nincs friss kapcsolat.');
+            error = new Error('TV-kérés: ' + path + ' (HTTP ' + response.status + ').');
             error.status = response.status;
             throw error;
           case 5:
-            _context5.n = 6;
-            return response.json();
+            return _context6.a(2, json);
           case 6:
-            return _context5.a(2, _context5.v);
-          case 7:
-            _context5.p = 7;
+            _context6.p = 6;
             clearTimeout(timer);
-            return _context5.f(7);
-          case 8:
-            return _context5.a(2);
+            return _context6.f(6);
+          case 7:
+            return _context6.a(2);
         }
-      }, _callee5, null, [[1,, 7, 8]]);
+      }, _callee6, null, [[1,, 6, 7]]);
     }));
     return _request.apply(this, arguments);
   }
@@ -839,39 +917,39 @@ window.GCSignageStorage = {
     return _pair.apply(this, arguments);
   }
   function _pair() {
-    _pair = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee6() {
-      var generation, p, _t5;
-      return _regenerator().w(function (_context6) {
-        while (1) switch (_context6.p = _context6.n) {
+    _pair = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee7() {
+      var generation, p, _t8;
+      return _regenerator().w(function (_context7) {
+        while (1) switch (_context7.p = _context7.n) {
           case 0:
             generation = ++pairingGeneration;
             nonce = null;
             document.getElementById('pair-code').textContent = '…';
             notice('Párosítási kód kérése…');
-            _context6.p = 1;
-            _context6.n = 2;
+            _context7.p = 1;
+            _context7.n = 2;
             return request('pairing/start', 'POST', {}, null);
           case 2:
-            p = _context6.v;
+            p = _context7.v;
             if (!(generation !== pairingGeneration || token)) {
-              _context6.n = 3;
+              _context7.n = 3;
               break;
             }
-            return _context6.a(2);
+            return _context7.a(2);
           case 3:
             nonce = p.nonce;
             document.getElementById('pair-code').textContent = p.code;
             notice('A párosítási kód 10 percig érvényes.');
-            _context6.n = 5;
+            _context7.n = 5;
             break;
           case 4:
-            _context6.p = 4;
-            _t5 = _context6.v;
+            _context7.p = 4;
+            _t8 = _context7.v;
             if (generation === pairingGeneration && !token) notice('Nem sikerült kódot kérni. Ellenőrizd a kapcsolatot, majd próbáld újra.');
           case 5:
-            return _context6.a(2);
+            return _context7.a(2);
         }
-      }, _callee6, null, [[1, 4]]);
+      }, _callee7, null, [[1, 4]]);
     }));
     return _pair.apply(this, arguments);
   }
@@ -879,141 +957,117 @@ window.GCSignageStorage = {
     return _pairingPoll.apply(this, arguments);
   }
   function _pairingPoll() {
-    _pairingPoll = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee7() {
-      var generation, requestedNonce, p, _t6, _t7;
-      return _regenerator().w(function (_context7) {
-        while (1) switch (_context7.p = _context7.n) {
+    _pairingPoll = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee8() {
+      var generation, requestedNonce, p, _t9, _t0;
+      return _regenerator().w(function (_context8) {
+        while (1) switch (_context8.p = _context8.n) {
           case 0:
             if (!(token || !nonce || pairingPolling)) {
-              _context7.n = 1;
+              _context8.n = 1;
               break;
             }
-            return _context7.a(2);
+            return _context8.a(2);
           case 1:
             generation = pairingGeneration, requestedNonce = nonce;
             pairingPolling = true;
-            _context7.p = 2;
-            _context7.n = 3;
+            _context8.p = 2;
+            _context8.n = 3;
             return request('pairing/status', 'POST', {}, requestedNonce);
           case 3:
-            p = _context7.v;
+            p = _context8.v;
             if (!(generation !== pairingGeneration || nonce !== requestedNonce || token)) {
-              _context7.n = 4;
+              _context8.n = 4;
               break;
             }
-            return _context7.a(2);
+            return _context8.a(2);
           case 4:
             if (!(p.status === 'paired')) {
-              _context7.n = 11;
+              _context8.n = 11;
               break;
             }
             if (!(typeof p.token !== 'string' || !p.token)) {
-              _context7.n = 5;
+              _context8.n = 5;
               break;
             }
             throw new Error('Érvénytelen párosítás.');
           case 5:
             token = p.token;
             nonce = null;
-            _context7.p = 6;
-            _context7.n = 7;
+            _context8.p = 6;
+            _context8.n = 7;
             return store.save('token', token);
           case 7:
-            _context7.n = 9;
+            _context8.n = 9;
             break;
           case 8:
-            _context7.p = 8;
-            _t6 = _context7.v;
+            _context8.p = 8;
+            _t9 = _context8.v;
             token = null;
             notice('A párosítás nem menthető a készülékre. Ellenőrizd a böngésző tárhelyét, majd kérj új kódot.');
-            return _context7.a(2);
+            return _context8.a(2);
           case 9:
             pairPanel.hidden = true;
-            _context7.n = 10;
+            _context8.n = 10;
             return synchronize();
           case 10:
-            _context7.n = 12;
+            _context8.n = 12;
             break;
           case 11:
             notice('Várakozás a párosításra. A kód 10 percig érvényes.');
           case 12:
-            _context7.n = 15;
+            _context8.n = 15;
             break;
           case 13:
-            _context7.p = 13;
-            _t7 = _context7.v;
+            _context8.p = 13;
+            _t0 = _context8.v;
             if (!(generation !== pairingGeneration || nonce !== requestedNonce || token)) {
-              _context7.n = 14;
+              _context8.n = 14;
               break;
             }
-            return _context7.a(2);
+            return _context8.a(2);
           case 14:
-            if (_t7.status === 404) {
+            if (_t0.status === 404) {
               nonce = null;
               notice('A kód lejárt vagy már felhasználták. Kérj új párosítási kódot.');
             } else notice('A kapcsolat megszakadt. A párosítást automatikusan újra ellenőrizzük.');
           case 15:
-            _context7.p = 15;
+            _context8.p = 15;
             pairingPolling = false;
-            return _context7.f(15);
+            return _context8.f(15);
           case 16:
-            return _context7.a(2);
+            return _context8.a(2);
         }
-      }, _callee7, null, [[6, 8], [2, 13, 15, 16]]);
+      }, _callee8, null, [[6, 8], [2, 13, 15, 16]]);
     }));
     return _pairingPoll.apply(this, arguments);
   }
-  function applyCatalog() {
-    return _applyCatalog.apply(this, arguments);
-  }
-  function _applyCatalog() {
-    _applyCatalog = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee8() {
-      var sent, wall, data, ttl;
-      return _regenerator().w(function (_context8) {
-        while (1) switch (_context8.n) {
-          case 0:
-            sent = performance.now(), wall = Date.now();
-            _context8.n = 1;
-            return request('catalog');
-          case 1:
-            data = _context8.v;
-            ttl = Date.parse(data.valid_until) - Date.parse(data.server_time);
-            if (!(data.schema_version !== 1 || !Array.isArray(data.products) || !Number.isFinite(ttl))) {
-              _context8.n = 2;
-              break;
-            }
-            throw new Error('Érvénytelen katalógus.');
-          case 2:
-            catalog = data;
-            receipt = {
-              ttl: Math.max(0, ttl),
-              monotonic: sent,
-              wall
-            };
-            clock = {
-              server: Date.parse(data.server_time),
-              monotonic: sent,
-              wall
-            };
-            if (current && !GCSignageSchedule.sceneAllowed(current, {
-              fresh: fresh(),
-              invalid_media: data.invalid_media
-            })) {
-              fallback();
-            } else if (renderer) renderer.update(data.products);
-          case 3:
-            return _context8.a(2);
-        }
-      }, _callee8);
-    }));
-    return _applyCatalog.apply(this, arguments);
+  function applyCatalog(data, sent, wall, sameRelease) {
+    var ttl = Date.parse(data.valid_until) - Date.parse(data.server_time);
+    if (data.schema_version !== 1 || !Array.isArray(data.products) || !Number.isFinite(ttl)) throw new Error('Érvénytelen katalógus.');
+    catalog = data;
+    receipt = {
+      ttl: Math.max(0, ttl),
+      monotonic: sent,
+      wall
+    };
+    clock = {
+      server: Date.parse(data.server_time),
+      monotonic: sent,
+      wall
+    };
+    if (current && !GCSignageSchedule.sceneAllowed(current, {
+      fresh: fresh(),
+      invalid_media: data.invalid_media
+    })) {
+      fallback();
+    } else if (renderer && sameRelease) renderer.update(data.products);
   }
   function synchronize() {
     return _synchronize.apply(this, arguments);
   }
   function _synchronize() {
     _synchronize = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee9() {
-      var generation, _manifest, manifestSent, manifestWall, incoming, _t8;
+      var generation, _current, _manifest, manifestSent, manifestWall, incoming, data, _t1, _t10;
       return _regenerator().w(function (_context9) {
         while (1) switch (_context9.p = _context9.n) {
           case 0:
@@ -1024,34 +1078,40 @@ window.GCSignageStorage = {
             return _context9.a(2);
           case 1:
             syncing = true;
+            clearTimeout(retrySync);
+            retrySync = null;
             generation = sessionGeneration;
             _context9.p = 2;
-            _context9.n = 3;
-            return applyCatalog();
-          case 3:
             manifestSent = performance.now();
             manifestWall = Date.now();
-            _context9.n = 4;
+            _context9.n = 3;
             return request('manifest');
-          case 4:
+          case 3:
             incoming = _context9.v;
             if (!(incoming.schema_version !== 1 || !Array.isArray(incoming.releases) || !Number.isFinite(Date.parse(incoming.server_time)))) {
-              _context9.n = 5;
+              _context9.n = 4;
               break;
             }
             throw new Error('Nem támogatott kiadás.');
-          case 5:
-            clock = {
-              server: Date.parse(incoming.server_time),
-              monotonic: manifestSent,
-              wall: manifestWall
-            };
-            if (!(!token || generation !== sessionGeneration)) {
+          case 4:
+            _t1 = incoming.catalog;
+            if (_t1) {
               _context9.n = 6;
               break;
             }
-            return _context9.a(2);
+            _context9.n = 5;
+            return request('catalog');
+          case 5:
+            _t1 = _context9.v;
           case 6:
+            data = _t1;
+            if (!(!token || generation !== sessionGeneration)) {
+              _context9.n = 7;
+              break;
+            }
+            return _context9.a(2);
+          case 7:
+            applyCatalog(data, manifestSent, manifestWall, ((_current = current) === null || _current === void 0 ? void 0 : _current.release_id) === incoming.default_release_id);
             if (!current || ((_manifest = manifest) === null || _manifest === void 0 ? void 0 : _manifest.default_release_id) === incoming.default_release_id) {
               manifest = incoming;
               pendingManifest = null;
@@ -1059,21 +1119,22 @@ window.GCSignageStorage = {
             lastError = '';
             notice('');
             if (!current || pendingManifest) next();
-            _context9.n = 8;
+            _context9.n = 9;
             break;
-          case 7:
-            _context9.p = 7;
-            _t8 = _context9.v;
-            lastError = _t8.message;
-            notice(_t8.message);
           case 8:
             _context9.p = 8;
-            syncing = false;
-            return _context9.f(8);
+            _t10 = _context9.v;
+            lastError = _t10.message;
+            if (!current) notice(_t10.message);
+            if (token && generation === sessionGeneration) retrySync = setTimeout(synchronize, 5000);
           case 9:
+            _context9.p = 9;
+            syncing = false;
+            return _context9.f(9);
+          case 10:
             return _context9.a(2);
         }
-      }, _callee9, null, [[2, 7, 8, 9]]);
+      }, _callee9, null, [[2, 8, 9, 10]]);
     }));
     return _synchronize.apply(this, arguments);
   }
@@ -1121,8 +1182,8 @@ window.GCSignageStorage = {
               invalid_media: ((_catalog2 = catalog) === null || _catalog2 === void 0 ? void 0 : _catalog2.invalid_media) || []
             };
             _loop2 = /*#__PURE__*/_regenerator().m(function _loop2() {
-              var _catalog3, _current;
-              var scene, _catalog4, cycle, _t9;
+              var _catalog3, _current2;
+              var scene, _catalog4, cycle, _t11;
               return _regenerator().w(function (_context0) {
                 while (1) switch (_context0.p = _context0.n) {
                   case 0:
@@ -1146,7 +1207,7 @@ window.GCSignageStorage = {
                     }
                     return _context0.a(2, 0);
                   case 3:
-                    if (!(scenes.length === 1 && scene.type === 'grid' && !scene.background_media && ((_current = current) === null || _current === void 0 ? void 0 : _current.release_id) === releaseId && current.id === scene.id)) {
+                    if (!(scenes.length === 1 && scene.type === 'grid' && !scene.background_media && ((_current2 = current) === null || _current2 === void 0 ? void 0 : _current2.release_id) === releaseId && current.id === scene.id)) {
                       _context0.n = 4;
                       break;
                     }
@@ -1189,8 +1250,8 @@ window.GCSignageStorage = {
                     });
                   case 5:
                     _context0.p = 5;
-                    _t9 = _context0.v;
-                    lastError = _t9.message;
+                    _t11 = _context0.v;
+                    lastError = _t11.message;
                   case 6:
                     return _context0.a(2);
                 }
@@ -1239,7 +1300,7 @@ window.GCSignageStorage = {
   }
   function _heartbeat() {
     _heartbeat = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee1() {
-      var _current2, _catalog5, _current3, _t0;
+      var _current3, _catalog5, _current4, _t12;
       return _regenerator().w(function (_context10) {
         while (1) switch (_context10.p = _context10.n) {
           case 0:
@@ -1252,10 +1313,10 @@ window.GCSignageStorage = {
             _context10.p = 1;
             _context10.n = 2;
             return request('heartbeat', 'POST', {
-              player_version: 'online-1',
-              active_release_id: ((_current2 = current) === null || _current2 === void 0 ? void 0 : _current2.release_id) || null,
+              player_version: 'online-2',
+              active_release_id: ((_current3 = current) === null || _current3 === void 0 ? void 0 : _current3.release_id) || null,
               catalog_revision: ((_catalog5 = catalog) === null || _catalog5 === void 0 ? void 0 : _catalog5.catalog_revision) || '',
-              scene_id: ((_current3 = current) === null || _current3 === void 0 ? void 0 : _current3.id) || '',
+              scene_id: ((_current4 = current) === null || _current4 === void 0 ? void 0 : _current4.id) || '',
               error: lastError,
               offline: !navigator.onLine
             });
@@ -1264,7 +1325,7 @@ window.GCSignageStorage = {
             break;
           case 3:
             _context10.p = 3;
-            _t0 = _context10.v;
+            _t12 = _context10.v;
           case 4:
             return _context10.a(2);
         }

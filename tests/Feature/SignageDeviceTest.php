@@ -9,6 +9,25 @@ use App\Models\User;
 
 class SignageDeviceTest extends \Tests\TestCase
 {
+    public function test_catalog_photo_download_serves_original_bytes_for_image_accept_headers(): void
+    {
+        $path = tempnam(storage_path('app/public/admin-assets/images/item'), 'signage-test-');
+        $photo = $path.'.png';
+        try {
+            rename($path, $photo);
+            file_put_contents($photo, "\x89PNG\r\n\x1a\noriginal-bytes");
+            $original = url(trim((string) env('ASSETSPATHURL'), '/').'/admin-assets/images/item/'.basename($photo));
+            $download = \App\Services\Signage\SignageCatalogPhoto::downloadUrl($original);
+            $response = $this->get($download, ['Accept'=>'image/webp,*/*'])->assertOk()
+                ->assertHeader('Content-Type', 'application/octet-stream');
+            $this->assertSame(hash_file('sha256', $photo), hash_file('sha256', $response->baseResponse->getFile()->getPathname()));
+            $this->assertTrue($response->headers->hasCacheControlDirective('no-transform'));
+        } finally {
+            if (is_file($photo)) unlink($photo);
+            if (is_file($path)) unlink($path);
+        }
+    }
+
     public function test_pairing_status_polling_does_not_consume_the_new_pairing_code_limit(): void
     {
         $pair=$this->postJson('/signage/api/v1/pairing/start')->assertCreated()->json();

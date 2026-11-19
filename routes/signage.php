@@ -6,6 +6,8 @@ use App\Http\Middleware\SignageEnabled;
 Route::middleware(SignageEnabled::class)->group(function(){
     Route::get('/signage',[\App\Http\Controllers\Signage\PlayerController::class,'index']);
     Route::get('/signage/sw.js',[\App\Http\Controllers\Signage\PlayerController::class,'worker']);
+    Route::get('/signage/catalog-photo/{filename}.bin',[DeviceController::class,'catalogPhoto'])
+        ->where('filename', \App\Services\Signage\SignageCatalogPhoto::FILENAME);
 });
 Route::prefix('signage/api/v1')->middleware([\Illuminate\Routing\Middleware\SubstituteBindings::class,SignageEnabled::class])->group(function(){
     Route::post('pairing/start',[DeviceController::class,'start'])->middleware('throttle:signage-start');

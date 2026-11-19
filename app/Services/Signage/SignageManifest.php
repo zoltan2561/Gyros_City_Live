@@ -9,6 +9,11 @@ class SignageManifest {
         $screen=SignageScreen::findOrFail($screenId);
         $ids=collect($screen->delivered_release_ids??[])->push($screen->release_id)->push($screen->active_release_id)->filter()->unique();
         $releases=SignageRelease::whereIn('id',$ids)->get()->map(fn($r)=>['id'=>$r->id,'snapshot'=>$r->snapshot])->values()->all();
+        foreach ($releases as $index => $release) {
+            foreach ($release['snapshot']['files'] ?? [] as $position => $file) {
+                $releases[$index]['snapshot']['files'][$position]['url'] = SignageCatalogPhoto::downloadUrl($file['url']);
+            }
+        }
         $content=['playback_mode'=>'continuous','default_release_id'=>$screen->release_id,'releases'=>$releases,'schedules'=>[]];
         return ['schema_version'=>1,'player_version'=>'1','layout_revision'=>hash('sha256',json_encode($content)),
             'server_time'=>$now->setTimezone(new DateTimeZone('UTC'))->format(DATE_ATOM),

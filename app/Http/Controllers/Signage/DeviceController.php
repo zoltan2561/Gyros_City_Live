@@ -4,6 +4,7 @@ use App\Http\Controllers\Controller;
 use App\Models\SignageMedia;
 use App\Models\SignagePairing;
 use App\Services\Signage\SignageCatalog;
+use App\Services\Signage\SignageCatalogPhoto;
 use App\Services\Signage\SignageManifest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
@@ -38,6 +39,9 @@ class DeviceController extends Controller {
         $manifest=$service->forScreen($request->attributes->get('signage_screen')->id,$now);
         $snapshot=app(SignageCatalog::class)->snapshot($service->bindings($manifest),$now,$request->attributes->get('signage_screen')->offline_price_seconds);
         $snapshot['invalid_media']=[];
+        foreach ($snapshot['products'] as $index => $product) {
+            $snapshot['products'][$index]['image'] = SignageCatalogPhoto::downloadUrl($product['image']);
+        }
         foreach($service->media($manifest) as $m){
             if(empty($m['baked_prices']))continue;
             $record=SignageMedia::find($m['id']);
@@ -46,6 +50,17 @@ class DeviceController extends Controller {
             if($valid&&$record->price_valid_until&&$record->price_valid_until->getTimestamp()<strtotime($snapshot['valid_until']))$snapshot['valid_until']=$record->price_valid_until->toIso8601String();
         }
         return response()->json($snapshot)->header('Cache-Control','no-store');
+    }
+    public function catalogPhoto(string $filename) {
+        $path = storage_path('app/public/admin-assets/images/item/'.$filename);
+        abort_unless(is_file($path), 404);
+
+        // The player verifies the original bytes, then restores the MIME type from its manifest.
+        return response()->file($path, [
+            'Content-Type' => 'application/octet-stream',
+            'Cache-Control' => 'private, no-store, no-transform',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
     }
     public function heartbeat(Request $request) {
         $data=$request->validate(['player_version'=>'nullable|string|max:20','active_release_id'=>'nullable|integer',

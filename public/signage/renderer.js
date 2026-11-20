@@ -241,7 +241,18 @@
         const view={
             update(products){if(!disposed&&scene.type!=='media'){updateCards(grid,scene,products,options.previews,options.embedded);select();}},
             pause(value){if(disposed||paused===!!value)return;paused=!!value;stage.dataset.paused=String(paused);if(paused)remaining=Math.max(1,deadline-now());stop();if(!paused)start();},
-            dispose(){if(disposed)return;disposed=true;stop();for(const state of grids.get(grid)?.values()||[])state.cancelPhoto?.();if(views.get(stage)===view)views.delete(stage);}
+            dispose(){
+                if(disposed)return;
+                disposed=true;
+                stop();
+                for(const state of grids.get(grid)?.values()||[])state.cancelPhoto?.();
+                for(const video of stage.querySelectorAll('video')){
+                    video.pause();
+                    video.removeAttribute('src');
+                    video.load();
+                }
+                if(views.get(stage)===view)views.delete(stage);
+            }
         };
         views.set(stage,view);select();start();
         fontsReady.then(()=>{if(views.get(stage)===view)checkNames(stage);});

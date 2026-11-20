@@ -9,6 +9,7 @@ let pairingGeneration=0,pairingPolling=false;
 let retrySync=null;
 let previews={},previewRelease=null,checking=false,lastSync=Date.now(),recovering=false;
 let controlEnabled=false,controlFrame=null,controlSequence=0,controlSent=0,controlWall=0,lastControl=0,acceptedAt=-1;
+let lastDirectCatalog=-Infinity,lastDirectHeartbeat=-Infinity;
 const failedScenes=new Map();
 function notice(message){status.textContent=message;}
 function fallback(){cycleId++;GCSignage.fallback(root);renderer=null;current=null;}
@@ -108,6 +109,7 @@ async function synchronize(){
   const data=incoming.catalog||await request('catalog');
   if(!token||generation!==sessionGeneration)return;
   acceptManifest(incoming,data,manifestSent,manifestWall);
+  lastDirectCatalog=manifestSent;
  }catch(e){
   lastError=e.message;if(!current)notice(e.message);
   if(token&&generation===sessionGeneration)retrySync=setTimeout(synchronize,5000);
@@ -157,6 +159,9 @@ function playbackStatus(){
 function controlHealthy(){return controlEnabled&&lastControl>0&&Date.now()-lastControl<25000&&Date.now()-lastSync<60000;}
 function pollControl(){
  if(!token||!controlEnabled)return;
+ // The frame is a fallback for TV browsers whose normal requests stop working.
+ const now=performance.now();
+ if(now-lastDirectCatalog<45000&&now-lastDirectHeartbeat<25000)return;
  if(controlFrame && Date.now()-controlWall<20000)return;
  controlFrame?.remove();
  const frame=document.createElement('iframe'),form=document.createElement('form');
@@ -183,6 +188,7 @@ async function heartbeat(){
  checking=true;
  try{
   const reply=await request('heartbeat','POST',playbackStatus());
+ lastDirectHeartbeat=performance.now();
   if(token && 'assigned_release_id' in reply && reply.assigned_release_id!==manifest?.default_release_id)synchronize();
  }catch(e){/* A failed heartbeat never renews price freshness. */}
  finally{checking=false;if(token&&Date.now()-lastSync>120000)recoverConnection();}

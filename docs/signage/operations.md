@@ -1,6 +1,6 @@
 # TV kijelzők – helyi használat
 
-A fejlesztési változat a `feature/gctv-v1-local` ágon található. Apache, MySQL és a külön signage worker szükséges; FFmpeg és ffprobe legyen a PATH-on. Nincs új npm-csomag vagy buildlépés.
+A helyi adminhoz Apache és MySQL szükséges. A feltöltött médiát a külön signage worker dolgozza fel. Az FFmpeg és az ffprobe legyen elérhető a PATH-on.
 
 A később mérlegelhető Android TV-s APK és TV ki-/bekapcsolás terve: [android-tv-apk-terv.md](android-tv-apk-terv.md). Az APK és a TV-vezérlés még nincs megvalósítva.
 
@@ -14,6 +14,17 @@ A később mérlegelhető Android TV-s APK és TV ki-/bekapcsolás terve: [andro
 - Külön műsor: `?program=burger`, `?program=menu`, `?program=pizza`, `?program=general`, `?program=modern-burger`, `?program=modern-menu`, `?program=modern-pizza`. Kezelősáv nélküli megjelenítéshez `&fullscreen=1`.
 
 A modul alapértelmezetten kikapcsolt. A `local` környezetben, loopback kapcsolaton tesztelhető; ez nem engedélyezi az éles vagy a hálózaton elérhető TV-ket. Az admin tulajdonosa eléri; munkatársnak külön **TV kijelzők** moduljog kell.
+
+## MP4 készítése pendrive-ra
+
+A helyi adminban válassz egy mentett listát, majd kattints az **MP4 készítése és letöltése** gombra. Hagyd nyitva a lapot, amíg az export végigjátssza és kódolja az első műsorkört. Az elkészült néma, Full HD H.264 videó legalább tízpercnyi teljes kört tartalmaz. Másold a fájlt a pendrive-ra, és kapcsold be az egy fájl ismétlését a TV-n. Étlapváltozás után generáld újra és cseréld le a pendrive-on a videót. A termékfotók az aktuális étlapról kerülnek a videóba, a leírásokat a választott jelenetsablon jeleníti meg.
+
+Új Windowsos fejlesztői gépen az exporthoz Microsoft Edge, Node.js 20 vagy frissebb, valamint H.264-képes FFmpeg szükséges. A projekt gyökerében futtasd egyszer a két parancsot a helyi renderelő telepítéséhez.
+
+```powershell
+npm ci --prefix scripts/signage/export
+node scripts/signage/export/node_modules/playwright-core/cli.js install ffmpeg
+```
 
 ## Műsor összeállítása
 

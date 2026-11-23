@@ -104,6 +104,7 @@ final class AdminPermissions
             'App\\Http\\Controllers\\admin\\SignageController@index' => 35,
             'App\\Http\\Controllers\\admin\\SignageController@scene' => 35,
             'App\\Http\\Controllers\\admin\\SignageController@playlist' => 35,
+            \App\Http\Controllers\admin\SignageExportController::class => 35,
             'App\\Http\\Controllers\\admin\\SignageController@publish' => 35,
             'App\\Http\\Controllers\\admin\\SignageController@rollback' => 35,
             'App\\Http\\Controllers\\admin\\SignageController@preview' => 35,

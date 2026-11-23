@@ -25,6 +25,7 @@ Route::prefix('admin/signage')->middleware(['web',SignageEnabled::class])->group
     Route::get('',[\App\Http\Controllers\admin\SignageController::class,'index'])->name('admin.signage');
     Route::post('scenes',[\App\Http\Controllers\admin\SignageController::class,'scene']);
     Route::post('playlists',[\App\Http\Controllers\admin\SignageController::class,'playlist']);
+    Route::post('playlists/{id}/mp4',\App\Http\Controllers\admin\SignageExportController::class)->whereNumber('id');
     Route::post('publish',[\App\Http\Controllers\admin\SignageController::class,'publish']);
     Route::post('rollback',[\App\Http\Controllers\admin\SignageController::class,'rollback']);
     Route::get('preview/{id}',[\App\Http\Controllers\admin\SignageController::class,'preview'])->whereNumber('id');

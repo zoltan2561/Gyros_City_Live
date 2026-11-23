@@ -156,7 +156,29 @@
         event.preventDefault();navigate(destination.href,link);
     }));
     function send(form){if(form===editor)submittingEditor=true;form.setAttribute('aria-busy','true');form.querySelectorAll('button[type=submit],button:not([type])').forEach(b=>b.disabled=true);HTMLFormElement.prototype.submit.call(form);}
-    document.querySelectorAll('.signage-admin form').forEach(form=>{
+    const exportForm=document.getElementById('playlist-export');
+    exportForm?.addEventListener('submit',async event=>{
+        event.preventDefault();
+        const button=exportForm.querySelector('button'),status=exportForm.querySelector('[role=status]');
+        if(button.disabled)return;
+        button.disabled=true;
+        status.textContent='A videó készül. Hagyd nyitva ezt a lapot a letöltésig.';
+        try {
+            const response=await fetch(exportForm.action,{method:'POST',body:new FormData(exportForm),headers:{Accept:'application/json'}});
+            if(!response.ok || !response.headers.get('Content-Type')?.includes('video/mp4')){
+                const data=await response.json().catch(()=>({}));
+                throw new Error(Object.values(data.errors||{}).flat()[0] || 'A videó készítése sikertelen. Ellenőrizd a bejelentkezést és próbáld újra.');
+            }
+            const href=URL.createObjectURL(await response.blob()),link=document.createElement('a');
+            link.href=href;
+            link.download=response.headers.get('Content-Disposition')?.match(/filename="?([\w.-]+\.mp4)/i)?.[1] || 'gyros-city-tv.mp4';
+            link.click();
+            setTimeout(()=>URL.revokeObjectURL(href),60000);
+            status.textContent='A videó elkészült. A letöltött MP4-et másold a pendrive-ra.';
+        } catch(error){status.textContent=error.message;}
+        finally{button.disabled=false;}
+    });
+    document.querySelectorAll('.signage-admin form:not(#playlist-export)').forEach(form=>{
     form.addEventListener('input',e=>{
         if(e.target.getAttribute('aria-invalid')==='true'&&e.target.checkValidity()){
             e.target.removeAttribute('aria-invalid');

@@ -12,6 +12,16 @@ use Illuminate\Validation\ValidationException;
 
 class SignageCatalog
 {
+    public function menuPhotoSnapshot(array $bindings, DateTimeImmutable $now): array
+    {
+        // USB files follow menu photo changes even for scenes with dedicated TV artwork.
+        foreach ($bindings as &$binding) {
+            unset($binding['artwork'], $binding['photo_media_id']);
+        }
+        unset($binding);
+        return $this->snapshot($bindings, $now);
+    }
+
     public function snapshot(array $bindings, DateTimeImmutable $now, ?int $priceTtl = null): array
     {
         $items = Item::visibleOnMenu()->whereIn('id', array_column($bindings, 'item_id'))

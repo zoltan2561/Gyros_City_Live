@@ -39,3 +39,8 @@ test('a failed worker shows an actionable message and enables another attempt',a
  const run=mount([{job:{id:'job-2',status:'failed',total_scenes:1,scene:0}}]);
  await run.flush();assert.equal(run.button.disabled,false);assert.equal(run.download.hidden,true);assert.match(run.status.textContent,/újra/);
 });
+
+test('a list without a previous export shows readiness instead of a permanent checking message',async()=>{
+ const run=mount([{job:null}]);await run.flush();
+ assert.equal(run.button.disabled,false);assert.match(run.status.textContent,/Indíts/);
+});

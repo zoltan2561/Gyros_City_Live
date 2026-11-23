@@ -157,4 +157,18 @@ class SignageExportTest extends SignageCatalogTest
         $this->assertSame(0, $process->wait(), $process->getErrorOutput());
         $this->assertStringContainsString('"status":"pending"', $process->getOutput());
     }
+
+    public function test_renderer_start_failure_keeps_only_private_stderr_for_diagnosis(): void
+    {
+        $directory = $this->temporaryStorage.'/renderer-failure';
+        File::ensureDirectoryExists($directory, 0700);
+        $method = new \ReflectionMethod(SignageExport::class, 'render');
+        try {
+            $method->invoke(new SignageExport(), ['node'=>$directory.'/missing-node', 'env'=>[], 'timeout'=>2], $directory);
+            $this->fail('A missing renderer executable succeeded.');
+        } catch (\Symfony\Component\Process\Exception\ProcessFailedException $e) {
+            $this->assertFileExists($directory.'/renderer-error.log');
+            $this->assertNotSame('', File::get($directory.'/renderer-error.log'));
+        }
+    }
 }

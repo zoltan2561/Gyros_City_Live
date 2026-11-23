@@ -22,7 +22,7 @@
 
     function show(job) {
         clearTimeout(timer);
-        if (!job) { button.disabled = false; return; }
+        if (!job) { button.disabled = false; status.textContent = 'Indíts videókészítést a fenti gombbal.'; return; }
         activeId = job.id;
         const running = ['pending','running'].includes(job.status);
         button.disabled = running;

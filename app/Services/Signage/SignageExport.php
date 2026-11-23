@@ -125,7 +125,14 @@ class SignageExport
         $process = new Process($command, $directory.'/work', $payload['env']);
         $payload['progress_file'] = $directory.'/progress.json';
         $process->setInput(json_encode($payload, JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE));
-        $process->setTimeout($payload['timeout'] + 30)->mustRun();
+        try {
+            $process->setTimeout($payload['timeout'] + 30)->mustRun();
+        } catch (\Symfony\Component\Process\Exception\ProcessFailedException $e) {
+            // Keep bounded stderr privately; never persist the exception's
+            // full command/stdin, which can contain the catalog snapshot.
+            File::put($directory.'/renderer-error.log', substr($process->getErrorOutput(), -4000));
+            throw $e;
+        }
         $probe = new Process([$payload['ffprobe'], '-v', 'error', '-show_entries', 'stream=codec_name,width,height,pix_fmt:format=duration', '-of', 'json', $directory.'/output.mp4']);
         $probe->setTimeout(30)->mustRun();
         $info = json_decode($probe->getOutput(), true, 512, JSON_THROW_ON_ERROR);

@@ -75,6 +75,17 @@
                 <button class="btn btn-primary" id="playlist-save" disabled>Lista mentése</button>
             </div>
         </form>
+        @if($editingPlaylist)
+        <form id="playlist-export" class="card p-4 mt-3" method="post" action="{{ url('admin/signage/playlists/'.$editingPlaylist->id.'/mp4') }}" data-exports-url="{{ url('admin/signage/exports') }}">
+            @csrf
+            <h2 class="h5">Videó pendrive-ra</h2>
+            <p>A mentett listából készül, az étlap jelenlegi áraival és fotóival. A videó legalább 10 perces. A TV-n válaszd az egy fájl ismétlését.</p>
+            <p class="small text-muted">A mentés nélküli módosítások nem kerülnek a videóba. Az elkészült fájl 24 órán át tölthető le.</p>
+            <button class="btn btn-outline-primary align-self-start" disabled>MP4 készítése</button>
+            <span class="small mt-2" role="status" aria-live="polite">Korábbi videókészítés ellenőrzése…</span>
+            <a class="btn btn-primary align-self-start mt-3" data-export-download download hidden>MP4 letöltése</a>
+        </form>
+        @endif
         @if($releases->isNotEmpty() && $screens->isNotEmpty())
         <details class="card p-4 mt-3">
             <summary>Korábbi megjelenés visszaállítása</summary>

@@ -1,6 +1,6 @@
-# TV kijelzők – helyi használat
+# TV kijelzők – használat
 
-A fejlesztési változat a `feature/gctv-v1-local` ágon található. Apache, MySQL és a külön signage worker szükséges; FFmpeg és ffprobe legyen a PATH-on. Nincs új npm-csomag vagy buildlépés.
+A helyi adminhoz Apache és MySQL szükséges. A feltöltött médiát a külön signage worker dolgozza fel. Az FFmpeg és az ffprobe legyen elérhető a PATH-on.
 
 A később mérlegelhető Android TV-s APK és TV ki-/bekapcsolás terve: [android-tv-apk-terv.md](android-tv-apk-terv.md). Az APK és a TV-vezérlés még nincs megvalósítva.
 
@@ -14,6 +14,23 @@ A később mérlegelhető Android TV-s APK és TV ki-/bekapcsolás terve: [andro
 - Külön műsor: `?program=burger`, `?program=menu`, `?program=pizza`, `?program=general`, `?program=modern-burger`, `?program=modern-menu`, `?program=modern-pizza`. Kezelősáv nélküli megjelenítéshez `&fullscreen=1`.
 
 A modul alapértelmezetten kikapcsolt. A `local` környezetben, loopback kapcsolaton tesztelhető; ez nem engedélyezi az éles vagy a hálózaton elérhető TV-ket. Az admin tulajdonosa eléri; munkatársnak külön **TV kijelzők** moduljog kell.
+
+## MP4 készítése pendrive-ra
+
+A helyi vagy az éles adminban válassz egy mentett listát, majd kattints az **MP4 készítése** gombra. A tulajdonos és a **TV kijelzők** modulra jogosult munkatárs is használhatja. A generálás a szerveren, háttérben fut; a lap bezárható. Ugyanazzal az adminnal és ugyanahhoz a listához visszatérve az állapot és az **MP4 letöltése** gomb ismét megjelenik. Minden admin csak a saját exportját érheti el.
+
+Az elkészült néma, Full HD H.264 videó legalább tízpercnyi teljes kört tartalmaz. Másold a pendrive-ra, és kapcsold be az egy fájl ismétlését a TV-n. Étlapváltozás után generáld újra és cseréld le a fájlt: a videóba égetett árak nem frissülnek automatikusan. A termékfotók az aktuális étlapról kerülnek a videóba, a leírásokat a választott jelenetsablon jeleníti meg. Csak a mentett módosítások szerepelnek benne.
+
+Egyszerre egy export készülhet, legfeljebb 30 perces első műsorkörből. Másik admin egyidejű indításkor foglaltsági üzenetet kap. A fájl 24 órán át tölthető le; a lejárt exportokat a következő indítás takarítja el. A szerver az exporthoz privát `storage/app/signage-exports` könyvtárat használ, adatbázis-migráció és új cronfeladat nélkül.
+
+A Linuxos tárhely Node.js-, Playwright- és H.264-képes FFmpeg-példánya a webroot melletti privát `.signage-runtime` könyvtárban található. A renderelő innen tölti a függőségeit, nem az admin számítógépéről. A határidőt GNU `timeout` felügyeli folyamatcsoporttal és leállítási türelmi idővel. A feladatok saját CLI-folyamatként indulnak; nincs folyamatosan futtatandó exportworker. Leállt feladat után újraindítás kérhető a gombbal.
+
+Új Windowsos fejlesztői gépen a helyi exporthoz Microsoft Edge, Node.js 20 vagy frissebb, valamint H.264-képes FFmpeg/ffprobe szükséges. A projekt gyökerében futtasd egyszer a két parancsot a helyi renderelő telepítéséhez.
+
+```powershell
+npm ci --prefix scripts/signage/export
+node scripts/signage/export/node_modules/playwright-core/cli.js install ffmpeg
+```
 
 ## Műsor összeállítása
 

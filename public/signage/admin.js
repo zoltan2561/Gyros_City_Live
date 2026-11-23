@@ -156,7 +156,7 @@
         event.preventDefault();navigate(destination.href,link);
     }));
     function send(form){if(form===editor)submittingEditor=true;form.setAttribute('aria-busy','true');form.querySelectorAll('button[type=submit],button:not([type])').forEach(b=>b.disabled=true);HTMLFormElement.prototype.submit.call(form);}
-    document.querySelectorAll('.signage-admin form').forEach(form=>{
+    document.querySelectorAll('.signage-admin form:not(#playlist-export)').forEach(form=>{
     form.addEventListener('input',e=>{
         if(e.target.getAttribute('aria-invalid')==='true'&&e.target.checkValidity()){
             e.target.removeAttribute('aria-invalid');

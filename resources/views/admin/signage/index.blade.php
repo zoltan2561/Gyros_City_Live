@@ -32,4 +32,5 @@
 @endsection
 @section('script')
 <script src="{{ url('public/signage/admin.js') }}?v={{ filemtime(public_path('signage/admin.js')) }}"></script>
+<script src="{{ url('public/signage/export.js') }}?v={{ filemtime(public_path('signage/export.js')) }}"></script>
 @endsection

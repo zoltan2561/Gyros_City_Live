@@ -125,4 +125,41 @@ class AdminPermissionsTest extends \Tests\TestCase
         $this->expectException(\Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException::class);
         $this->app['router']->getRoutes()->match(\Illuminate\Http\Request::create('/admin/change-status?status=2', 'GET'));
     }
+
+    /** @dataProvider signageNavigationUsers */
+    public function test_owner_and_granted_staff_can_start_and_follow_production_exports(int $type): void
+    {
+        config(['signage.enabled'=>true]);
+        DB::table('manage_roles')->where('id', 1)->update(['modules'=>'35']);
+        $user = $this->operator();
+        $user->type = $type;
+        DB::table('users')->where('id', $user->id)->update(['type'=>$type]);
+        $this->actingAs($user);
+        $id = '75075499-3431-4b53-b7e8-a9c7e507789e';
+        $state = ['id'=>$id, 'status'=>'pending', 'filename'=>'menu.mp4', 'scene'=>0, 'total_scenes'=>1];
+        $service = $this->mock(\App\Services\Signage\SignageExport::class);
+        $service->shouldReceive('start')->once()->with(3, $user->id)->andReturn($state);
+        $service->shouldReceive('latest')->once()->with(3, $user->id)->andReturn($state);
+        $service->shouldReceive('status')->twice()->with($id, $user->id)->andReturn($state);
+        $file = tempnam(sys_get_temp_dir(), 'gc-export-download-');
+        file_put_contents($file, 'private video');
+        $service->shouldReceive('downloadPath')->once()->with($id, $user->id)->andReturn($file);
+        try {
+            $this->postJson('/admin/signage/playlists/3/mp4')->assertStatus(202)->assertJsonPath('id', $id);
+            $this->getJson('/admin/signage/playlists/3/mp4')->assertOk()->assertJsonPath('job.id', $id);
+            $this->getJson('/admin/signage/exports/'.$id)->assertOk()->assertJsonPath('status', 'pending');
+            $this->get('/admin/signage/exports/'.$id.'/download')->assertOk()->assertHeader('Content-Type', 'video/mp4');
+        } finally { unlink($file); }
+    }
+
+    public function test_staff_without_tv_permission_cannot_access_any_export_endpoint(): void
+    {
+        config(['signage.enabled'=>true]);
+        $this->actingAs($this->operator());
+        $id = '75075499-3431-4b53-b7e8-a9c7e507789e';
+        $this->postJson('/admin/signage/playlists/3/mp4')->assertForbidden();
+        foreach (['playlists/3/mp4', 'exports/'.$id, 'exports/'.$id.'/download'] as $path) {
+            $this->getJson('/admin/signage/'.$path)->assertForbidden();
+        }
+    }
 }

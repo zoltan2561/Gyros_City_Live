@@ -79,6 +79,31 @@ class SignageCatalogTest extends \Tests\TestCase
         $this->assertSame('Mozzarella, Bazsalikom',$this->snapshot()['products'][0]['description']);
     }
 
+    public function test_usb_regeneration_reads_the_latest_menu_price_description_and_photo(): void
+    {
+        $original = storage_path();
+        $directory = sys_get_temp_dir().'/signage-export-'.bin2hex(random_bytes(8));
+        $this->app->useStoragePath($directory);
+        try {
+            $photos = storage_path('app/public/admin-assets/images/item');
+            mkdir($photos, 0700, true);
+            $bindings = [['id'=>'burger', 'item_id'=>1, 'photo_media_id'=>3, 'artwork'=>'burger-1']];
+            $catalog = app(SignageCatalog::class);
+            foreach (['before.jpg'=>2260, 'after.jpg'=>2790] as $photo=>$price) {
+                touch($photos.'/'.$photo);
+                DB::table('item_images')->updateOrInsert(['item_id'=>1], ['image'=>$photo]);
+                DB::table('item')->where('id',1)->update(['price'=>$price,'item_description'=>'Menu '.$price]);
+                $row = $catalog->menuPhotoSnapshot($bindings, new \DateTimeImmutable())['products'][0];
+                $this->assertSame($price.'.00', $row['price']);
+                $this->assertSame('Menu '.$price, $row['description']);
+                $this->assertStringEndsWith('/'.$photo, $row['image']);
+            }
+        } finally {
+            $this->app->useStoragePath($original);
+            \Illuminate\Support\Facades\File::deleteDirectory($directory);
+        }
+    }
+
     public function test_local_demo_follows_reference_order_and_skips_unavailable_pizzas(): void
     {
         $this->mock(SignageCatalog::class,function ($mock) {

@@ -169,7 +169,11 @@ class SignageExport
         $supervisor = PHP_OS_FAMILY === 'Windows' ? null : $finder->find('timeout');
         if (!$node || !$ffmpeg || !$ffprobe || (PHP_OS_FAMILY !== 'Windows' && !$supervisor)) throw ValidationException::withMessages(['export'=>'A videókészítő jelenleg nem elérhető. Próbáld újra később.']);
         $env = [];
-        if (is_dir($runtime.'/node_modules/playwright-core')) $env = ['NODE_PATH'=>$runtime.'/node_modules', 'PLAYWRIGHT_BROWSERS_PATH'=>$runtime.'/browsers', 'PLAYWRIGHT_HOST_PLATFORM_OVERRIDE'=>'ubuntu22.04-x64'];
+        if (is_dir($runtime.'/node_modules/playwright-core')) $env = ['NODE_PATH'=>$runtime.'/node_modules', 'PLAYWRIGHT_BROWSERS_PATH'=>$runtime.'/browsers',
+            'PLAYWRIGHT_HOST_PLATFORM_OVERRIDE'=>'ubuntu22.04-x64',
+            // Web-launched children inherit a bounded virtual address space.
+            // Use Wasm inline bounds checks rather than reserving a ~10 GiB cage.
+            'NODE_OPTIONS'=>'--disable-wasm-trap-handler'];
         return compact('node', 'ffmpeg', 'ffprobe', 'supervisor', 'env');
     }
 

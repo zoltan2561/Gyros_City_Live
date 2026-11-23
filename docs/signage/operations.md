@@ -25,6 +25,8 @@ Egyszerre egy export készülhet, legfeljebb 30 perces első műsorkörből. Má
 
 A Linuxos tárhely Node.js-, Playwright- és H.264-képes FFmpeg-példánya a webroot melletti privát `.signage-runtime` könyvtárban található. A renderelő innen tölti a függőségeit, nem az admin számítógépéről. A határidőt GNU `timeout` felügyeli folyamatcsoporttal és leállítási türelmi idővel. A feladatok saját CLI-folyamatként indulnak; nincs folyamatosan futtatandó exportworker. Leállt feladat után újraindítás kérhető a gombbal.
 
+A szerveroldali Node-folyamat `--disable-wasm-trap-handler` kompatibilitási kapcsolóval indul, hogy a webes környezettől örökölt virtuálismemória-korlát mellett is működjön a Playwright HTTP-kezelése. Ez csak a renderelő gyermekfolyamat környezete; nem módosít tárhelyszintű limiteket vagy `.env`-fájlt. Sikertelen rendereléskor a privát feladatkönyvtár `renderer-error.log` fájlja a hibakimenet legfeljebb utolsó 4000 bájtját tartalmazza, a teljes katalógusbemenet nélkül.
+
 Új Windowsos fejlesztői gépen a helyi exporthoz Microsoft Edge, Node.js 20 vagy frissebb, valamint H.264-képes FFmpeg/ffprobe szükséges. A projekt gyökerében futtasd egyszer a két parancsot a helyi renderelő telepítéséhez.
 
 ```powershell

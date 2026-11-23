@@ -9,6 +9,7 @@ let pairingGeneration=0,pairingPolling=false;
 let retrySync=null;
 let previews={},previewRelease=null,checking=false,lastSync=Date.now(),recovering=false;
 let controlEnabled=false,controlFrame=null,controlSequence=0,controlSent=0,controlWall=0,lastControl=0,acceptedAt=-1;
+let lastDirectCatalog=-Infinity,lastDirectHeartbeat=-Infinity;
 const failedScenes=new Map();
 function notice(message){status.textContent=message;}
 function fallback(){cycleId++;GCSignage.fallback(root);renderer=null;current=null;}
@@ -108,6 +109,7 @@ async function synchronize(){
   const data=incoming.catalog||await request('catalog');
   if(!token||generation!==sessionGeneration)return;
   acceptManifest(incoming,data,manifestSent,manifestWall);
+  lastDirectCatalog=manifestSent;
  }catch(e){
   lastError=e.message;if(!current)notice(e.message);
   if(token&&generation===sessionGeneration)retrySync=setTimeout(synchronize,5000);
@@ -154,10 +156,13 @@ async function next(){
 function playbackStatus(){
  return {player_version:'online-4',active_release_id:current?.release_id||null,catalog_revision:catalog?.catalog_revision||'',scene_id:current?.id||'',error:lastError,offline:navigator.onLine===false?1:0};
 }
-function controlHealthy(){return controlEnabled&&lastControl>0&&Date.now()-lastControl<12000&&Date.now()-lastSync<60000;}
+function controlHealthy(){return controlEnabled&&lastControl>0&&Date.now()-lastControl<25000&&Date.now()-lastSync<60000;}
 function pollControl(){
  if(!token||!controlEnabled)return;
- if(controlFrame && Date.now()-controlWall<12000)return;
+ // The frame is a fallback for TV browsers whose normal requests stop working.
+ const now=performance.now();
+ if(now-lastDirectCatalog<45000&&now-lastDirectHeartbeat<25000)return;
+ if(controlFrame && Date.now()-controlWall<20000)return;
  controlFrame?.remove();
  const frame=document.createElement('iframe'),form=document.createElement('form');
  frame.hidden=true;frame.title='TV műsorfrissítés';frame.name='gc-control-'+(++controlSequence);
@@ -183,23 +188,25 @@ async function heartbeat(){
  checking=true;
  try{
   const reply=await request('heartbeat','POST',playbackStatus());
+ lastDirectHeartbeat=performance.now();
   if(token && 'assigned_release_id' in reply && reply.assigned_release_id!==manifest?.default_release_id)synchronize();
  }catch(e){/* A failed heartbeat never renews price freshness. */}
  finally{checking=false;if(token&&Date.now()-lastSync>120000)recoverConnection();}
 }
-async function recoverConnection(){
+async function recoverConnection(scheduled=false){
  if(recovering)return;recovering=true;
  try{
   // Check the application through the browser's image loader, independently of API requests.
   const key='gc-signage-last-reconnect-'+base.pathname,now=Date.now();
-  if(now-Number(sessionStorage.getItem(key)||0)<300000)return;
+  if(!scheduled&&now-Number(sessionStorage.getItem(key)||0)<300000)return;
   const reachable=await new Promise(resolve=>{
    const probe=new Image(),timer=setTimeout(()=>finish(false),8000);
    function finish(ok){clearTimeout(timer);probe.onload=probe.onerror=null;resolve(ok);}
    probe.onload=()=>finish(true);probe.onerror=()=>finish(false);
    probe.src=new URL('connection.gif?t='+now,base).href;
   });
-  if(reachable&&token&&Date.now()-lastSync>120000){sessionStorage.setItem(key,String(now));location.reload();}
+  // A reload only happens while the server answers, so the TV never lands on a browser error page.
+  if(reachable&&token&&(scheduled||Date.now()-lastSync>120000)){sessionStorage.setItem(key,String(now));location.reload();}
  }catch(e){/* Regular synchronization still retries. */}finally{recovering=false;}
 }
 setInterval(()=>{
@@ -212,8 +219,11 @@ setInterval(()=>{
  if(performance.now()-started>=limit){next();return;}
  if(video&&!video.ended&&performance.now()-videoChecked>=10000)mediaFailed(current,'A videó elakadt.',cycleId);
 },1000);
+// TV browsers slowly leak memory over a full day; a fresh page every hour keeps playback stable.
+const pageLoaded=Date.now();
+setInterval(()=>{if(token&&Date.now()-pageLoaded>=3600000)recoverConnection(true);},60000);
 setInterval(synchronize,30000);setInterval(heartbeat,10000);setInterval(pairingPoll,5000);
-setInterval(pollControl,4000);
+setInterval(pollControl,8000);
 window.addEventListener('online',()=>{synchronize();heartbeat();});window.addEventListener('visibilitychange',()=>{if(!document.hidden)synchronize();});
 window.addEventListener('pageshow',()=>{if(token)synchronize();});
 document.getElementById('new-code').addEventListener('click',pair);

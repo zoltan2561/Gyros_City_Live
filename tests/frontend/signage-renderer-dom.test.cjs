@@ -13,6 +13,9 @@ class Element {
   querySelectorAll(selector){return this.children.flatMap(child=>[...(selector.startsWith('.')?child.className.split(' ').includes(selector.slice(1)):child.tagName===selector)?[child]:[],...child.querySelectorAll(selector)]);}
   get firstElementChild(){return this.children[0]||null;}
   setAttribute(name,value){this[name]=value;}
+  removeAttribute(name){delete this[name];}
+  pause(){this.paused=true;}
+  load(){this.sourceAtLoad=this.src||'';}
 }
 function setup(){
   const timers=new Map();let timerId=0,time=0;
@@ -24,6 +27,20 @@ function setup(){
 }
 const scene={type:'split',theme:'dark',title:'Burgerek',bindings:[{id:'a'},{id:'b'}],media:{url:'/video.mp4',mime:'video/mp4'}};
 const products=[{id:'a',name:'Burger',image:'/burger.jpg',available:true,formatted_price:'2 000 Ft'}, {id:'b',name:'Fishburger',available:true,formatted_price:'1 790 Ft'}];
+
+test('leaving a scene stops and unloads its foreground and background videos',()=>{
+  const {api,stage}=setup();
+  for(const leave of [()=>api.render(stage,scene,products),()=>api.fallback(stage)]){
+    api.render(stage,{...scene,background_media:scene.media},products);
+    const videos=stage.querySelectorAll('video');
+    assert.equal(videos.length,2);
+    leave();
+    for(const video of videos){
+      assert.equal(video.paused,true);
+      assert.equal(video.sourceAtLoad,'');
+    }
+  }
+});
 
 test('background presets apply only to general scenes and never leak into clones or fallback',()=>{
   const {api,stage}=setup();

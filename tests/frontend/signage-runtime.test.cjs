@@ -2,6 +2,38 @@ const {test}=require('node:test');const assert=require('node:assert/strict');con
 const schedule=require('../../public/signage/schedule.js');
 const flush=async()=>{for(let i=0;i<20;i++)await new Promise(r=>setImmediate(r));};
 
+test('healthy menu updates run for 30 minutes without frames, then a stalled catalog enables the frame fallback',async()=>{
+ let now=0,frames=0,stall=false;
+ const epoch=Date.UTC(2026,10,20),intervals=new Map();
+ class Clock extends Date{static now(){return epoch+now;}}
+ const node={addEventListener(){},querySelectorAll:()=>[],querySelector:()=>null};
+ const document={getElementById:()=>node,body:{appendChild(){}},createElement(tag){
+  if(tag==='iframe')frames++;
+  return {appendChild(){},submit(){},remove(){}};
+ }};
+ const context={URL,Date:Clock,performance:{now:()=>now},document,window:{addEventListener(){}},
+  navigator:{onLine:true},location:{href:'https://example.test/signage/'},
+  setInterval:(fn,ms)=>intervals.set(ms,fn),setTimeout:()=>1,clearTimeout(){},
+  GCSignageStorage:{database:()=>({load:async()=>'device'})},GCSignageSchedule:schedule,
+  GCSignage:{fallback(){},priceFresh:()=>true,cardsForScene:()=>[{}],render:()=>({update(){}})},
+  fetch:async url=>{
+   if(String(url).endsWith('/heartbeat'))return new Response('{"assigned_release_id":1}');
+   if(stall)throw Error('catalog unavailable');
+   const time=new Date(epoch+now).toISOString();
+   return new Response(JSON.stringify({schema_version:1,control_frame:true,server_time:time,playback_mode:'continuous',
+    default_release_id:1,releases:[{id:1,snapshot:{scenes:[{id:'menu',type:'grid'}]}}],
+    catalog:{schema_version:1,server_time:time,valid_until:new Date(epoch+now+1800000).toISOString(),products:[]}}));
+  }};
+ vm.runInNewContext(fs.readFileSync(require.resolve('../../public/signage/player.js'),'utf8'),context);
+ await flush();
+ for(now=1000;now<=1860000;now+=1000){
+  stall=now>1800000;
+  for(const ms of [30000,10000,8000])if(now%ms===0)await intervals.get(ms)();
+  if(!stall)assert.equal(frames,0);
+ }
+ assert.ok(frames>0);
+});
+
 test('24 simulated hours of switches recover from a stalled fetch on a TV without AbortController',async()=>{
  const intervals=new Map(),delays=new Map(),renders=[];
  let now=0,seq=0,assigned=1,stall=false,requests=0;

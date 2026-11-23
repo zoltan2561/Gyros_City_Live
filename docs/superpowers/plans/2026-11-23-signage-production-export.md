@@ -38,5 +38,5 @@
 
 ## Execution notes
 
-- The user switched the original checkout to PROD during execution. Feature work moved to an isolated worktree. A release worktree based on the current production commit a4f6dd7 will carry only this feature and its tests, excluding unrelated later main player changes. PROD currently predates the deployed code, so advancing it through a4f6dd7 also records the already-live baseline.
+- The user switched the original checkout to PROD during execution. Feature work moved to an isolated worktree. The release started from the production commit a4f6dd7; PROD was advanced through that already-live baseline. The user subsequently explicitly requested all existing main commits too, so main through 53f14ba is merged into the release, retaining the newer production export implementation where the old local exporter conflicts.
 - The approved architecture is implemented directly; the user has twice approved proceeding to production, so there is no additional plan approval gate.

@@ -108,10 +108,12 @@ class DeviceController extends Controller {
             if(isset($data['active_release_id'])){
                 $active=(int)$data['active_release_id'];
                 $delivered=$screen->delivered_release_ids??[];
-                abort_unless(in_array($active,array_merge($delivered,[$screen->release_id,$screen->active_release_id]),true),422);
-                $position=array_search($active,$delivered,true);
-                if($position!==false)$screen->delivered_release_ids=array_slice($delivered,$position);
-                $screen->active_release_id=$active;
+                // An unknown release is not recorded, but the TV still counts as connected.
+                if(in_array($active,array_merge($delivered,[$screen->release_id,$screen->active_release_id]),true)){
+                    $position=array_search($active,$delivered,true);
+                    if($position!==false)$screen->delivered_release_ids=array_slice($delivered,$position);
+                    $screen->active_release_id=$active;
+                }
             }
             $screen->last_seen_at=now();$screen->status=$data;$screen->save();
             return $screen->release_id;

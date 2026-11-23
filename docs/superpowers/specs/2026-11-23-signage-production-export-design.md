@@ -38,7 +38,7 @@ A gyroscity.eu adminjában a kiválasztott, mentett lejátszási lista meglévő
 - A telepítés nem igényel tervezett adatbázis-migrációt, `.env`- vagy hitelesítőadat-módosítást. Ha a próba mégis ilyen változtatást igényelne, azt külön fel kell tárni.
 - Automatizált ellenőrzés: admin- és munkatársjogok, jogosulatlan elérés, más feladatához hozzáférés tiltása, párhuzamos indítás, folyamatindítási hiba, hibás és megszakadt render, valamint letöltés.
 - Böngészős próba: tulajdonos és jogosult munkatárs is indítson exportot; állapotkövetés, visszatérés és letöltés ellenőrzése. Az elkészült MP4 időtartamát és kodekjét gépi vizsgálat, tartalmát képkocka-ellenőrzés igazolja.
-- Éles kódfelülírás előtt az érintett fájlok és a szükséges adatállapot mentése, utána visszaolvasás és működési próba szükséges. Commit, push és más TV-listák publikálása nem része ennek az engedélynek.
+- Éles kódfelülírás előtt az érintett fájlok és a szükséges adatállapot mentése, utána visszaolvasás és működési próba szükséges. A felhasználó utóbb külön kérte a PROD-push-t és a main korábbi commitjainak átvételét is. Más TV-listák publikálása továbbra sem része a feladatnak.
 
 ## Nyitott technikai feltétel
 

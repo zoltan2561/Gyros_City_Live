@@ -673,6 +673,20 @@ window.GCSignageStorage = {
         } finally {
           _iterator7.f();
         }
+        var _iterator8 = _createForOfIteratorHelper(stage.querySelectorAll('video')),
+          _step8;
+        try {
+          for (_iterator8.s(); !(_step8 = _iterator8.n()).done;) {
+            var video = _step8.value;
+            video.pause();
+            video.removeAttribute('src');
+            video.load();
+          }
+        } catch (err) {
+          _iterator8.e(err);
+        } finally {
+          _iterator8.f();
+        }
         if (views.get(stage) === view) views.delete(stage);
       }
     };
@@ -733,11 +747,11 @@ window.GCSignageStorage = {
     prior.setUTCDate(prior.getUTCDate() - 1);
     var previous = prior.toISOString().slice(0, 10),
       previousDay = prior.getUTCDay() || 7;
-    var _iterator8 = _createForOfIteratorHelper([...manifest.schedules].sort((a, b) => b.priority - a.priority)),
-      _step8;
+    var _iterator9 = _createForOfIteratorHelper([...manifest.schedules].sort((a, b) => b.priority - a.priority)),
+      _step9;
     try {
-      for (_iterator8.s(); !(_step8 = _iterator8.n()).done;) {
-        var r = _step8.value;
+      for (_iterator9.s(); !(_step9 = _iterator9.n()).done;) {
+        var r = _step9.value;
         var overnight = r.end_time <= r.start_time;
         var date = p.date,
           day = p.day,
@@ -750,9 +764,9 @@ window.GCSignageStorage = {
         if (active && date >= r.starts_on && date <= r.ends_on && r.days.map(Number).includes(day)) return Number(r.release_id);
       }
     } catch (err) {
-      _iterator8.e(err);
+      _iterator9.e(err);
     } finally {
-      _iterator8.f();
+      _iterator9.f();
     }
     return manifest.default_release_id;
   }
@@ -810,6 +824,8 @@ window.GCSignageStorage = {
     controlWall = 0,
     lastControl = 0,
     acceptedAt = -1;
+  var lastDirectCatalog = -Infinity,
+    lastDirectHeartbeat = -Infinity;
   var failedScenes = new Map();
   function notice(message) {
     status.textContent = message;
@@ -1197,6 +1213,7 @@ window.GCSignageStorage = {
             return _context9.a(2);
           case 6:
             acceptManifest(incoming, data, manifestSent, manifestWall);
+            lastDirectCatalog = manifestSent;
             _context9.n = 8;
             break;
           case 7:
@@ -1387,12 +1404,15 @@ window.GCSignageStorage = {
     };
   }
   function controlHealthy() {
-    return controlEnabled && lastControl > 0 && Date.now() - lastControl < 12000 && Date.now() - lastSync < 60000;
+    return controlEnabled && lastControl > 0 && Date.now() - lastControl < 25000 && Date.now() - lastSync < 60000;
   }
   function pollControl() {
     var _controlFrame, _manifest2;
     if (!token || !controlEnabled) return;
-    if (controlFrame && Date.now() - controlWall < 12000) return;
+    // The frame is a fallback for TV browsers whose normal requests stop working.
+    var now = performance.now();
+    if (now - lastDirectCatalog < 45000 && now - lastDirectHeartbeat < 25000) return;
+    if (controlFrame && Date.now() - controlWall < 20000) return;
     (_controlFrame = controlFrame) === null || _controlFrame === void 0 || _controlFrame.remove();
     var frame = document.createElement('iframe'),
       form = document.createElement('form');
@@ -1460,6 +1480,7 @@ window.GCSignageStorage = {
             return request('heartbeat', 'POST', playbackStatus());
           case 3:
             reply = _context10.v;
+            lastDirectHeartbeat = performance.now();
             if (token && 'assigned_release_id' in reply && reply.assigned_release_id !== ((_manifest3 = manifest) === null || _manifest3 === void 0 ? void 0 : _manifest3.default_release_id)) synchronize();
             _context10.n = 5;
             break;
@@ -1482,7 +1503,7 @@ window.GCSignageStorage = {
     return _recoverConnection.apply(this, arguments);
   }
   function _recoverConnection() {
-    _recoverConnection = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee10() {
+    _recoverConnection = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee10(scheduled = false) {
       var key, now, reachable, _t13;
       return _regenerator().w(function (_context11) {
         while (1) switch (_context11.p = _context11.n) {
@@ -1497,7 +1518,7 @@ window.GCSignageStorage = {
             _context11.p = 2;
             // Check the application through the browser's image loader, independently of API requests.
             key = 'gc-signage-last-reconnect-' + base.pathname, now = Date.now();
-            if (!(now - Number(sessionStorage.getItem(key) || 0) < 300000)) {
+            if (!(!scheduled && now - Number(sessionStorage.getItem(key) || 0) < 300000)) {
               _context11.n = 3;
               break;
             }
@@ -1518,7 +1539,8 @@ window.GCSignageStorage = {
             });
           case 4:
             reachable = _context11.v;
-            if (reachable && token && Date.now() - lastSync > 120000) {
+            // A reload only happens while the server answers, so the TV never lands on a browser error page.
+            if (reachable && token && (scheduled || Date.now() - lastSync > 120000)) {
               sessionStorage.setItem(key, String(now));
               location.reload();
             }
@@ -1566,10 +1588,15 @@ window.GCSignageStorage = {
     }
     if (video && !video.ended && performance.now() - videoChecked >= 10000) mediaFailed(current, 'A videó elakadt.', cycleId);
   }, 1000);
+  // TV browsers slowly leak memory over a full day; a fresh page every hour keeps playback stable.
+  var pageLoaded = Date.now();
+  setInterval(() => {
+    if (token && Date.now() - pageLoaded >= 3600000) recoverConnection(true);
+  }, 60000);
   setInterval(synchronize, 30000);
   setInterval(heartbeat, 10000);
   setInterval(pairingPoll, 5000);
-  setInterval(pollControl, 4000);
+  setInterval(pollControl, 8000);
   window.addEventListener('online', () => {
     synchronize();
     heartbeat();

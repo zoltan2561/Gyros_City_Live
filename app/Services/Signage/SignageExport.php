@@ -13,6 +13,7 @@ use Symfony\Component\Process\Process;
 class SignageExport
 {
     private const RETENTION = 86400;
+    private const STARTUP_SECONDS = 180;
 
     public function start(int $playlistId, int $ownerId): array
     {
@@ -86,7 +87,7 @@ class SignageExport
         try {
             $job = $this->read($directory.'/job.json');
             $active = $this->read($this->root().'/active.json');
-            if (!$job || ($active['id'] ?? null) !== $id || $job['status'] !== 'pending' || $job['created_at'] < time() - 60) return false;
+            if (!$job || ($active['id'] ?? null) !== $id || $job['status'] !== 'pending' || $job['created_at'] < time() - self::STARTUP_SECONDS) return false;
             $lock = $this->lock('render', false);
             if (!$lock) return false;
             $job['status'] = 'running';
@@ -111,6 +112,17 @@ class SignageExport
             File::deleteDirectory($directory.'/work');
             $this->unlock($lock);
         }
+    }
+
+    public function dispatchPending(): bool
+    {
+        $admission = $this->lock('admission', true);
+        try {
+            $active = $this->read($this->root().'/active.json');
+            $job = $active ? $this->read($this->directory($active['id']).'/job.json') : null;
+            if (!$job || $this->refresh($job)['status'] !== 'pending') return false;
+        } finally { $this->unlock($admission); }
+        return $this->run($job['id']);
     }
 
     protected function render(array $payload, string $directory): void
@@ -143,6 +155,9 @@ class SignageExport
 
     protected function launch(string $id, string $directory): void
     {
+        // Host cron starts outside the HTTP process's inherited address-space
+        // limit. Enable this handoff only after the host job has been configured.
+        if (PHP_OS_FAMILY !== 'Windows' && is_file(dirname(base_path()).'/.signage-runtime/cron-ready')) return;
         $php = PHP_BINDIR.(PHP_OS_FAMILY === 'Windows' ? '/php.exe' : '/php');
         $arguments = [$php, base_path('artisan'), 'signage:export-job', $id];
         if (PHP_OS_FAMILY === 'Windows') {
@@ -221,7 +236,7 @@ class SignageExport
         $lock = $this->lock('render', false);
         if ($lock) {
             $job = $this->read($this->directory($job['id']).'/job.json');
-            if (($job['status'] === 'pending' && $job['created_at'] < time() - 60) || $job['status'] === 'running') {
+            if (($job['status'] === 'pending' && $job['created_at'] < time() - self::STARTUP_SECONDS) || $job['status'] === 'running') {
                 $job['status'] = 'failed';
                 $this->write($this->directory($job['id']).'/job.json', $job);
             }

@@ -127,7 +127,7 @@ class SignageExportTest extends SignageCatalogTest
         $old = $service->start($this->playlist->id, 12);
         $path = storage_path('app/signage-exports/'.$old['id'].'/job.json');
         $record = json_decode(File::get($path), true);
-        $record['created_at'] = time() - 90;
+        $record['created_at'] = time() - 300;
         File::put($path, json_encode($record));
         $this->assertSame('failed', $service->status($old['id'], 12)['status']);
         $new = $service->start($this->playlist->id, 99);
@@ -170,5 +170,17 @@ class SignageExportTest extends SignageCatalogTest
             $this->assertFileExists($directory.'/renderer-error.log');
             $this->assertNotSame('', File::get($directory.'/renderer-error.log'));
         }
+    }
+
+    public function test_scheduled_dispatch_runs_one_waiting_job_and_is_idle_after_completion(): void
+    {
+        $service = $this->exporter();
+        $service->shouldReceive('render')->once()->andReturnUsing(fn ($payload, $directory) => File::put($directory.'/output.mp4', 'scheduled-video'));
+        $this->assertTrue(method_exists($service, 'dispatchPending'), 'A scheduled dispatcher must be available.');
+        $this->assertFalse($service->dispatchPending());
+        $job = $service->start($this->playlist->id, 12);
+        $this->assertTrue($service->dispatchPending());
+        $this->assertSame('complete', $service->status($job['id'], 12)['status']);
+        $this->assertFalse($service->dispatchPending());
     }
 }
